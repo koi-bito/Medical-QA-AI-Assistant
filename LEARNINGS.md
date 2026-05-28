@@ -17,7 +17,7 @@ Why are embeddings useful? What does "similar meaning = similar vector" actually
 - **When two words or sentences have similar meanings, their vectors end up close together in vector space. For example: "happy" and "joyful" will have vectors that are nearly pointing in the same direction, while "happy" and "car" will be far apart.**
 
 
-## Day 1
+## Day 3
 
 What is the difference between a base model and a fine-tuned model? Why does QLoRA exist?
 - **A base model is pre-trained on general data, while a fine-tuned model is adapted for specific tasks; QLoRA exists to enable efficient fine-tuning of large models on limited hardware by using 4-bit quantization and low-rank adapters.**
