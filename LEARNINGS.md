@@ -21,3 +21,9 @@ Why are embeddings useful? What does "similar meaning = similar vector" actually
 
 What is the difference between a base model and a fine-tuned model? Why does QLoRA exist?
 - **A base model is pre-trained on general data, while a fine-tuned model is adapted for specific tasks; QLoRA exists to enable efficient fine-tuning of large models on limited hardware by using 4-bit quantization and low-rank adapters.**
+
+
+## Day 4
+
+What problem does RAG solve that fine-tuning doesn't?
+- **RAG solves the knowledge‑access problem, letting a model fetch fresh, factual information from an external source at inference time, something fine‑tuning, which only rewrites static model weights can’t achieve.**
