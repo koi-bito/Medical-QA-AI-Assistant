@@ -27,3 +27,23 @@ What is the difference between a base model and a fine-tuned model? Why does QLo
 
 What problem does RAG solve that fine-tuning doesn't?
 - **RAG solves the knowledge‑access problem, letting a model fetch fresh, factual information from an external source at inference time, something fine‑tuning, which only rewrites static model weights can’t achieve.**
+
+
+## Day 5
+
+What does one training example look like in med_qa? What fields does it have?
+- **One training example in med_qa (bigbio format) looks something like this:
+{
+  'id': '1',
+  'question': 'A 23-year-old pregnant woman at 22 weeks gestation presents with...',
+  'answer': {'text': 'Decreased fetal movement', 'label': 'A'},
+  'options': [
+    {'key': 'A', 'value': 'Decreased fetal movement'},
+    {'key': 'B', 'value': 'Premature rupture of membranes'},
+    ...
+  ],
+  'type': 'multiple_choice',
+  'metamap_phrases': [...]
+}
+The key fields are: 'id', 'question' (the clinical scenario), 'options' (4–5 MCQ choices with keys A/B/C/D), 'answer' (the correct option label + text), 'type' (always multiple_choice here), and 'metamap_phrases' (medical concept tags extracted from the question).
+The dataset is a multiple-choice medical licensing exam format — each example is a USMLE-style clinical question. The model's job is to pick the right answer from the options, not generate free text. This matters for how we'll format the training data later — we'll need to frame it as an instruction-following task so the fine-tuned model learns to reason and select.**
