@@ -1,49 +1,48 @@
 # 🧠 Learnings
 
-
 ## Day 1
 
 What is a weight?
+
 - **Weight is a value of importance of pixel for identifying the object/pattern.**
 
 What does "training" mean in your own words?
-- **Training means, model correcting itself through updating weights which are calculated through the loss function and gradients to clarify how much the model is going in the right direction.**
 
+- **Training means, model correcting itself through updating weights which are calculated through the loss function and gradients to clarify how much the model is going in the right direction.**
 
 ## Day 2
 
 Why are embeddings useful? What does "similar meaning = similar vector" actually mean?
+
 - **An embedding is a list of numbers (a vector) that represents a word, sentence, or piece of text in a multi-dimensional space.Computers can only work with numbers, not words. Embeddings solve this by converting text into a vector — an ordered list of numbers — that captures the meaning of that text.**
 - **When two words or sentences have similar meanings, their vectors end up close together in vector space. For example: "happy" and "joyful" will have vectors that are nearly pointing in the same direction, while "happy" and "car" will be far apart.**
-
 
 ## Day 3
 
 What is the difference between a base model and a fine-tuned model? Why does QLoRA exist?
-- **A base model is pre-trained on general data, while a fine-tuned model is adapted for specific tasks; QLoRA exists to enable efficient fine-tuning of large models on limited hardware by using 4-bit quantization and low-rank adapters.**
 
+- **A base model is pre-trained on general data, while a fine-tuned model is adapted for specific tasks; QLoRA exists to enable efficient fine-tuning of large models on limited hardware by using 4-bit quantization and low-rank adapters.**
 
 ## Day 4
 
 What problem does RAG solve that fine-tuning doesn't?
-- **RAG solves the knowledge‑access problem, letting a model fetch fresh, factual information from an external source at inference time, something fine‑tuning, which only rewrites static model weights can’t achieve.**
 
+- **RAG solves the knowledge‑access problem, letting a model fetch fresh, factual information from an external source at inference time, something fine‑tuning, which only rewrites static model weights can’t achieve.**
 
 ## Day 5
 
 What does one training example look like in med_qa? What fields does it have?
-- **One training example in med_qa (bigbio format) looks something like this:
-{
-  'id': '1',
-  'question': 'A 23-year-old pregnant woman at 22 weeks gestation presents with...',
-  'answer': {'text': 'Decreased fetal movement', 'label': 'A'},
-  'options': [
-    {'key': 'A', 'value': 'Decreased fetal movement'},
-    {'key': 'B', 'value': 'Premature rupture of membranes'},
-    ...
-  ],
-  'type': 'multiple_choice',
-  'metamap_phrases': [...]
+
+- \*\*One training example in `lavita/ChatDoctor-HealthCareMagic-100k` looks something like this:
+
+One example:{
+"instruction": "If you are a doctor, please answer the medical questions based on the patient's description.",
+"input": "I woke up this morning feeling the whole room is spinning when i was sitting down. I went to the bathroom walking unsteadily, as i tried to focus i feel nauseous. I try to vomit but it wont come out.. After taking panadol and sleep for few hours, i still feel the same.. By the way, if i lay down or sit down, my head do not spin, only when i want to move around then i feel the whole world is spinning.. And it is normal stomach discomfort at the same time? Earlier after i relieved myself, the spinning lessen so i am not sure whether its connected or coincidences.. Thank you doc!",
+"output": "Hi, Thank you for posting your query. The most likely cause for your symptoms is benign paroxysmal positional vertigo (BPPV), a type of peripheral vertigo. In this condition, the most common symptom is dizziness or giddiness, which is made worse with movements. Accompanying nausea and vomiting are common. The condition is due to problem in the ear, and improves in a few days on own. Betahistine tablets would help relieve your symptoms. Doing vestibular rehabilitation or adaptation exercises would prevent the recurrence of these symptoms. An ENT evaluation would also help. I hope it helps. Best wishes, Chat Doctor."
 }
-The key fields are: 'id', 'question' (the clinical scenario), 'options' (4–5 MCQ choices with keys A/B/C/D), 'answer' (the correct option label + text), 'type' (always multiple_choice here), and 'metamap_phrases' (medical concept tags extracted from the question).
-The dataset is a multiple-choice medical licensing exam format — each example is a USMLE-style clinical question. The model's job is to pick the right answer from the options, not generate free text. This matters for how we'll format the training data later — we'll need to frame it as an instruction-following task so the fine-tuned model learns to reason and select.**
+
+The key fields are:
+
+- instruction – short prompt that tells the model what role to assume (e.g., “If you are a doctor, please answer the medical questions based on the patient's description.”)
+- input – the patient’s query / description of symptoms.
+- output – the doctor‑style answer generated by the model.
