@@ -58,3 +58,40 @@ What is CUDA? Why does the GPU need special drivers to work with Python?
 
 - **CUDA (Compute Unified Device Architecture) is a parallel computing platform and programming model created by NVIDIA. It allows software (like PyTorch) to use the massive parallel processing power of NVIDIA GPUs for general-purpose mathematical computations, which is crucial for training and running deep learning models.**
 - **GPUs need special drivers to work with Python (and other high-level environments) because standard operating systems and Python libraries cannot communicate directly with the GPU hardware. The drivers (along with the CUDA toolkit) translate PyTorch's mathematical operations into assembly instructions the GPU can execute, enabling hardware acceleration.**
+
+## Day 8
+
+What does each library do? (One sentence each)
+
+- **transformers** — HuggingFace's library that provides pre-trained models (like Phi-3) and tools to load, tokenize, and run them.
+- **peft** — Parameter-Efficient Fine-Tuning library that implements LoRA and QLoRA, allowing us to fine-tune only tiny adapter layers rather than the full model.
+- **trl** — Transformer Reinforcement Learning library from HuggingFace; provides `SFTTrainer`, a high-level wrapper that makes supervised fine-tuning simple.
+- **bitsandbytes** — Enables 4-bit and 8-bit quantization so a 3.8B model fits in 6GB VRAM.
+- **datasets** — HuggingFace's library for downloading, caching, and streaming datasets efficiently.
+- **accelerate** — Abstracts away the hardware differences (single GPU, multi-GPU, mixed precision) so training code stays simple.
+- **chromadb** — A local vector database that stores embeddings and enables fast similarity search for RAG.
+- **sentence-transformers** — Provides embedding models (like PubMedBERT) that convert text into semantic vectors.
+- **mlflow** — Experiment tracking system that logs hyperparameters, metrics, and artifacts for every training run.
+- **fastapi** — Modern, fast Python web framework for building the REST API endpoint.
+- **uvicorn** — ASGI server that runs the FastAPI app in production.
+- **gradio** — Lets you build simple web UIs for ML models with just a few lines of Python.
+- **dvc** — Data Version Control — tracks large data files separately from Git, like Git for datasets.
+- **huggingface_hub** — CLI and Python API for uploading/downloading models and datasets to/from HuggingFace Hub.
+- **pandas** — The standard library for loading, filtering, and manipulating tabular data (DataFrames).
+- **numpy** — Fundamental library for numerical computing in Python; everything ML-related uses it internally.
+- **pytest** — Python's testing framework for writing and running automated tests.
+
+## Day 9
+
+What is the purpose of each folder in the project structure?
+
+- **data/raw/** — Stores downloaded, unmodified source data. Gitignored and tracked by DVC.
+- **data/processed/** — Stores cleaned and formatted data ready for training. Also DVC-tracked.
+- **models/** — Stores fine-tuned model adapter weights. Gitignored (too large for GitHub).
+- **notebooks/** — Jupyter notebooks for exploration, analysis, and evaluation. These are committed to Git.
+- **src/training/** — Python scripts for data preparation and the QLoRA training loop.
+- **src/rag/** — Scripts for the full RAG pipeline: data collection, chunking, vector store, retriever.
+- **src/api/** — FastAPI backend that serves the QA system as a REST endpoint.
+- **src/inference/** — Groq API client for fast cloud inference in the public demo.
+- **src/evaluation/** — Script that evaluates the system on a fixed set of test questions.
+- **tests/** — pytest test files for automated testing of the API.
