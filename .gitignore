@@ -1,0 +1,39 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment
+*.env
+.env
+medqa_env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Large files (tracked by DVC or too big for Git)
+data/raw/
+data/processed/
+data/chroma_db/
+models/
+
+# MLflow
+mlruns/
+mlartifacts/
+evaluation_results.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# DVC
+/tmp

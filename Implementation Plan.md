@@ -162,13 +162,13 @@ print(dataset['train'][0])
 
 **Tasks:**
 
-1. Install Python 3.11 from python.org. Use 3.11 specifically — some ML libraries still have issues with 3.12+.
+1. Install Python 3.13 from python.org. Use 3.13 specifically — libraries have updated since this plan was written and 3.13 is the stable stable release standard now.
 2. Install VS Code from code.visualstudio.com. Then install the "Python" extension from the VS Code extensions panel.
 3. Open a terminal and create your virtual environment:
 
 ```bash
 # Create the virtual environment
-python -m venv medqa_env
+py -3.13 -m venv medqa_env
 
 # Activate it — pick your OS:
 # Windows:
@@ -194,7 +194,7 @@ print("hello world")
 
 **You're done when:** A Jupyter notebook runs successfully inside your virtual environment in VS Code.
 
-**Write in LEARNINGS.md:** What is a virtual environment? Why is 3.11 used instead of the latest Python?
+**Write in LEARNINGS.md:** What is a virtual environment? Why is 3.13 used instead of the latest Python (e.g. 3.14)?
 
 ---
 
@@ -212,12 +212,12 @@ print("hello world")
 nvidia-smi
 ```
 
-You should see your RTX 4050 listed. Note the CUDA version shown (e.g., 12.1).
+You should see your RTX 4050 listed. Note the CUDA version shown (e.g., 12.1 or newer like 12.4 / 12.6).
 
 2. Go to pytorch.org → "Get Started" → select your OS, pip, and your CUDA version → copy the install command. It'll look something like:
 
 ```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
 
 3. Verify it worked:
@@ -1674,7 +1674,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Install dependencies
         run: |
@@ -2047,7 +2047,7 @@ emoji: 🏥
 colorFrom: blue
 colorTo: green
 sdk: gradio
-sdk_version: 4.0.0
+sdk_version: 5.0.0
 app_file: app.py
 pinned: false
 ---
