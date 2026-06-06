@@ -192,3 +192,43 @@ Week 2 summary — what does the full data pipeline look like? What did spot-che
 - **Looking ahead to Week 3:** The training script is already fully written in `train.py` — the next step is just running it. The plan: start with a 200-example smoke test to confirm there are no OOM or formatting errors, then kick off the full 10k-example run. The thing to watch during training is the loss curve — it should decrease steadily. A loss that stays flat means the learning rate is too low; a loss that spikes means the learning rate is too high or the data formatting is wrong.
 - **What Week 2 taught overall:** Data preparation is not glamorous but it's where most of the actual model quality is determined. The model can only be as good as what it's trained on — getting the format exactly right and filtering aggressively for quality matters more than most hyperparameter choices.
 
+## Day 20
+
+What did you learn about loading the model and dataset?
+
+- **4-bit Quantization:** Loading the model in 4-bit using `BitsAndBytesConfig` is what makes training a 3.8B parameter model on a 6GB GPU possible. Without it, the model wouldn't even fit in memory.
+- **Data Splitting:** Splitting the dataset into a 90% training and 10% evaluation set is crucial for monitoring overfitting. The evaluation set tells us how well the model generalizes to unseen data.
+
+## Day 21
+
+What did you learn about setting up the training loop?
+
+- **SFTTrainer:** Hugging Face's `SFTTrainer` significantly simplifies the training process by handling the training loop, gradient accumulation, and evaluation steps internally.
+- **MLflow Integration:** By wrapping the training process in an `mlflow.start_run()` block, all hyperparameters and final metrics are automatically logged, creating a reproducible record of the experiment.
+
+## Day 22
+
+Why is a small test run important?
+
+- **Failing Fast:** Running a small test with just 200 examples and 1 epoch allows you to catch critical errors—like CUDA out-of-memory errors or tokenization issues—in minutes rather than waiting hours for a full run to crash.
+
+## Day 23
+
+What did you observe during the full training run?
+
+- **Loss Curve:** The steady decrease in training loss confirmed that the model was actively learning from the dataset.
+- **Storage Efficiency:** Saving only the LoRA adapter weights instead of the full model meant the final output was just ~10-20 MB, making it extremely lightweight and portable.
+
+## Day 24
+
+How did the fine-tuned model compare to the base model?
+
+- **Persona Shift:** The fine-tuned model successfully adopted the persona of a helpful, cautious medical assistant, consistently providing medical context while advising the patient to see a doctor.
+- **Tuning Generation:** I learned that generation parameters like `repetition_penalty` and `temperature` are critical. A low repetition penalty can cause the model to get stuck in a degeneration loop (repeating the same phrases), which can be fixed during inference without retraining.
+
+## Day 25
+
+What did you learn about pushing to Hugging Face?
+
+- **Direct Upload:** You don't need to load the model into memory to push it to the Hub. Using `HfApi.upload_folder` allows you to upload the saved adapter directory directly, saving time and VRAM.
+- **Model Cards:** A model card is essential for communicating the model's purpose, training details, and limitations (e.g., that it is not a substitute for professional medical advice).

@@ -25,6 +25,7 @@ models/
 # MLflow
 mlruns/
 mlartifacts/
+mlflow.db
 evaluation_results.json
 
 # OS

@@ -13,7 +13,7 @@ import os
 import torch
 import mlflow
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, get_peft_model, TaskType
 from trl import SFTTrainer, SFTConfig
 from datasets import Dataset
@@ -47,12 +47,19 @@ def load_model_and_tokenizer():
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16,
+        bnb_4bit_compute_dtype=torch.bfloat16,
         bnb_4bit_use_double_quant=True  # Nested quantization — saves extra VRAM
     )
 
+    # Patch config for Phi-3 rope_scaling issue
+    config = AutoConfig.from_pretrained(MODEL_NAME, trust_remote_code=True)
+    if hasattr(config, "rope_scaling") and config.rope_scaling:
+        # Phi-3 modeling code expects rope_scaling to be None unless it's "longrope"
+        config.rope_scaling = None
+
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
+        config=config,
         quantization_config=bnb_config,
         device_map="auto",
         trust_remote_code=True
@@ -133,7 +140,7 @@ def train():
         gradient_accumulation_steps=4,   # Effective batch = BATCH_SIZE * 4 = 8
         gradient_checkpointing=True,     # Trade compute for VRAM — necessary on 6GB
         learning_rate=LEARNING_RATE,
-        fp16=True,                        # Float16 compute — faster on RTX 4050
+        bf16=True,                        # BFloat16 compute — faster and prevents GradScaler crash on RTX 4050
         logging_steps=50,
         eval_strategy="steps",
         eval_steps=200,
@@ -193,7 +200,7 @@ def train():
     print(f"\nSaving adapter weights to {OUTPUT_DIR}...")
     model.save_pretrained(OUTPUT_DIR)
     tokenizer.save_pretrained(OUTPUT_DIR)
-    print(f"✓ Done! Adapter saved to {OUTPUT_DIR}/")
+    print(f"[Done] Adapter saved to {OUTPUT_DIR}/")
     print("  Files: adapter_config.json, adapter_model.safetensors, tokenizer files")
 
 
