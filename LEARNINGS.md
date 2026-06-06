@@ -182,3 +182,13 @@ What does the training script structure look like? Why is it organized this way?
 - **Why write the full script before running it?** Writing the skeleton first forces you to think through the entire flow — what inputs each function needs, what it returns, how MLflow wraps around the training loop — before you're staring at a 4-hour training job. Bugs caught before training start are cheap; bugs caught 3 hours in are expensive.
 - **The MLflow `with mlflow.start_run()` block wraps the entire training call.** This means if training crashes halfway through, the run is still logged as a failed run with whatever metrics were collected before the crash — which is valuable diagnostic information.
 - **`gradient_checkpointing=True` is non-negotiable on 6GB VRAM.** It trades compute for memory: instead of storing all intermediate activations during the forward pass (needed for backprop), it recomputes them on the fly during backprop. Training is ~20% slower but uses ~40% less VRAM.
+
+## Day 19
+
+Week 2 summary — what does the full data pipeline look like? What did spot-checking reveal?
+
+- **The full data pipeline from raw to ready-to-train is three steps:** (1) `load_dataset()` downloads ~100k examples from HuggingFace, (2) `is_good_example()` filters out ~15–20% of low-quality rows, (3) `format_for_training()` wraps each example in Phi-3 Mini's `<|system|>/<|user|>/<|assistant|>` chat format and saves it as a CSV. The whole thing runs with one command: `python src/training/data_prep.py`.
+- **Spot-checking formatted examples revealed one subtle issue to watch for:** some `input` fields from the raw dataset contain newlines and extra whitespace mid-sentence. These don't break training but they look untidy in the formatted text. The current filtering handles the worst cases (empty or near-empty inputs), but a future improvement would be to strip and normalize whitespace inside `data_prep.py`.
+- **Looking ahead to Week 3:** The training script is already fully written in `train.py` — the next step is just running it. The plan: start with a 200-example smoke test to confirm there are no OOM or formatting errors, then kick off the full 10k-example run. The thing to watch during training is the loss curve — it should decrease steadily. A loss that stays flat means the learning rate is too low; a loss that spikes means the learning rate is too high or the data formatting is wrong.
+- **What Week 2 taught overall:** Data preparation is not glamorous but it's where most of the actual model quality is determined. The model can only be as good as what it's trained on — getting the format exactly right and filtering aggressively for quality matters more than most hyperparameter choices.
+

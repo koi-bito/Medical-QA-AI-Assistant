@@ -142,7 +142,7 @@ def train():
         save_total_limit=2,              # Keep only the 2 most recent checkpoints
         warmup_ratio=0.03,               # 3% of steps as warmup
         lr_scheduler_type="cosine",
-        max_seq_length=MAX_SEQ_LEN,
+        max_length=MAX_SEQ_LEN,
         dataset_text_field="text",
         report_to="none",                # We use MLflow instead of wandb/tensorboard
     )
@@ -171,7 +171,7 @@ def train():
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             args=training_args,
-            tokenizer=tokenizer,
+            processing_class=tokenizer,  # TRL >= 1.0: renamed from tokenizer=
         )
 
         print("\nStarting training... (this will take 3-5 hours on RTX 4050)")
