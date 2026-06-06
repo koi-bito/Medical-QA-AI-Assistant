@@ -2,7 +2,7 @@
 
 > A medical Q&A chatbot built with a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
 
-**Status:** Week 1–2 — Environment Setup & Data Preparation
+**Status:** Week 1–2 Complete — Environment Setup & Data Preparation ✅ | Next: Week 3 — Fine-tuning
 
 ---
 
@@ -45,14 +45,20 @@ medical-qa-assistant/
 │   └── processed/           # Cleaned and formatted data (DVC tracked)
 ├── models/                  # Fine-tuned adapter weights (gitignored)
 ├── notebooks/               # Exploration and evaluation notebooks
+│   ├── 01_data_exploration.ipynb
+│   ├── 02_data_analysis.ipynb
+│   ├── 03_model_exploration.ipynb
+│   └── 04_qlora_exploration.ipynb
 ├── src/
-│   ├── training/            # Data prep and training scripts
-│   ├── rag/                 # RAG pipeline (collection, chunking, retrieval)
-│   ├── api/                 # FastAPI backend
-│   ├── inference/           # Groq cloud inference client
-│   └── evaluation/          # Evaluation script
-├── tests/                   # API tests
-├── app.py                   # Gradio entry point (HuggingFace Spaces)
+│   ├── training/
+│   │   ├── data_prep.py     # Clean + format the dataset
+│   │   └── train.py         # QLoRA fine-tuning script
+│   ├── rag/                 # RAG pipeline (Week 4)
+│   ├── api/                 # FastAPI backend (Week 5)
+│   ├── inference/           # Groq cloud inference client (Week 5)
+│   └── evaluation/          # Evaluation script (Week 6)
+├── tests/                   # pytest API tests (Week 6)
+├── app.py                   # Gradio entry point — HuggingFace Spaces (Week 7)
 ├── requirements.txt
 └── .gitignore
 ```
@@ -61,8 +67,8 @@ medical-qa-assistant/
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/medical-qa-assistant.git
-cd medical-qa-assistant
+git clone https://github.com/koi-bito/Medical-QA-AI-Assistant.git
+cd Medical-QA-AI-Assistant
 
 # Create virtual environment
 py -3.13 -m venv medqa_env
@@ -71,6 +77,32 @@ medqa_env\Scripts\activate  # Windows
 # Install dependencies
 pip install -r requirements.txt
 ```
+
+## Running the Data Pipeline
+
+```bash
+# Step 1: Download, clean, and format the training data (~5 min)
+python src/training/data_prep.py
+
+# Step 2: Run fine-tuning (~3–5 hrs on RTX 4050)
+python src/training/train.py
+
+# Step 3: View training metrics
+mlflow ui   # then open http://localhost:5000
+```
+
+## Progress
+
+| Week | Topic | Status |
+|------|-------|--------|
+| Pre-Week (Days 1–5) | Foundations — NN, Embeddings, RAG, HuggingFace | ✅ Done |
+| Week 1 (Days 6–12) | Environment Setup — Python, CUDA, Libraries, GitHub | ✅ Done |
+| Week 2 (Days 13–19) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done |
+| Week 3 (Days 20–26) | Fine-tuning — QLoRA training on Phi-3 Mini | 🔄 Next |
+| Week 4 (Days 27–33) | RAG Pipeline — ChromaDB, PubMedBERT embeddings | ⏳ Upcoming |
+| Week 5 (Days 34–40) | API — FastAPI backend + Gradio UI | ⏳ Upcoming |
+| Week 6 (Days 41–47) | Evaluation + CI/CD | ⏳ Upcoming |
+| Week 7 (Days 48–54) | Deployment — HuggingFace Spaces | ⏳ Upcoming |
 
 ## Limitations
 

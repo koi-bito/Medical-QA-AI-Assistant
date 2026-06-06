@@ -95,3 +95,90 @@ What is the purpose of each folder in the project structure?
 - **src/inference/** — Groq API client for fast cloud inference in the public demo.
 - **src/evaluation/** — Script that evaluates the system on a fixed set of test questions.
 - **tests/** — pytest test files for automated testing of the API.
+
+## Day 10
+
+What does one training example look like after loading with `pandas`? What did you observe exploring the data?
+
+- **The dataset has three columns: `instruction`, `input`, and `output`.** The `instruction` field is identical for almost every row ("If you are a doctor, please answer the medical questions based on the patient's description."), so it acts as a fixed system prompt rather than a variable input.
+- **The `input` field is the real patient question** — ranging from a single line ("I have a headache") to several paragraphs describing complex symptom histories. Quality varies a lot.
+- **The `output` field contains the doctor's response.** The best answers are 200–800 characters long, specific, and end with a recommendation to see a professional. The worst are one-liners like "Please consult a doctor" — not useful for training.
+- **Key insight:** You can't just dump the raw dataset into training. Looking at it manually revealed that a significant portion of examples are either too short to teach the model anything or so long they'd overflow the model's context window.
+
+## Day 11
+
+Why is experiment tracking useful? What would happen if you didn't track your runs?
+
+- **Experiment tracking is like a lab notebook for ML.** Without it, after 3 runs you won't remember which hyperparameters produced which loss. With MLflow, every run is permanently logged — the settings, the metrics, and when it was run.
+- **The practical problem it solves:** If you train twice with different learning rates and don't track it, you're forced to either remember or re-run everything. MLflow makes every run reproducible and comparable in a browser UI with zero extra effort.
+- **What surprised me:** MLflow creates a local `mlruns/` folder automatically. You don't need a server — `mlflow ui` just reads that folder. The UI at `localhost:5000` shows every experiment run as a row in a table, fully searchable.
+
+## Day 12
+
+Week 1 summary — what was the hardest part? What surprised you?
+
+- **Hardest part: the PyTorch + CUDA setup (Day 7).** Getting `torch.cuda.is_available()` to return `True` required making sure the CUDA version in the `pip install` URL matched the actual driver version shown by `nvidia-smi`. One mismatch and the GPU is completely invisible to PyTorch.
+- **Most surprising:** How many libraries are needed just to _set up_ the project before writing a single line of real ML code. `bitsandbytes`, `accelerate`, `peft`, `trl` — each one solves a specific hard problem (quantization, hardware abstraction, adapter training, supervised fine-tuning loop). The ecosystem is mature but also complex.
+- **Biggest lesson:** Virtual environments are non-negotiable. Installing ML libraries globally would have destroyed my other Python setups.
+
+## Day 13
+
+What does good vs bad data look like in the ChatDoctor dataset?
+
+- **Good examples:** Answers that are 200–1000 characters, address the specific symptom mentioned, explain a likely cause, give a practical recommendation, and end with advice to see a professional. These teach the model both _what to say_ and _how to say it_.
+- **Bad examples — too short:** Responses like "Please see a doctor" or "I cannot diagnose you." These have no information content and would train the model to be evasive rather than helpful.
+- **Bad examples — too long:** Some answers exceed 2000+ characters and cover every possible edge case. These overflow the model's context window when combined with the system prompt and question, causing the tokenizer to silently truncate them — which means the model would be trained on incomplete, cut-off answers.
+- **Key insight:** The `answer_length` distribution has a long right tail. The bulk of examples are 200–800 characters, which is the sweet spot for the 512-token `MAX_SEQ_LEN` we're using.
+
+## Day 14
+
+What filtering decisions did you make in `data_prep.py`? Why those thresholds?
+
+- **Minimum output length of 100 characters:** Anything shorter is either a non-answer ("Please consult a doctor") or so brief it teaches nothing. 100 characters is roughly 2–3 sentences, which is the minimum for a useful medical response.
+- **Maximum output length of 2000 characters:** Phi-3 Mini has a 4k token context window. Once you add the system prompt (~100 tokens), the user question (~100 tokens), and special tokens, an output of 2000 characters (~500 tokens) sits comfortably within the 512 `MAX_SEQ_LEN` training limit.
+- **Minimum input length of 10 characters:** Filters out examples where the patient question is empty or just a punctuation mark. A model can't learn to answer a question that doesn't exist.
+- **Result:** After cleaning, roughly 80–85% of examples pass. The filters are intentionally conservative — it's better to keep a slightly mediocre example than to throw away too much data.
+
+## Day 15
+
+Why does the training format matter so much? What is the Phi-3 chat format?
+
+- **LLMs are trained with special tokens that mark speaker turns.** Phi-3 Mini uses `<|system|>`, `<|user|>`, `<|assistant|>`, and `<|end|>`. If you feed data without these tokens, the model can't distinguish who said what, and it learns a jumbled mix of question and answer text.
+- **The format we use:**
+  ```
+  <|system|>
+  You are a knowledgeable medical assistant...<|end|>
+  <|user|>
+  {patient question}<|end|>
+  <|assistant|>
+  {doctor answer}<|end|>
+  ```
+- **The system prompt is key.** It sets the model's persona and tells it to always recommend consulting a real doctor. Without it, the fine-tuned model might answer confidently even when it should be uncertain.
+- **Lesson:** The formatting function in `data_prep.py` is just string concatenation — but getting it wrong would silently poison the entire training dataset. Always print a few examples before committing to a full run.
+
+## Day 16
+
+How did the base Phi-3 Mini perform on medical questions before any fine-tuning?
+
+- **Generally knowledgeable but generic.** On straightforward questions like "What are the symptoms of type 2 diabetes?", the base model gave accurate, well-structured answers. It already knows medicine from pre-training.
+- **Weak on patient-style phrasing.** When questions were phrased the way a real patient would write them — informal, anxious, full of symptom descriptions — the model sometimes gave overly clinical or detached responses, not matching the tone of the ChatDoctor dataset.
+- **Occasional hallucination.** On edge-case questions it gave confident-sounding answers that were partially inaccurate. This is the core problem fine-tuning addresses: teaching the model _when to hedge_ and _how to respond in a medical assistant voice_, not just what medicine is.
+- **This is the baseline.** After training, we'll run the same 5 questions and compare to see if fine-tuning actually improved the responses.
+
+## Day 17
+
+What does the trainable% tell you? What would happen if you increased the LoRA rank?
+
+- **The trainable% (~0.05%) tells you the efficiency of QLoRA.** Instead of updating all 3.8 billion parameters, we update roughly 2 million — the tiny LoRA adapter matrices. This is why training fits on a 6GB GPU that couldn't even _load_ a full-precision version of this model.
+- **If you increase the rank (r=16 → r=64):** The adapter matrices get larger and more expressive — the model can learn more complex transformations. But trainable parameters increase roughly linearly with rank, so VRAM usage goes up. For our 6GB GPU, r=16 is the sweet spot: expressive enough to learn medical tone and response style, small enough to train without OOM errors.
+- **Why target `q_proj`, `v_proj`, `k_proj`, `o_proj`?** These are the Query, Value, Key, and Output projection matrices inside each attention head — the mechanism the model uses to decide which parts of the input to focus on. Adapting these layers has been empirically shown to capture most of the fine-tuning signal. Adapting feed-forward layers too helps marginally but costs more memory.
+- **Key insight from the rank experiment:** Going from r=4 to r=16 roughly quadruples trainable parameters. Going from r=16 to r=64 quadruples again. The loss improvement between r=16 and r=32 is usually marginal — r=16 is the standard recommendation for this model size.
+
+## Day 18
+
+What does the training script structure look like? Why is it organized this way?
+
+- **`train.py` is split into three clean functions:** `load_model_and_tokenizer()`, `load_training_data()`, and `train()`. This separation means each piece can be tested independently — you can verify the model loads correctly before touching the data, and vice versa.
+- **Why write the full script before running it?** Writing the skeleton first forces you to think through the entire flow — what inputs each function needs, what it returns, how MLflow wraps around the training loop — before you're staring at a 4-hour training job. Bugs caught before training start are cheap; bugs caught 3 hours in are expensive.
+- **The MLflow `with mlflow.start_run()` block wraps the entire training call.** This means if training crashes halfway through, the run is still logged as a failed run with whatever metrics were collected before the crash — which is valuable diagnostic information.
+- **`gradient_checkpointing=True` is non-negotiable on 6GB VRAM.** It trades compute for memory: instead of storing all intermediate activations during the forward pass (needed for backprop), it recomputes them on the fly during backprop. Training is ~20% slower but uses ~40% less VRAM.
