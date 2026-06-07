@@ -8,19 +8,19 @@
 
 ## Tech Stack
 
-| Component | Technology |
-|---|---|
-| Base Model | Phi-3 Mini (3.8B) |
-| Fine-tuning | QLoRA via PEFT + TRL |
-| Embeddings | PubMedBERT (domain-specific) |
-| Vector DB | ChromaDB |
-| Re-ranking | Cross-Encoder (ms-marco) |
-| API | FastAPI |
-| UI | Gradio |
-| Cloud Inference | Groq API |
-| Experiment Tracking | MLflow |
-| Data Versioning | DVC |
-| CI/CD | GitHub Actions |
+| Component           | Technology                   |
+| ------------------- | ---------------------------- |
+| Base Model          | Phi-3 Mini (3.8B)            |
+| Fine-tuning         | QLoRA via PEFT + TRL         |
+| Embeddings          | PubMedBERT (domain-specific) |
+| Vector DB           | ChromaDB                     |
+| Re-ranking          | Cross-Encoder (ms-marco)     |
+| API                 | FastAPI                      |
+| UI                  | Gradio                       |
+| Cloud Inference     | Groq API                     |
+| Experiment Tracking | MLflow                       |
+| Data Versioning     | DVC                          |
+| CI/CD               | GitHub Actions               |
 
 ## Hardware
 
@@ -30,6 +30,7 @@
 ## Model
 
 The fine-tuned LoRA adapter weights are hosted on Hugging Face:
+
 - [**koi-bito/phi3-medical-lora**](https://huggingface.co/koi-bito/phi3-medical-lora)
 
 ## Dataset
@@ -37,6 +38,7 @@ The fine-tuned LoRA adapter weights are hosted on Hugging Face:
 Training data: [`lavita/ChatDoctor-HealthCareMagic-100k`](https://huggingface.co/datasets/lavita/ChatDoctor-HealthCareMagic-100k) — 100k+ real doctor-patient conversations.
 
 Each example has:
+
 - `instruction` — the doctor's role prompt
 - `input` — the patient's question/description
 - `output` — the doctor's response
@@ -98,16 +100,16 @@ mlflow ui   # then open http://localhost:5000
 
 ## Progress
 
-| Week | Topic | Status |
-|------|-------|--------|
-| Pre-Week (Days 1–5) | Foundations — NN, Embeddings, RAG, HuggingFace | ✅ Done |
-| Week 1 (Days 6–12) | Environment Setup — Python, CUDA, Libraries, GitHub | ✅ Done |
-| Week 2 (Days 13–19) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done |
-| Week 3 (Days 20–26) | Fine-tuning — QLoRA training on Phi-3 Mini | 🔄 Next |
-| Week 4 (Days 27–33) | RAG Pipeline — ChromaDB, PubMedBERT embeddings | ⏳ Upcoming |
-| Week 5 (Days 34–40) | API — FastAPI backend + Gradio UI | ⏳ Upcoming |
-| Week 6 (Days 41–47) | Evaluation + CI/CD | ⏳ Upcoming |
-| Week 7 (Days 48–54) | Deployment — HuggingFace Spaces | ⏳ Upcoming |
+| Week                | Topic                                                | Status      |
+| ------------------- | ---------------------------------------------------- | ----------- |
+| Pre-Week (Days 1–5) | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done     |
+| Week 1 (Days 6–12)  | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done     |
+| Week 2 (Days 13–19) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done     |
+| Week 3 (Days 20–26) | Fine-tuning — QLoRA training on Phi-3 Mini           | 🔄 Next     |
+| Week 4 (Days 27–33) | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ⏳ Upcoming |
+| Week 5 (Days 34–40) | API — FastAPI backend + Gradio UI                    | ⏳ Upcoming |
+| Week 6 (Days 41–47) | Evaluation + CI/CD                                   | ⏳ Upcoming |
+| Week 7 (Days 48–54) | Deployment — HuggingFace Spaces                      | ⏳ Upcoming |
 
 ## Limitations
 

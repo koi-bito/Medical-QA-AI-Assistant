@@ -252,6 +252,7 @@ Week 3 Review + Buffer
 ### Model Quality & Future Improvements
 
 While the model has successfully adopted the medical assistant persona, the loss plateaued around 5.5-5.6. If I wanted to further improve the quality of the model, I would consider:
+
 - **Lowering the Learning Rate:** The loss curve had some fluctuations. Dropping the LR or extending the warmup could help it settle into a better minimum.
 - **Data Quality:** Implementing stricter filtering on the `ChatDoctor` dataset to remove more of the generic "please consult a doctor" answers.
 - **More Data/Epochs:** We only trained on a 10k subset of the 100k available examples for manageable training times. Using the full dataset over 1-2 epochs would likely improve the breadth of the model's medical knowledge.
