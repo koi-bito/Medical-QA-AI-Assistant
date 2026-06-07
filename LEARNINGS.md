@@ -232,3 +232,26 @@ What did you learn about pushing to Hugging Face?
 
 - **Direct Upload:** You don't need to load the model into memory to push it to the Hub. Using `HfApi.upload_folder` allows you to upload the saved adapter directory directly, saving time and VRAM.
 - **Model Cards:** A model card is essential for communicating the model's purpose, training details, and limitations (e.g., that it is not a substitute for professional medical advice).
+
+## Day 26
+
+Week 3 Review + Buffer
+
+### Training Details
+
+- **Model:** `microsoft/Phi-3-mini-4k-instruct`
+- **Hyperparameters:**
+  - Epochs: 2
+  - Batch Size: 2 (with 4 gradient accumulation steps)
+  - Learning Rate: 2e-4
+  - LoRA Rank (r): 16
+  - LoRA Alpha: 32
+- **Final Training Loss:** ~5.589
+- **Final Eval Loss:** ~5.613
+
+### Model Quality & Future Improvements
+
+While the model has successfully adopted the medical assistant persona, the loss plateaued around 5.5-5.6. If I wanted to further improve the quality of the model, I would consider:
+- **Lowering the Learning Rate:** The loss curve had some fluctuations. Dropping the LR or extending the warmup could help it settle into a better minimum.
+- **Data Quality:** Implementing stricter filtering on the `ChatDoctor` dataset to remove more of the generic "please consult a doctor" answers.
+- **More Data/Epochs:** We only trained on a 10k subset of the 100k available examples for manageable training times. Using the full dataset over 1-2 epochs would likely improve the breadth of the model's medical knowledge.

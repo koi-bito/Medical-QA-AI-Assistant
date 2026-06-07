@@ -27,6 +27,11 @@
 - GPU: NVIDIA GeForce RTX 4050 Laptop GPU (6GB VRAM)
 - Training: QLoRA 4-bit quantization
 
+## Model
+
+The fine-tuned LoRA adapter weights are hosted on Hugging Face:
+- [**koi-bito/phi3-medical-lora**](https://huggingface.co/koi-bito/phi3-medical-lora)
+
 ## Dataset
 
 Training data: [`lavita/ChatDoctor-HealthCareMagic-100k`](https://huggingface.co/datasets/lavita/ChatDoctor-HealthCareMagic-100k) — 100k+ real doctor-patient conversations.
