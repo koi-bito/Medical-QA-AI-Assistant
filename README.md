@@ -102,10 +102,10 @@ mlflow ui   # then open http://localhost:5000
 
 | Week                | Topic                                                | Status         |
 | ------------------- | ---------------------------------------------------- | -------------- |
-| Pre-Week (Days 1–5) | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
-| Week 1 (Days 6–12)  | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
-| Week 2 (Days 13–19) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
-| Week 3 (Days 20–26) | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
+| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md) | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
+| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
+| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
+| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md) | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
 | Week 4 (Days 27–33) | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | 🔄 In Progress |
 | Week 5 (Days 34–40) | API — FastAPI backend + Gradio UI                    | ⏳ Upcoming    |
 | Week 6 (Days 41–47) | Evaluation + CI/CD                                   | ⏳ Upcoming    |
