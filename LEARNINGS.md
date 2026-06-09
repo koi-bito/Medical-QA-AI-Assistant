@@ -263,3 +263,11 @@ What does the data fetched from MedlinePlus look like? Why are we using it?
 
 - **MedlinePlus API** provides public domain, free health topic summaries. The retrieved files contain structured XML/text describing causes, symptoms, diagnostic procedures, and treatments for each health topic.
 - **Why we are using it:** It provides highly reliable, trusted medical reference content. Grounding the fine-tuned LLM's responses using this corpus in our RAG pipeline will help reduce hallucination and ensure clinical accuracy.
+
+## Day 28
+
+Why do we need to chunk documents for RAG, and why use overlapping chunks?
+
+- **Context Limits:** Language models have strict limits on how much text they can process at once (context window). We can't feed a massive medical document into the prompt.
+- **Chunking:** By splitting documents into smaller pieces (e.g., 400 words), we can search for and retrieve only the specific paragraphs most relevant to a user's question.
+- **Overlap:** We use an overlap (e.g., 50 words) between consecutive chunks to ensure that a sentence or concept isn't accidentally cut in half at a chunk boundary, which preserves meaning and context.
