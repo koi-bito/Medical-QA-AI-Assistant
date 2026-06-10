@@ -271,3 +271,25 @@ Why do we need to chunk documents for RAG, and why use overlapping chunks?
 - **Context Limits:** Language models have strict limits on how much text they can process at once (context window). We can't feed a massive medical document into the prompt.
 - **Chunking:** By splitting documents into smaller pieces (e.g., 400 words), we can search for and retrieve only the specific paragraphs most relevant to a user's question.
 - **Overlap:** We use an overlap (e.g., 50 words) between consecutive chunks to ensure that a sentence or concept isn't accidentally cut in half at a chunk boundary, which preserves meaning and context.
+
+## Day 29
+
+Why use a vector database like ChromaDB? What does embedding chunks accomplish?
+
+- **Vector Database:** Traditional databases search for exact keyword matches. A vector database stores text as embeddings (numbers), allowing us to perform semantic searches — finding text that has a similar *meaning* to the user's question, even if different words are used.
+- **ChromaDB:** A lightweight, local vector database that is perfect for this project. It stores our medical chunks and their corresponding embeddings persistently on disk.
+
+## Day 30
+
+How does the basic retrieval function work?
+
+- **Semantic Search:** When a user asks a question, we first convert their question into an embedding using the exact same `SentenceTransformer` model (PubMedBERT) used for the document chunks.
+- **Finding Matches:** We then query ChromaDB to calculate the distance (similarity) between the question embedding and all chunk embeddings. The database returns the top `k` (e.g., 10) most similar chunks.
+
+## Day 31
+
+Why add Cross-Encoder Re-ranking? Doesn't the vector database already find the best chunks?
+
+- **Bi-Encoder vs. Cross-Encoder:** The vector database uses a Bi-Encoder (SentenceTransformer) which is very fast but evaluates the question and document separately. A Cross-Encoder processes both the question and the document together, allowing it to capture deep interactions between the words.
+- **The Reranking Pipeline:** We use the fast vector database to retrieve a candidate pool of 10 chunks, and then use the slower, but much more accurate Cross-Encoder to score these 10 chunks and pick the absolute best 3.
+- **Observation:** In tests, the Cross-Encoder successfully re-ordered chunks to prioritize more highly relevant medical context (e.g., shifting from a generic paragraph to one specifically addressing treatments when asked about treatments).
