@@ -117,7 +117,7 @@ python -m src.rag.demo
 | [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
 | [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
 | [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md) | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
-| Week 4 (Days 27–33) | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
+| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md) | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
 | Week 5 (Days 34–40) | API — FastAPI backend + Gradio UI                    | 🔄 In Progress |
 | Week 6 (Days 41–47) | Evaluation + CI/CD                                   | ⏳ Upcoming    |
 | Week 7 (Days 48–54) | Deployment — HuggingFace Spaces                      | ⏳ Upcoming    |

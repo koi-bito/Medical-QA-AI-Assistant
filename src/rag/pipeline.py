@@ -53,7 +53,7 @@ Medical context:
     # Step 3: Generate answer
     inputs = tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
     with torch.no_grad():
-        outputs = model.generate(**inputs, max_new_tokens=300, do_sample=False)
+        outputs = model.generate(**inputs, max_new_tokens=600, do_sample=False)
 
     input_length = inputs.input_ids.shape[1]
     generated_tokens = outputs[0][input_length:]
