@@ -55,8 +55,9 @@ Medical context:
     with torch.no_grad():
         outputs = model.generate(**inputs, max_new_tokens=300, do_sample=False)
 
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    answer   = response.split("<|assistant|>")[-1].strip()
+    input_length = inputs.input_ids.shape[1]
+    generated_tokens = outputs[0][input_length:]
+    answer = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
 
     return {"answer": answer, "sources": context_chunks}
 

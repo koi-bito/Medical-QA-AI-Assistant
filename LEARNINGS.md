@@ -276,7 +276,7 @@ Why do we need to chunk documents for RAG, and why use overlapping chunks?
 
 Why use a vector database like ChromaDB? What does embedding chunks accomplish?
 
-- **Vector Database:** Traditional databases search for exact keyword matches. A vector database stores text as embeddings (numbers), allowing us to perform semantic searches — finding text that has a similar *meaning* to the user's question, even if different words are used.
+- **Vector Database:** Traditional databases search for exact keyword matches. A vector database stores text as embeddings (numbers), allowing us to perform semantic searches — finding text that has a similar _meaning_ to the user's question, even if different words are used.
 - **ChromaDB:** A lightweight, local vector database that is perfect for this project. It stores our medical chunks and their corresponding embeddings persistently on disk.
 
 ## Day 30
@@ -293,3 +293,19 @@ Why add Cross-Encoder Re-ranking? Doesn't the vector database already find the b
 - **Bi-Encoder vs. Cross-Encoder:** The vector database uses a Bi-Encoder (SentenceTransformer) which is very fast but evaluates the question and document separately. A Cross-Encoder processes both the question and the document together, allowing it to capture deep interactions between the words.
 - **The Reranking Pipeline:** We use the fast vector database to retrieve a candidate pool of 10 chunks, and then use the slower, but much more accurate Cross-Encoder to score these 10 chunks and pick the absolute best 3.
 - **Observation:** In tests, the Cross-Encoder successfully re-ordered chunks to prioritize more highly relevant medical context (e.g., shifting from a generic paragraph to one specifically addressing treatments when asked about treatments).
+
+## Day 32
+
+What did you learn about wiring the full RAG pipeline together?
+
+- **Prompting with Context:** Passing retrieved context to the model requires careful prompt construction to ensure the model distinguishes between its instructions, the background context, and the user's question.
+- **Robust Output Parsing:** When decoding the model's output, `skip_special_tokens=True` removes tokens like `<|assistant|>`. Instead of relying on string splitting to find where the answer begins, it is much safer to slice the output token IDs using the length of the input prompt.
+
+## Day 33
+
+![First RAG Response](docs/first_response.png)
+
+What are the takeaways from building the local Gradio demo and completing Week 4?
+
+- **Gradio Simplicity:** Building an interactive chat UI with Gradio requires just a few lines of code. It seamlessly wraps our complex multi-model RAG pipeline.
+- **RAG Effectiveness:** Seeing the pipeline work end-to-end proves the value of RAG. Grounding the LLM in verified MedlinePlus chunks forces the model to synthesize real facts rather than hallucinate, making the system significantly more trustworthy.
