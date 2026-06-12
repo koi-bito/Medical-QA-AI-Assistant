@@ -1,3 +1,21 @@
+import sys
+import numpy as np
+from unittest.mock import MagicMock
+
+# Mock the heavy ML pipeline so tests can run without PyTorch or actual models
+mock_pipeline = MagicMock()
+mock_embedder = MagicMock()
+# Mock encode to return a dummy 2D array for the cosine similarity math
+mock_embedder.encode.return_value = np.array([[1.0, 0.0, 0.0]])
+
+mock_pipeline.load_all.return_value = (None, None, mock_embedder, None, None)
+mock_pipeline.answer_question.return_value = {
+    "answer": "This is a mocked test answer that is long enough.",
+    "sources": ["Mock Source 1"]
+}
+
+sys.modules['src.rag.pipeline'] = mock_pipeline
+
 import pytest
 from fastapi.testclient import TestClient
 from src.api.main import app
