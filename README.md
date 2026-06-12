@@ -10,10 +10,10 @@
 
 ## 📚 Documentation
 
-| Document                                 | Description                                                                                           |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [🏗️ System Design](SYSTEM_DESIGN.md)     | Full architecture walkthrough — data pipeline, QLoRA training, RAG design decisions, and API layer    |
-| [🧠 Engineering Learnings](LEARNINGS.md) | Day-by-day personal learnings — what was built, what was learned, and what surprised us along the way |
+| Document                             | Description                                                                                           |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| [🏗️ System Design](SYSTEM_DESIGN.md) | Full architecture walkthrough — data pipeline, QLoRA training, RAG design decisions, and API layer    |
+| [🧠 Learnings](LEARNINGS.md)         | Day-by-day personal learnings — what was built, what was learned, and what surprised us along the way |
 
 ---
 
