@@ -1,180 +1,167 @@
-# 🏥 Medical QA AI Assistant — System Design & Architecture
+# Medical QA AI Assistant — System Design
 
-> **A production-style medical Q&A system** combining a QLoRA fine-tuned LLM with a two-pass RAG pipeline, served via a FastAPI backend and deployed on Hugging Face Spaces.
+This document explains how the system works and why I made the design decisions I did. It's written for someone who wants to actually understand the architecture, not just skim a bullet list.
 
 ---
 
-## 🗺️ High-Level Architecture
+## The Problem
 
-The system is divided into two primary phases:
+Medical questions are one of the most common things people search online, and most of the time they get back SEO-optimized blog posts or generic WebMD pages. I wanted to build something that could give a more direct, contextualized answer — while being honest about its limitations.
 
-- **Offline:** Everything that happens once — data processing, model training, and populating the vector database.
-- **Runtime:** Everything that happens live — accepting a user's question and returning a grounded, accurate answer.
+The challenge is that a language model alone isn't reliable enough for this. It can sound confident while being completely wrong. So the architecture needed two things working together: a model fine-tuned to *respond like a medical assistant*, and a retrieval system grounded in *actual verified medical text*.
+
+---
+
+## How It Works (High Level)
+
+There are two phases — things that happen once (offline), and things that happen every time someone asks a question (runtime).
 
 ```mermaid
 graph TD
-    subgraph "🔧 Offline Processes (Run Once)"
-        A["📄 Raw ChatDoctor Dataset\n(100k doctor-patient conversations)"]
-        B["✅ Processed & Formatted Data\n(filtered + Phi-3 chat template)"]
-        C["🧠 Phi-3 Medical LoRA Adapters\n(saved to models/)"]
-        D["🌐 MedlinePlus Articles\n(20 health topics, public domain)"]
-        E["📦 Text Chunks\n(400 words, 50-word overlap)"]
-        F[("🗄️ ChromaDB\nVector Store")]
+    subgraph "Offline — Run Once"
+        A["ChatDoctor Dataset\n(100k doctor-patient Q&As)"] -->|filter + format| B["Cleaned Training Data"]
+        B -->|QLoRA fine-tuning| C["Phi-3 LoRA Adapter\n(saved to models/)"]
 
-        A -->|"Filter & Format\ndata_prep.py"| B
-        B -->|"QLoRA Fine-tuning\ntrain.py (3-5 hrs)"| C
-        D -->|"Clean & Chunk\nchunking.py"| E
-        E -->|"PubMedBERT Embeddings\nvector_store.py"| F
+        D["MedlinePlus Articles\n(20 health topics)"] -->|clean + chunk| E["~400-word text chunks"]
+        E -->|PubMedBERT embeddings| F[("ChromaDB\nvector store")]
     end
 
-    subgraph "⚡ Runtime Execution (Per Request)"
-        G["👤 User Question"]
-        H["🔌 FastAPI\n/ask endpoint"]
-        I["🔍 Cross-Encoder\nRe-ranker"]
-        J["📝 Prompt Builder\nContext + Query"]
-        K["🤖 Phi-3 Mini + LoRA\n4-bit Quantized"]
-        L["💬 Gradio UI"]
-
-        G --> H
-        H -->|"1. Embed & Search\n(Top 10 chunks)"| F
-        F -->|"Candidate chunks"| I
-        I -->|"2. Re-rank\n(Top 3 chunks)"| J
+    subgraph "Runtime — Per Request"
+        G["User's question"] --> H["FastAPI /ask endpoint"]
+        H -->|embed + search| F
+        F -->|top 10 chunks| I["Cross-Encoder re-ranker"]
+        I -->|top 3 chunks| J["Prompt with context injected"]
         G --> J
-        J -->|"3. Generate\n(Context-grounded prompt)"| K
-        K -->|"Answer + Sources\n+ Confidence + Latency"| H
-        H --> L
+        J -->|generate| K["Phi-3 + LoRA"]
+        K --> H
+        H --> L["Gradio UI"]
     end
 ```
 
----
-
-## 1️⃣ Data Processing Pipeline
-
-> *Establishing a high-quality foundation for model training.*
-
-| Step | Detail |
-|---|---|
-| **Source Dataset** | [`lavita/ChatDoctor-HealthCareMagic-100k`](https://huggingface.co/datasets/lavita/ChatDoctor-HealthCareMagic-100k) |
-| **Min. Output Length** | 100 chars — removes non-informative responses like *"Please consult a doctor"* |
-| **Max. Output Length** | 2000 chars — ensures text fits within the 512-token training limit |
-| **Min. Input Length** | 10 chars — eliminates empty or malformed patient queries |
-| **Output Format** | Phi-3 chat template with `<\|system\|>`, `<\|user\|>`, `<\|assistant\|>` turn markers |
-
-> [!NOTE]
-> After filtering, ~80–85% of examples pass. The filters are conservative — a mediocre example is kept over throwing away too much data.
+The offline work is done once and saved to disk. At runtime, we're just doing retrieval + generation — no training happening live.
 
 ---
 
-## 2️⃣ Model Fine-Tuning (QLoRA)
+## Data Preparation
 
-> *Adapting a general-purpose LLM into a specialized medical assistant.*
+The raw ChatDoctor dataset has 100k examples, but a lot of them are garbage. Things like:
 
-| Parameter | Value | Reason |
-|---|---|---|
-| **Base Model** | `microsoft/Phi-3-mini-4k-instruct` (3.8B) | Strong instruction-following baseline that fits in 6GB VRAM |
-| **Quantization** | 4-bit NormalFloat (NF4) via `bitsandbytes` | Reduces memory footprint from ~8GB → ~2.5GB |
-| **LoRA Rank (r)** | 16 | Optimal balance between expressiveness and parameter count |
-| **Target Layers** | `q_proj`, `v_proj`, `k_proj`, `o_proj` | Attention layers capture the most fine-tuning signal |
-| **Trainable Params** | ~0.05% of total | Only LoRA adapter matrices are updated, not the full model |
-| **Experiment Tracking** | MLflow | Logs hyperparameters, loss curve, and metrics per run |
+- Answers that are just "Please consult a doctor" (useless — the model can't learn anything from that)
+- Answers so long they overflow the context window when combined with the prompt and system message
+- Patient questions that are basically empty
 
-> [!TIP]
-> The output is lightweight LoRA adapter weights (~6MB `.safetensors`), fully decoupled from the 3.8B base model. This makes sharing and versioning trivial.
+So I filtered it down to usable examples using three thresholds:
+
+- **Min output length: 100 chars** — anything shorter is a non-answer
+- **Max output length: 2000 chars** — keeps us safely within the 512-token training limit
+- **Min input length: 10 chars** — rules out empty or near-empty patient queries
+
+After filtering, roughly 80-85% of examples survive. I kept the thresholds conservative because throwing away too much data hurts more than keeping a few mediocre examples.
+
+The examples are then reformatted into the Phi-3 chat template:
+
+```
+<|system|>
+You are a knowledgeable medical assistant...<|end|>
+<|user|>
+{patient question}<|end|>
+<|assistant|>
+{doctor answer}<|end|>
+```
+
+Getting this format exactly right matters a lot. If you skip it or get it wrong, the model trains on jumbled text where it can't distinguish who said what.
 
 ---
 
-## 3️⃣ Retrieval-Augmented Generation (RAG)
+## Fine-Tuning
 
-> *Grounding AI responses in verified medical literature to mitigate hallucination.*
+I used QLoRA on `microsoft/Phi-3-mini-4k-instruct` (3.8B parameters). The full model in 16-bit precision wouldn't even fit in 6GB VRAM, so 4-bit quantization via `bitsandbytes` was the only way to make training feasible on my RTX 4050.
 
-### Why RAG?
-Fine-tuning teaches the model *how* to respond (tone, format, persona). RAG gives the model *what* to say — factual, up-to-date information it can cite. Together they address both *style* and *accuracy*.
+The key insight with LoRA is that you're not retraining the whole model — you freeze all the original weights and inject small trainable adapter matrices into specific layers. For this I targeted the attention projection layers (`q_proj`, `v_proj`, `k_proj`, `o_proj`) since those are where the model learns what to focus on in a conversation. With rank r=16, only about 0.05% of parameters are actually updated.
+
+Training setup:
+- 10k examples, 2 epochs
+- Batch size 2 with 4 gradient accumulation steps (effective batch of 8)
+- Learning rate 2e-4
+- `gradient_checkpointing=True` — essential on 6GB VRAM, trades ~20% speed for ~40% memory savings
+
+Final training loss settled around 5.59. The model successfully adopted the medical assistant persona — more hedged responses, better at saying "see a doctor" in the right contexts, and noticeably less likely to respond with generic filler answers.
+
+All runs were tracked in MLflow, which made it easy to compare the smoke test run vs. the full training run.
+
+---
+
+## RAG Pipeline
+
+Fine-tuning alone isn't enough. The model's weights are frozen after training — it can't know about a specific drug interaction it wasn't trained on, and it can hallucinate with confidence. RAG solves this by giving the model access to retrieved text at inference time.
 
 ### Knowledge Base
-- **Source:** MedlinePlus health topic summaries (public domain, high clinical reliability)
-- **Coverage:** 20 common conditions — diabetes, hypertension, asthma, depression, and more
 
-### Two-Pass Retrieval Strategy
+I used MedlinePlus health topic summaries — they're public domain, clinically reliable, and cover the common conditions a general medical QA system needs to handle. 20 topics including diabetes, hypertension, asthma, depression, migraine, etc.
 
-```
-User Question
-     │
-     ▼
-[1] Bi-Encoder (PubMedBERT)  ──►  Top 10 candidate chunks  (fast, approximate)
-     │
-     ▼
-[2] Cross-Encoder (ms-marco) ──►  Top 3 re-ranked chunks   (slow, precise)
-     │
-     ▼
-Injected into LLM system prompt as context
-```
+### Chunking
 
-| Component | Model | Role |
-|---|---|---|
-| **Embedding** | `pritamdeka/S-PubMedBert-MS-MARCO` | Converts text to medical-domain vectors |
-| **Vector DB** | ChromaDB (local, persistent) | Stores and retrieves chunks by similarity |
-| **Re-ranker** | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Deep relevance scoring of query + chunk pairs |
+Documents are split into ~400-word chunks with 50-word overlap between consecutive chunks. The overlap is important — without it, a sentence can get split across two chunks and lose its meaning entirely.
 
-> [!IMPORTANT]
-> The bi-encoder evaluates the query and documents *separately* — it's fast but approximate. The cross-encoder evaluates them *together*, capturing deep word interactions. This two-pass approach gets the speed of vector search with the accuracy of a cross-encoder.
+### Why Two-Pass Retrieval?
+
+The first pass uses a bi-encoder (PubMedBERT) to convert both the user's question and all document chunks into vectors, then finds the 10 closest chunks by cosine similarity. This is fast but approximate — it finds chunks that are *semantically similar* but doesn't deeply analyze whether they actually answer the question.
+
+The second pass uses a cross-encoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`) which takes each (question, chunk) pair and scores them together. Because it processes them jointly, it captures word-level interactions that the bi-encoder misses. It's slower, but we're only running it on 10 candidates, not thousands — so it stays fast enough.
+
+The top 3 chunks from re-ranking are injected directly into the system prompt before the question is passed to Phi-3.
+
+I used PubMedBERT specifically because a domain-specific medical embedder outperforms a generic one here. Medical vocabulary is unusual — "MI" means myocardial infarction, not the state of Michigan. A model trained on medical text handles that correctly.
 
 ---
 
-## 4️⃣ API & UI Layer
+## API Layer
 
-> *Serving the model to end-users efficiently.*
+The API is built with FastAPI. It exposes two endpoints:
 
-### FastAPI Backend (`src/api/main.py`)
+- `GET /health` — uptime check, returns `{"status": "ok"}`
+- `POST /ask` — takes a question, runs the full pipeline, returns the answer
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/health` | `GET` | Uptime check — returns `{"status": "ok"}` |
-| `/ask` | `POST` | Accepts `{"question": "..."}` and returns a full response |
+The `POST /ask` response looks like this:
 
-**`/ask` Response Shape:**
 ```json
 {
   "answer": "Type 2 diabetes is characterized by...",
-  "sources": ["Diabetes occurs when...", "Blood sugar levels..."],
+  "sources": ["Diabetes occurs when the body...", "Blood sugar control involves..."],
   "confidence": "high",
   "latency_seconds": 4.23
 }
 ```
 
-**Confidence Scoring:** Uses cosine similarity between the question embedding and the retrieved source embeddings. `avg_similarity > 0.5` → `"high"`, `> 0.3` → `"medium"`, else `"low"`.
+The confidence field is a rough heuristic — I compute cosine similarity between the question embedding and the source embeddings. If the average similarity is above 0.5 it's "high", above 0.3 it's "medium", otherwise "low". It's not a calibrated probability, just a sanity signal.
 
-### Gradio UI
-- Wraps the entire multi-model pipeline into a simple web interface
-- Displays both the generated answer and the source medical chunks used to ground it
+One important implementation detail: all models (Phi-3, PubMedBERT, cross-encoder) are loaded once at server startup and held in memory. If you loaded them per-request, every query would take minutes just for initialization.
 
 ---
 
-## 5️⃣ Evaluation & Testing
+## Testing
 
-> *Ensuring correctness before deployment.*
+I wrote four automated tests using FastAPI's `TestClient`:
 
-### Automated API Tests (`tests/test_api.py`)
-Uses FastAPI's `TestClient` to run 4 automated checks:
-- ✅ Health endpoint returns `200 OK`
-- ✅ A valid question returns an answer `> 10 chars`
-- ✅ An empty question returns a `400 Bad Request`
-- ✅ The response includes at least one source chunk
+1. Health check returns 200
+2. A real question returns an answer longer than 10 characters
+3. An empty/too-short question returns a 400 error
+4. The response includes at least one source chunk
 
-### Batch Evaluation Script (`src/evaluation/evaluate.py`)
-Runs the full pipeline on 5 fixed medical questions and checks answers against expected topics using multi-alias keyword matching (e.g., `"urination"` also matches `"polyuria"`, `"frequent urination"`).
+One thing I learned the hard way: you can't run the test suite while the uvicorn server is also running. Both try to load the full model stack into GPU memory, and a 6GB GPU can't hold two copies. Shut down the server first, then run tests.
 
 ---
 
-## 6️⃣ Deployment
+## Deployment
 
-> *Making the system publicly accessible.*
+The fine-tuned LoRA adapter is hosted on [Hugging Face Hub](https://huggingface.co/koi-bito/phi3-medical-lora). At ~6MB it's tiny and easy to version.
 
-| Component | Platform |
-|---|---|
-| **Fine-tuned Model** | [Hugging Face Hub](https://huggingface.co/koi-bito/phi3-medical-lora) |
-| **Cloud Inference** | Groq API (`llama3-8b-8192`) — for fast public demo |
-| **Web App** | Hugging Face Spaces (Gradio) |
-| **CI/CD** | GitHub Actions — runs `pytest` on every push to `main` |
+For the public demo I use Groq (Llama 3 via API) instead of the local Phi-3. The fine-tuned model stays local because Groq doesn't support custom models — but it's fast and free for demo purposes. The README is transparent about this trade-off.
 
-> [!WARNING]
-> **This is an educational project and is NOT a substitute for professional medical advice.** The model may hallucinate. Always verify with a qualified healthcare professional.
+The Gradio frontend wraps everything into a simple chat UI and is deployed to Hugging Face Spaces.
+
+---
+
+## Limitations
+
+This is an educational project. The model will occasionally hallucinate, the knowledge base covers only 20 conditions, and nothing here should be used for actual medical decisions. The system always tells users to consult a real doctor — that's baked into the system prompt.
