@@ -303,8 +303,6 @@ What did you learn about wiring the full RAG pipeline together?
 
 ## Day 33
 
-![First RAG Response](docs/first_response.png)
-
 What are the takeaways from building the local Gradio demo and completing Week 4?
 
 - **Gradio Simplicity:** Building an interactive chat UI with Gradio requires just a few lines of code. It seamlessly wraps our complex multi-model RAG pipeline.
