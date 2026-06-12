@@ -323,3 +323,10 @@ Why are API tests necessary when the manual test works?
 - **TestClient:** The `fastapi.testclient.TestClient` allows us to programmatically simulate HTTP requests to our application. It makes writing tests extremely straightforward.
 - **Catching Regressions:** Automated tests immediately flag if a future code change breaks the API (like failing to return sources). It is the backbone of continuous integration (CI) which we will set up next.
 - **GPU Resource Management:** I learned firsthand that running tests that load models while a local server is already running causes CUDA Out-Of-Memory (OOM) errors on a 6GB GPU. Managing GPU VRAM by closing the server before running local tests is an essential ML engineering habit.
+
+## Day 36
+
+What did you learn about setting up GitHub Actions CI/CD?
+
+- **Continuous Integration (CI):** Setting up an automated workflow ensures that tests are run automatically in a fresh environment every time code is pushed or a pull request is made, preventing broken code from making it to production.
+- **Environment Isolation:** GitHub Actions runners start from a clean state. This revealed the importance of having explicitly defined dependencies (in `requirements.txt` or the workflow itself). If you forget a dependency, the CI pipeline fails immediately, whereas it might silently succeed on your local machine if you had previously installed it.
