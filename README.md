@@ -8,9 +8,9 @@
 
 ## 📚 Documentation
 
-| Document | Description |
-|---|---|
-| [🏗️ System Design](SYSTEM_DESIGN.md) | Full architecture walkthrough — data pipeline, QLoRA training, RAG design decisions, and API layer |
+| Document                                 | Description                                                                                           |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [🏗️ System Design](SYSTEM_DESIGN.md)     | Full architecture walkthrough — data pipeline, QLoRA training, RAG design decisions, and API layer    |
 | [🧠 Engineering Learnings](LEARNINGS.md) | Day-by-day personal learnings — what was built, what was learned, and what surprised us along the way |
 
 ---
@@ -121,16 +121,16 @@ python -m src.rag.demo
 
 ## Progress
 
-| Week                | Topic                                                | Status         |
-| ------------------- | ---------------------------------------------------- | -------------- |
-| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md) | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
-| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
-| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
-| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md) | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
-| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md) | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
-| Week 5 (Days 34–40) | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | 🔄 In Progress (Days 34–35 ✅) |
-| Week 6 (Days 41–47) | Evaluation + CI/CD                                   | ⏳ Upcoming    |
-| Week 7 (Days 48–54) | Deployment — HuggingFace Spaces                      | ⏳ Upcoming    |
+| Week                                                   | Topic                                                | Status                         |
+| ------------------------------------------------------ | ---------------------------------------------------- | ------------------------------ |
+| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done                        |
+| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done                        |
+| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done                        |
+| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done                        |
+| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done                        |
+| Week 5 (Days 34–40)                                    | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | 🔄 In Progress (Days 34–35 ✅) |
+| Week 6 (Days 41–47)                                    | Evaluation + CI/CD                                   | ⏳ Upcoming                    |
+| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming                    |
 
 ## Limitations
 

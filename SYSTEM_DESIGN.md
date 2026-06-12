@@ -8,7 +8,7 @@ This document explains how the system works and why I made the design decisions 
 
 Medical questions are one of the most common things people search online, and most of the time they get back SEO-optimized blog posts or generic WebMD pages. I wanted to build something that could give a more direct, contextualized answer — while being honest about its limitations.
 
-The challenge is that a language model alone isn't reliable enough for this. It can sound confident while being completely wrong. So the architecture needed two things working together: a model fine-tuned to *respond like a medical assistant*, and a retrieval system grounded in *actual verified medical text*.
+The challenge is that a language model alone isn't reliable enough for this. It can sound confident while being completely wrong. So the architecture needed two things working together: a model fine-tuned to _respond like a medical assistant_, and a retrieval system grounded in _actual verified medical text_.
 
 ---
 
@@ -80,6 +80,7 @@ I used QLoRA on `microsoft/Phi-3-mini-4k-instruct` (3.8B parameters). The full m
 The key insight with LoRA is that you're not retraining the whole model — you freeze all the original weights and inject small trainable adapter matrices into specific layers. For this I targeted the attention projection layers (`q_proj`, `v_proj`, `k_proj`, `o_proj`) since those are where the model learns what to focus on in a conversation. With rank r=16, only about 0.05% of parameters are actually updated.
 
 Training setup:
+
 - 10k examples, 2 epochs
 - Batch size 2 with 4 gradient accumulation steps (effective batch of 8)
 - Learning rate 2e-4
@@ -105,7 +106,7 @@ Documents are split into ~400-word chunks with 50-word overlap between consecuti
 
 ### Why Two-Pass Retrieval?
 
-The first pass uses a bi-encoder (PubMedBERT) to convert both the user's question and all document chunks into vectors, then finds the 10 closest chunks by cosine similarity. This is fast but approximate — it finds chunks that are *semantically similar* but doesn't deeply analyze whether they actually answer the question.
+The first pass uses a bi-encoder (PubMedBERT) to convert both the user's question and all document chunks into vectors, then finds the 10 closest chunks by cosine similarity. This is fast but approximate — it finds chunks that are _semantically similar_ but doesn't deeply analyze whether they actually answer the question.
 
 The second pass uses a cross-encoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`) which takes each (question, chunk) pair and scores them together. Because it processes them jointly, it captures word-level interactions that the bi-encoder misses. It's slower, but we're only running it on 10 candidates, not thousands — so it stays fast enough.
 
@@ -127,7 +128,10 @@ The `POST /ask` response looks like this:
 ```json
 {
   "answer": "Type 2 diabetes is characterized by...",
-  "sources": ["Diabetes occurs when the body...", "Blood sugar control involves..."],
+  "sources": [
+    "Diabetes occurs when the body...",
+    "Blood sugar control involves..."
+  ],
   "confidence": "high",
   "latency_seconds": 4.23
 }
