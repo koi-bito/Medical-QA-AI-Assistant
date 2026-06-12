@@ -1,32 +1,48 @@
-# 🏥 Medical QA AI Assistant - System Design & Architecture
+# 🏥 Medical QA AI Assistant — System Design & Architecture
 
-This document provides a comprehensive overview of the architecture, data flow, and technical design decisions behind the Medical QA AI Assistant. It outlines the end-to-end pipeline from data preparation and model fine-tuning to the Retrieval-Augmented Generation (RAG) system and API deployment.
+> **A production-style medical Q&A system** combining a QLoRA fine-tuned LLM with a two-pass RAG pipeline, served via a FastAPI backend and deployed on Hugging Face Spaces.
 
 ---
 
-## 🏗️ High-Level Architecture
+## 🗺️ High-Level Architecture
 
-The system is divided into two primary phases: **Offline Processes** (data processing, training, and database population) and **Runtime Execution** (handling live queries).
+The system is divided into two primary phases:
+
+- **Offline:** Everything that happens once — data processing, model training, and populating the vector database.
+- **Runtime:** Everything that happens live — accepting a user's question and returning a grounded, accurate answer.
 
 ```mermaid
 graph TD
-    subgraph Offline Processes
-        A["Raw ChatDoctor Dataset"] -->|"Filtering & Formatting"| B["Processed Data"]
-        B -->|"QLoRA Training"| C["Phi-3 Medical LoRA Adapters"]
+    subgraph "🔧 Offline Processes (Run Once)"
+        A["📄 Raw ChatDoctor Dataset\n(100k doctor-patient conversations)"]
+        B["✅ Processed & Formatted Data\n(filtered + Phi-3 chat template)"]
+        C["🧠 Phi-3 Medical LoRA Adapters\n(saved to models/)"]
+        D["🌐 MedlinePlus Articles\n(20 health topics, public domain)"]
+        E["📦 Text Chunks\n(400 words, 50-word overlap)"]
+        F[("🗄️ ChromaDB\nVector Store")]
 
-        D["MedlinePlus Articles"] -->|"Clean & Chunk"| E["Text Chunks"]
-        E -->|"PubMedBERT"| F[("ChromaDB Vector Store")]
+        A -->|"Filter & Format\ndata_prep.py"| B
+        B -->|"QLoRA Fine-tuning\ntrain.py (3-5 hrs)"| C
+        D -->|"Clean & Chunk\nchunking.py"| E
+        E -->|"PubMedBERT Embeddings\nvector_store.py"| F
     end
 
-    subgraph Runtime Execution
-        G["User Question"] --> H["FastAPI Endpoint"]
-        H -->|"1. Search"| F
-        F -->|"Top 10 Chunks"| I["Cross-Encoder Re-ranker"]
-        I -->|"Top 3 Chunks"| J["Prompt Builder"]
+    subgraph "⚡ Runtime Execution (Per Request)"
+        G["👤 User Question"]
+        H["🔌 FastAPI\n/ask endpoint"]
+        I["🔍 Cross-Encoder\nRe-ranker"]
+        J["📝 Prompt Builder\nContext + Query"]
+        K["🤖 Phi-3 Mini + LoRA\n4-bit Quantized"]
+        L["💬 Gradio UI"]
+
+        G --> H
+        H -->|"1. Embed & Search\n(Top 10 chunks)"| F
+        F -->|"Candidate chunks"| I
+        I -->|"2. Re-rank\n(Top 3 chunks)"| J
         G --> J
-        J -->|"Context + Query"| K["Phi-3 + LoRA Model"]
-        K -->|"Generated Answer"| H
-        H --> L["Gradio UI"]
+        J -->|"3. Generate\n(Context-grounded prompt)"| K
+        K -->|"Answer + Sources\n+ Confidence + Latency"| H
+        H --> L
     end
 ```
 
@@ -34,54 +50,131 @@ graph TD
 
 ## 1️⃣ Data Processing Pipeline
 
-_Establishing a high-quality foundation for model training._
+> *Establishing a high-quality foundation for model training.*
 
-- **Source Dataset:** [`lavita/ChatDoctor-HealthCareMagic-100k`](https://huggingface.co/datasets/lavita/ChatDoctor-HealthCareMagic-100k)
-- **Data Filtering Strategy:**
-  - **Minimum Output Length (100 chars):** Removes non-informative, generic responses (e.g., "Please consult a doctor").
-  - **Maximum Output Length (2000 chars):** Ensures the text fits comfortably within the model's 512-token sequence limit alongside system prompts.
-  - **Minimum Input Length (10 chars):** Eliminates empty or severely malformed patient queries.
-- **Formatting:** Transformed into the Phi-3 chat template format, utilizing `<|system|>`, `<|user|>`, and `<|assistant|>` markers to establish clear conversational boundaries.
+| Step | Detail |
+|---|---|
+| **Source Dataset** | [`lavita/ChatDoctor-HealthCareMagic-100k`](https://huggingface.co/datasets/lavita/ChatDoctor-HealthCareMagic-100k) |
+| **Min. Output Length** | 100 chars — removes non-informative responses like *"Please consult a doctor"* |
+| **Max. Output Length** | 2000 chars — ensures text fits within the 512-token training limit |
+| **Min. Input Length** | 10 chars — eliminates empty or malformed patient queries |
+| **Output Format** | Phi-3 chat template with `<\|system\|>`, `<\|user\|>`, `<\|assistant\|>` turn markers |
 
-## 2️⃣ Model Fine-Tuning
+> [!NOTE]
+> After filtering, ~80–85% of examples pass. The filters are conservative — a mediocre example is kept over throwing away too much data.
 
-_Adapting a generalized language model into a specialized medical assistant._
+---
 
-- **Base Model:** `microsoft/Phi-3-mini-4k-instruct` (3.8 Billion parameters)
-- **Optimization Strategy:** Parameter-Efficient Fine-Tuning (PEFT)
-- **Quantization:** Loaded in 4-bit NormalFloat (NF4) via `bitsandbytes` to constrain memory usage to a 6GB VRAM footprint.
-- **QLoRA Parameters:**
-  - **Rank (r):** 16 (Optimal balance between parameter count and expressiveness)
-  - **Target Modules:** `q_proj`, `v_proj`, `k_proj`, `o_proj` (Attention layers)
-- **Experiment Tracking:** Integrated with **MLflow** to log hyperparameters, steps, and loss metrics.
-- **Output:** LoRA adapter weights, decoupling the trained specialized behavior from the heavy base model.
+## 2️⃣ Model Fine-Tuning (QLoRA)
+
+> *Adapting a general-purpose LLM into a specialized medical assistant.*
+
+| Parameter | Value | Reason |
+|---|---|---|
+| **Base Model** | `microsoft/Phi-3-mini-4k-instruct` (3.8B) | Strong instruction-following baseline that fits in 6GB VRAM |
+| **Quantization** | 4-bit NormalFloat (NF4) via `bitsandbytes` | Reduces memory footprint from ~8GB → ~2.5GB |
+| **LoRA Rank (r)** | 16 | Optimal balance between expressiveness and parameter count |
+| **Target Layers** | `q_proj`, `v_proj`, `k_proj`, `o_proj` | Attention layers capture the most fine-tuning signal |
+| **Trainable Params** | ~0.05% of total | Only LoRA adapter matrices are updated, not the full model |
+| **Experiment Tracking** | MLflow | Logs hyperparameters, loss curve, and metrics per run |
+
+> [!TIP]
+> The output is lightweight LoRA adapter weights (~6MB `.safetensors`), fully decoupled from the 3.8B base model. This makes sharing and versioning trivial.
+
+---
 
 ## 3️⃣ Retrieval-Augmented Generation (RAG)
 
-_Grounding AI responses in verified medical literature to mitigate hallucination._
+> *Grounding AI responses in verified medical literature to mitigate hallucination.*
 
-- **Knowledge Base:** MedlinePlus health topic summaries, chosen for their reliability and public domain availability.
-- **Data Chunking:** Documents are split into manageable ~400-word chunks. A 50-word overlap is maintained between chunks to prevent cutting off crucial context at arbitrary boundaries.
-- **Vector Database:** **ChromaDB** serves as the persistent local storage for rapid semantic retrieval.
-- **Embedding Model:** `pritamdeka/S-PubMedBert-MS-MARCO` – A model specifically trained on medical text, significantly outperforming generic embedders for healthcare vocabulary.
-- **Two-Pass Retrieval System:**
-  1. **Semantic Search (Bi-Encoder):** Rapidly pulls the top 10 most relevant chunks from ChromaDB.
-  2. **Re-ranking (Cross-Encoder):** Uses `cross-encoder/ms-marco-MiniLM-L-6-v2` to deeply analyze the relationship between the query and the 10 retrieved chunks, scoring and sorting them to select the absolute top 3 for maximum relevance.
-- **Context Injection:** The winning chunks are formatted directly into the LLM's system prompt prior to generation.
+### Why RAG?
+Fine-tuning teaches the model *how* to respond (tone, format, persona). RAG gives the model *what* to say — factual, up-to-date information it can cite. Together they address both *style* and *accuracy*.
 
-## 4️⃣ API and UI Layer
+### Knowledge Base
+- **Source:** MedlinePlus health topic summaries (public domain, high clinical reliability)
+- **Coverage:** 20 common conditions — diabetes, hypertension, asthma, depression, and more
 
-_Serving the model to end-users efficiently._
+### Two-Pass Retrieval Strategy
 
-- **Backend Framework:** **FastAPI** provides a robust, asynchronous REST interface.
-- **Primary Endpoints:**
-  - `/health`: Uptime monitoring.
-  - `/ask`: Receives user queries, orchestrates the entire RAG pipeline (Retrieval -> Prompting -> Generation), and returns the answer alongside a confidence score (derived from embedding similarity) and processing latency.
-- **User Interface:** **Gradio** provides a clean, web-based chat interface for seamless user interaction.
+```
+User Question
+     │
+     ▼
+[1] Bi-Encoder (PubMedBERT)  ──►  Top 10 candidate chunks  (fast, approximate)
+     │
+     ▼
+[2] Cross-Encoder (ms-marco) ──►  Top 3 re-ranked chunks   (slow, precise)
+     │
+     ▼
+Injected into LLM system prompt as context
+```
 
-## 5️⃣ Evaluation and Deployment
+| Component | Model | Role |
+|---|---|---|
+| **Embedding** | `pritamdeka/S-PubMedBert-MS-MARCO` | Converts text to medical-domain vectors |
+| **Vector DB** | ChromaDB (local, persistent) | Stores and retrieves chunks by similarity |
+| **Re-ranker** | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Deep relevance scoring of query + chunk pairs |
 
-_Ensuring quality and accessibility._
+> [!IMPORTANT]
+> The bi-encoder evaluates the query and documents *separately* — it's fast but approximate. The cross-encoder evaluates them *together*, capturing deep word interactions. This two-pass approach gets the speed of vector search with the accuracy of a cross-encoder.
 
-- **Evaluation:** The system is evaluated through batch testing against an established set of medical questions, analyzing both the relevance of the retrieved context and the clinical safety/accuracy of the final generated response.
-- **Deployment:** The full application is packaged and deployed publicly as a Gradio web application hosted on **Hugging Face Spaces**.
+---
+
+## 4️⃣ API & UI Layer
+
+> *Serving the model to end-users efficiently.*
+
+### FastAPI Backend (`src/api/main.py`)
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/health` | `GET` | Uptime check — returns `{"status": "ok"}` |
+| `/ask` | `POST` | Accepts `{"question": "..."}` and returns a full response |
+
+**`/ask` Response Shape:**
+```json
+{
+  "answer": "Type 2 diabetes is characterized by...",
+  "sources": ["Diabetes occurs when...", "Blood sugar levels..."],
+  "confidence": "high",
+  "latency_seconds": 4.23
+}
+```
+
+**Confidence Scoring:** Uses cosine similarity between the question embedding and the retrieved source embeddings. `avg_similarity > 0.5` → `"high"`, `> 0.3` → `"medium"`, else `"low"`.
+
+### Gradio UI
+- Wraps the entire multi-model pipeline into a simple web interface
+- Displays both the generated answer and the source medical chunks used to ground it
+
+---
+
+## 5️⃣ Evaluation & Testing
+
+> *Ensuring correctness before deployment.*
+
+### Automated API Tests (`tests/test_api.py`)
+Uses FastAPI's `TestClient` to run 4 automated checks:
+- ✅ Health endpoint returns `200 OK`
+- ✅ A valid question returns an answer `> 10 chars`
+- ✅ An empty question returns a `400 Bad Request`
+- ✅ The response includes at least one source chunk
+
+### Batch Evaluation Script (`src/evaluation/evaluate.py`)
+Runs the full pipeline on 5 fixed medical questions and checks answers against expected topics using multi-alias keyword matching (e.g., `"urination"` also matches `"polyuria"`, `"frequent urination"`).
+
+---
+
+## 6️⃣ Deployment
+
+> *Making the system publicly accessible.*
+
+| Component | Platform |
+|---|---|
+| **Fine-tuned Model** | [Hugging Face Hub](https://huggingface.co/koi-bito/phi3-medical-lora) |
+| **Cloud Inference** | Groq API (`llama3-8b-8192`) — for fast public demo |
+| **Web App** | Hugging Face Spaces (Gradio) |
+| **CI/CD** | GitHub Actions — runs `pytest` on every push to `main` |
+
+> [!WARNING]
+> **This is an educational project and is NOT a substitute for professional medical advice.** The model may hallucinate. Always verify with a qualified healthcare professional.

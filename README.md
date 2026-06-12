@@ -2,7 +2,17 @@
 
 > A medical Q&A chatbot built with a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
 
-**Status:** Weeks 1–4 Complete — Data Prep, QLoRA Fine-tuning & RAG Pipeline ✅ | Next: Week 5 — MLOps + API (In Progress)
+**Status:** Weeks 1–5 (Days 34–35) Complete — FastAPI Endpoint & Automated Tests ✅ | Next: Day 36 — GitHub Actions CI/CD
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|---|---|
+| [🏗️ System Design](SYSTEM_DESIGN.md) | Full architecture walkthrough — data pipeline, QLoRA training, RAG design decisions, and API layer |
+| [🧠 Engineering Learnings](LEARNINGS.md) | Day-by-day personal learnings — what was built, what was learned, and what surprised us along the way |
+
 ---
 
 ## Tech Stack
@@ -118,7 +128,7 @@ python -m src.rag.demo
 | [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
 | [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md) | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
 | [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md) | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
-| Week 5 (Days 34–40) | API — FastAPI backend + Gradio UI                    | 🔄 In Progress |
+| Week 5 (Days 34–40) | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | 🔄 In Progress (Days 34–35 ✅) |
 | Week 6 (Days 41–47) | Evaluation + CI/CD                                   | ⏳ Upcoming    |
 | Week 7 (Days 48–54) | Deployment — HuggingFace Spaces                      | ⏳ Upcoming    |
 
