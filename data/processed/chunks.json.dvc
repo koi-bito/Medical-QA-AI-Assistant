@@ -1,0 +1,5 @@
+outs:
+- md5: 9589f6375dccbf80f12b0ba90867241e
+  size: 2449822
+  hash: md5
+  path: chunks.json

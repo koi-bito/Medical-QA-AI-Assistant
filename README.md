@@ -4,7 +4,7 @@
 
 > A medical Q&A chatbot built with a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
 
-**Status:** Weeks 1–5 (Days 34–36) Complete — FastAPI Endpoint, Automated Tests & CI/CD ✅ | Next: Day 37 — DVC for Data Versioning
+**Status:** Weeks 1–5 (Days 34–37) Complete — Tests, CI/CD, & DVC Data Versioning ✅ | Next: Day 38 — Evaluation Script
 
 ---
 

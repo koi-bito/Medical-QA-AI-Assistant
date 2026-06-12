@@ -330,3 +330,10 @@ What did you learn about setting up GitHub Actions CI/CD?
 
 - **Continuous Integration (CI):** Setting up an automated workflow ensures that tests are run automatically in a fresh environment every time code is pushed or a pull request is made, preventing broken code from making it to production.
 - **Environment Isolation:** GitHub Actions runners start from a clean state. This revealed the importance of having explicitly defined dependencies (in `requirements.txt` or the workflow itself). If you forget a dependency, the CI pipeline fails immediately, whereas it might silently succeed on your local machine if you had previously installed it.
+
+## Day 37
+
+Why use Data Version Control (DVC)?
+
+- **Git Limits:** Git is designed for small text files (code), not 150MB CSVs or massive JSON files. Committing huge data files bloats the repository and makes cloning impossibly slow.
+- **The Solution:** DVC acts exactly like Git but for large files. It tracks a small text pointer file (like `chunks.json.dvc`) in Git, while the actual heavy file is stored separately or configured to be synced to cloud storage. This means we can version control our datasets and seamlessly sync them alongside our code without breaking Git.
