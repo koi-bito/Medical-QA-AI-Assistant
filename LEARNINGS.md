@@ -307,3 +307,19 @@ What are the takeaways from building the local Gradio demo and completing Week 4
 
 - **Gradio Simplicity:** Building an interactive chat UI with Gradio requires just a few lines of code. It seamlessly wraps our complex multi-model RAG pipeline.
 - **RAG Effectiveness:** Seeing the pipeline work end-to-end proves the value of RAG. Grounding the LLM in verified MedlinePlus chunks forces the model to synthesize real facts rather than hallucinate, making the system significantly more trustworthy.
+
+## Day 34
+
+What did you learn about serving the RAG pipeline as an API?
+
+- **FastAPI Basics:** FastAPI allows us to quickly wrap our Python functions into a RESTful API. We use Pydantic models to strictly define the expected input and output formats, which ensures type safety and generates clear documentation automatically.
+- **Loading Models Once:** It is crucial to load the heavy models (Phi-3, embedding models, cross-encoder) globally at startup rather than per-request. Otherwise, every API call would take minutes to respond.
+- **Swagger UI:** FastAPI automatically generates an interactive `/docs` page, making it incredibly easy to manually test our endpoints from the browser without building a frontend.
+
+## Day 35
+
+Why are API tests necessary when the manual test works?
+
+- **TestClient:** The `fastapi.testclient.TestClient` allows us to programmatically simulate HTTP requests to our application. It makes writing tests extremely straightforward.
+- **Catching Regressions:** Automated tests immediately flag if a future code change breaks the API (like failing to return sources). It is the backbone of continuous integration (CI) which we will set up next.
+- **GPU Resource Management:** I learned firsthand that running tests that load models while a local server is already running causes CUDA Out-Of-Memory (OOM) errors on a 6GB GPU. Managing GPU VRAM by closing the server before running local tests is an essential ML engineering habit.
