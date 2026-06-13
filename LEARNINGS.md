@@ -337,3 +337,17 @@ Why use Data Version Control (DVC)?
 
 - **Git Limits:** Git is designed for small text files (code), not 150MB CSVs or massive JSON files. Committing huge data files bloats the repository and makes cloning impossibly slow.
 - **The Solution:** DVC acts exactly like Git but for large files. It tracks a small text pointer file (like `chunks.json.dvc`) in Git, while the actual heavy file is stored separately or configured to be synced to cloud storage. This means we can version control our datasets and seamlessly sync them alongside our code without breaking Git.
+
+## Day 38
+
+How can we systematically evaluate the QA system's responses?
+
+- **Keyword and Alias Matching:** A simple and effective initial evaluation strategy is to define a set of test questions with expected medical topics. By using multiple aliases (synonyms) for each topic, we can programmatically check if the model's generated answer contains the necessary medical concepts, ensuring it provides accurate and comprehensive responses.
+- **Automated Scoring:** Running the evaluation script gives us an average score across all test questions, allowing us to quantify the model's performance and confidently track improvements or regressions over time.
+
+## Day 39
+
+Why use a cloud API like Groq for inference instead of our fine-tuned local model for the public demo?
+
+- **Hosting Limitations:** Hosting a custom fine-tuned model requires a dedicated GPU server, which can be expensive and difficult to scale.
+- **Speed and Accessibility:** Using Groq provides lightning-fast inference for the public web demo. While Groq uses a different base model (e.g., Llama 3.1) and doesn't support custom fine-tuned weights, combining it with our custom RAG pipeline still delivers highly accurate, context-grounded medical answers quickly and cost-effectively for end users.

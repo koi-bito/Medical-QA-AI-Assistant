@@ -5,6 +5,12 @@ Uses multiple aliases per topic to handle medical synonyms
 (e.g., "urination" also matches "polyuria", "frequent urination").
 """
 import json
+import sys
+import os
+
+# Add the project root directory to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from src.rag.pipeline import load_all, answer_question
 
 # Each topic has a list of aliases — if ANY alias matches, the topic counts as a hit.

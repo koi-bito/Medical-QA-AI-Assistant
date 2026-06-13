@@ -4,7 +4,7 @@
 
 > A medical Q&A chatbot built with a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
 
-**Status:** Weeks 1–5 (Days 34–37) Complete — Tests, CI/CD, & DVC Data Versioning ✅ | Next: Day 38 — Evaluation Script
+**Status:** Weeks 1–5 (Days 34–39) Complete — Tests, CI/CD, DVC, Evaluation & Groq Integration ✅ | Next: Day 40 — Week 5 Review + Integration Check
 
 ---
 
@@ -130,7 +130,7 @@ python -m src.rag.demo
 | [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done                        |
 | [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done                        |
 | [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done                        |
-| Week 5 (Days 34–40)                                    | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | 🔄 In Progress (Days 34–35 ✅) |
+| Week 5 (Days 34–40)                                    | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | 🔄 In Progress (Days 34–39 ✅) |
 | Week 6 (Days 41–47)                                    | Evaluation + CI/CD                                   | ⏳ Upcoming                    |
 | Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming                    |
 
