@@ -351,3 +351,10 @@ Why use a cloud API like Groq for inference instead of our fine-tuned local mode
 
 - **Hosting Limitations:** Hosting a custom fine-tuned model requires a dedicated GPU server, which can be expensive and difficult to scale.
 - **Speed and Accessibility:** Using Groq provides lightning-fast inference for the public web demo. While Groq uses a different base model (e.g., Llama 3.1) and doesn't support custom fine-tuned weights, combining it with our custom RAG pipeline still delivers highly accurate, context-grounded medical answers quickly and cost-effectively for end users.
+
+## Day 40
+
+What did you learn during the Week 5 integration and review?
+
+- **API Flexibility:** Using environment variables (like `USE_GROQ`) to conditionally load parts of the model pipeline makes the API incredibly flexible. It allows the same codebase to run a lightweight, fast cloud inference version for demos, or a fully local, fine-tuned model version for maximum privacy and customization.
+- **Integration Testing:** Ensuring all components (FastAPI, RAG retriever, and Groq/local model) work together smoothly highlights the importance of modular design. Separating the retriever logic from the generation logic makes it easy to swap out the generation backend without touching the complex document search code.

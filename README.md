@@ -4,7 +4,7 @@
 
 > A medical Q&A chatbot built with a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
 
-**Status:** Weeks 1–5 (Days 34–39) Complete — Tests, CI/CD, DVC, Evaluation & Groq Integration ✅ | Next: Day 40 — Week 5 Review + Integration Check
+**Status:** Weeks 1–5 (Days 34–40) Complete — Tests, CI/CD, DVC, Evaluation & API Integration ✅ | Next: Week 6 — Deployment
 
 ---
 
@@ -121,18 +121,69 @@ python src/rag/vector_store.py
 python -m src.rag.demo
 ```
 
+## API Documentation
+
+Start the API server:
+
+```bash
+# For local inference
+uvicorn src.api.main:app --reload
+
+# For fast cloud inference using Groq
+# Windows: set USE_GROQ=true
+# Mac/Linux: export USE_GROQ=true
+uvicorn src.api.main:app --reload
+```
+
+### Endpoints
+
+**1. Health Check**
+`GET /health`
+
+```bash
+curl http://localhost:8000/health
+```
+
+Response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+**2. Ask a Medical Question**
+`POST /ask`
+
+```bash
+curl -X POST "http://localhost:8000/ask" \
+     -H "Content-Type: application/json" \
+     -d '{"question": "What are the symptoms of type 2 diabetes?"}'
+```
+
+Response:
+
+```json
+{
+  "answer": "Common symptoms of type 2 diabetes include increased thirst, frequent urination, increased hunger, unintended weight loss, fatigue, blurred vision, slow-healing sores, and frequent infections. Always consult a healthcare provider for an accurate diagnosis.",
+  "sources": ["Type 2 diabetes signs and symptoms include..."],
+  "confidence": "high",
+  "latency_seconds": 1.25
+}
+```
+
 ## Progress
 
-| Week                                                   | Topic                                                | Status                         |
-| ------------------------------------------------------ | ---------------------------------------------------- | ------------------------------ |
-| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done                        |
-| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done                        |
-| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done                        |
-| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done                        |
-| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done                        |
-| Week 5 (Days 34–40)                                    | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | 🔄 In Progress (Days 34–39 ✅) |
-| Week 6 (Days 41–47)                                    | Evaluation + CI/CD                                   | ⏳ Upcoming                    |
-| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming                    |
+| Week                                                   | Topic                                                | Status      |
+| ------------------------------------------------------ | ---------------------------------------------------- | ----------- |
+| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done     |
+| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done     |
+| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done     |
+| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done     |
+| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done     |
+| [Week 5 (Days 34–40)](docs/week_5_mlops_api.md)        | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done     |
+| Week 6 (Days 41–47)                                    | Evaluation + CI/CD                                   | ⏳ Upcoming |
+| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming |
 
 ## Limitations
 

@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import time
@@ -5,10 +6,21 @@ import numpy as np
 
 app = FastAPI(title="Medical QA API", version="1.0")
 
-# Load everything at startup (once)
-from src.rag.pipeline import load_all, answer_question
+USE_GROQ = os.environ.get("USE_GROQ", "false").lower() == "true"
+
+# Load models at startup
 print("Loading models...")
-model, tokenizer, embedder, collection, reranker = load_all()
+if USE_GROQ:
+    print("Using Groq for inference. Loading retriever only...")
+    from src.rag.retriever import load_retriever, load_reranker, retrieve_and_rerank
+    from src.inference.groq_client import answer_with_groq
+    embedder, collection = load_retriever()
+    reranker = load_reranker()
+    model, tokenizer = None, None
+else:
+    print("Using local model for inference. Loading all models...")
+    from src.rag.pipeline import load_all, answer_question
+    model, tokenizer, embedder, collection, reranker = load_all()
 print("Ready!")
 
 class QuestionRequest(BaseModel):
@@ -45,14 +57,23 @@ def ask(request: QuestionRequest):
         raise HTTPException(status_code=400, detail="Question too short")
 
     start  = time.time()
-    result = answer_question(request.question, model, tokenizer, embedder, collection, reranker)
+    
+    if USE_GROQ:
+        chunks = retrieve_and_rerank(request.question, collection, embedder, reranker)
+        answer = answer_with_groq(request.question, chunks)
+        sources = chunks
+    else:
+        result = answer_question(request.question, model, tokenizer, embedder, collection, reranker)
+        answer = result['answer']
+        sources = result['sources']
+        
     latency = round(time.time() - start, 2)
 
-    confidence = estimate_confidence(request.question, result['sources'], embedder)
+    confidence = estimate_confidence(request.question, sources, embedder)
 
     return QuestionResponse(
-        answer=result['answer'],
-        sources=result['sources'],
+        answer=answer,
+        sources=sources,
         confidence=confidence,
         latency_seconds=latency
     )
