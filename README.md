@@ -4,7 +4,7 @@
 
 > A medical Q&A chatbot built with a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
 
-**Status:** Weeks 1–5 (Days 34–40) Complete — Tests, CI/CD, DVC, Evaluation & API Integration ✅ | Next: Week 6 — Deployment
+**Status:** Weeks 1–6 (Day 41) Complete — Gradio UI ✅ | Next: Deploy to HuggingFace Spaces
 
 ---
 
@@ -174,16 +174,16 @@ Response:
 
 ## Progress
 
-| Week                                                   | Topic                                                | Status      |
-| ------------------------------------------------------ | ---------------------------------------------------- | ----------- |
-| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done     |
-| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done     |
-| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done     |
-| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done     |
-| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done     |
-| [Week 5 (Days 34–40)](docs/week_5_mlops_api.md)        | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done     |
-| Week 6 (Days 41–47)                                    | Evaluation + CI/CD                                   | ⏳ Upcoming |
-| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming |
+| Week                                                   | Topic                                                | Status         |
+| ------------------------------------------------------ | ---------------------------------------------------- | -------------- |
+| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
+| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
+| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
+| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
+| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
+| [Week 5 (Days 34–40)](docs/week_5_mlops_api.md)        | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done        |
+| Week 6 (Days 41–47)                                    | Deployment & Polish — Gradio UI                      | ✅ In Progress |
+| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming    |
 
 ## Limitations
 

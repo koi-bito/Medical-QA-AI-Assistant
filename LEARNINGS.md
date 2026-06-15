@@ -358,3 +358,10 @@ What did you learn during the Week 5 integration and review?
 
 - **API Flexibility:** Using environment variables (like `USE_GROQ`) to conditionally load parts of the model pipeline makes the API incredibly flexible. It allows the same codebase to run a lightweight, fast cloud inference version for demos, or a fully local, fine-tuned model version for maximum privacy and customization.
 - **Integration Testing:** Ensuring all components (FastAPI, RAG retriever, and Groq/local model) work together smoothly highlights the importance of modular design. Separating the retriever logic from the generation logic makes it easy to swap out the generation backend without touching the complex document search code.
+
+## Day 41
+
+What did you learn about building the public Gradio UI?
+
+- **Gradio 6 Compatibility:** Building a chat UI with Gradio is incredibly fast, but being mindful of major version updates is critical. Gradio 6 changed how `Chatbot` history works—enforcing a strict dictionary format `[{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]` instead of the older tuple format. It also moved styling options like `theme` out of `gr.Blocks()` and into `demo.launch()`.
+- **Connecting the Pipeline:** The UI seamlessly connects the ChromaDB vector retriever with the Groq inference client, providing an interactive, user-friendly wrapper over the complex RAG architecture we built in previous weeks.
