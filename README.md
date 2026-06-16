@@ -4,12 +4,9 @@
 
 > A medical Q&A system built with fine-tuned Phi-3 Mini + RAG pipeline
 
-## 📚 Documentation
+## 🧠 Journey & Learnings
 
-| Document                             | Description                                                                                           |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| [🏗️ System Design](SYSTEM_DESIGN.md) | Full architecture walkthrough — data pipeline, QLoRA training, RAG design decisions, and API layer    |
-| [🧠 Key Learnings](LEARNINGS.md)     | Day-by-day personal learnings — what was built, what was learned, and what surprised us along the way |
+Want to see how this was built? Read my **[Day-by-Day Key Learnings](LEARNINGS.md)** to see the development process, challenges faced, and what was learned along the way.
 
 ## Live Demo
 
