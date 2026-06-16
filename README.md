@@ -57,6 +57,19 @@ When a user asks a medical question, the input is converted into numerical vecto
 
 To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrieved results, filtering out low-quality matches. Finally, the highest-scoring medical contexts are passed alongside the user's question to a high-speed cloud LLM (via Groq), which synthesizes a clear, accurate, and transparent response that cites the retrieved sources directly.
 
+## Progress
+
+| Week                                                   | Topic                                                | Status         |
+| ------------------------------------------------------ | ---------------------------------------------------- | -------------- |
+| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
+| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
+| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
+| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
+| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
+| [Week 5 (Days 34–40)](docs/week_5_mlops_api.md)        | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done        |
+| Week 6 (Days 41–47)                                    | Deployment & Polish — Gradio UI                      | ✅ Done        |
+| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ✅ Done        |
+
 ## Limitations
 
 - **Not a substitute for real medical advice.** Always consult a qualified healthcare provider.
