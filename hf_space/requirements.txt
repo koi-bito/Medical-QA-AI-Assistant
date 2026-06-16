@@ -5,3 +5,4 @@ groq
 transformers
 torch
 huggingface_hub
+audioop-lts
