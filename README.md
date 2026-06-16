@@ -1,192 +1,64 @@
 # 🏥 Medical QA Assistant
 
-![Tests](https://github.com/koi-bito/Medical-QA-AI-Assistant/actions/workflows/test.yml/badge.svg)
+![Tests](https://github.com/koi-bito/Medical-QA-AI-Assistant/actions/workflows/test.yml/badge.svg) | [Live Demo](https://huggingface.co/spaces/koi-bito/medical-qa) | [Vector DB on HuggingFace](https://huggingface.co/datasets/koi-bito/medical-qa-vectorstore)
 
-> A medical Q&A chatbot built with a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
+> A medical Q&A system built with fine-tuned Phi-3 Mini + RAG pipeline
 
-**Status:** Weeks 1–6 (Day 41) Complete — Gradio UI ✅ | Next: Deploy to HuggingFace Spaces
+## Live Demo
 
----
+Try the live public demo deployed on Hugging Face Spaces:  
+👉 **[Medical QA Assistant - Live Demo](https://huggingface.co/spaces/koi-bito/medical-qa)**
 
-## 📚 Documentation
+## Architecture
 
-| Document                             | Description                                                                                           |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| [🏗️ System Design](SYSTEM_DESIGN.md) | Full architecture walkthrough — data pipeline, QLoRA training, RAG design decisions, and API layer    |
-| [🧠 Key Learnings](LEARNINGS.md)     | Day-by-day personal learnings — what was built, what was learned, and what surprised us along the way |
+_(Architecture diagram placeholder — to be completed on Day 45)_
 
----
+## What It Does
 
-## Tech Stack
-
-| Component           | Technology                   |
-| ------------------- | ---------------------------- |
-| Base Model          | Phi-3 Mini (3.8B)            |
-| Fine-tuning         | QLoRA via PEFT + TRL         |
-| Embeddings          | PubMedBERT (domain-specific) |
-| Vector DB           | ChromaDB                     |
-| Re-ranking          | Cross-Encoder (ms-marco)     |
-| API                 | FastAPI                      |
-| UI                  | Gradio                       |
-| Cloud Inference     | Groq API                     |
-| Experiment Tracking | MLflow                       |
-| Data Versioning     | DVC                          |
-| CI/CD               | GitHub Actions               |
-
-## Hardware
-
-- GPU: NVIDIA GeForce RTX 4050 Laptop GPU (6GB VRAM)
-- Training: QLoRA 4-bit quantization
-
-## Model
-
-The fine-tuned LoRA adapter weights are hosted on Hugging Face:
-
-- [**koi-bito/phi3-medical-lora**](https://huggingface.co/koi-bito/phi3-medical-lora)
-
-## Dataset
-
-Training data: [`lavita/ChatDoctor-HealthCareMagic-100k`](https://huggingface.co/datasets/lavita/ChatDoctor-HealthCareMagic-100k) — 100k+ real doctor-patient conversations.
-
-Each example has:
-
-- `instruction` — the doctor's role prompt
-- `input` — the patient's question/description
-- `output` — the doctor's response
-
-## Project Structure
-
-```
-medical-qa-assistant/
-├── data/
-│   ├── raw/                 # Downloaded raw data (DVC tracked)
-│   └── processed/           # Cleaned and formatted data (DVC tracked)
-├── models/                  # Fine-tuned adapter weights (gitignored)
-├── notebooks/               # Exploration and evaluation notebooks
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_data_analysis.ipynb
-│   ├── 03_model_exploration.ipynb
-│   └── 04_qlora_exploration.ipynb
-├── src/
-│   ├── training/
-│   │   ├── data_prep.py     # Clean + format the dataset
-│   │   └── train.py         # QLoRA fine-tuning script
-│   ├── rag/                 # RAG pipeline (Week 4)
-│   ├── api/                 # FastAPI backend (Week 5)
-│   ├── inference/           # Groq cloud inference client (Week 5)
-│   └── evaluation/          # Evaluation script (Week 6)
-├── tests/                   # pytest API tests (Week 6)
-├── app.py                   # Gradio entry point — HuggingFace Spaces (Week 7)
-├── requirements.txt
-└── .gitignore
-```
+- **Fine-tunes Phi-3 Mini (3.8B)** using QLoRA on 100k+ real doctor-patient conversations.
+- **Retrieves relevant medical context** using domain-specific BioMedical embeddings (`PubMedBERT`).
+- **Re-ranks retrieved documents** with a cross-encoder (`ms-marco-MiniLM`) to dramatically improve accuracy.
+- **Provides High-Speed Inference** using Groq's cloud APIs.
+- **Serves answers via a FastAPI backend** equipped with unit tests and GitHub Actions CI/CD pipelines.
+- **Deployed publicly via a Gradio UI** securely hosted on Hugging Face Spaces.
 
 ## Setup
 
+To run this project locally on your machine:
+
 ```bash
-# Clone the repo
+# 1. Clone the repository
 git clone https://github.com/koi-bito/Medical-QA-AI-Assistant.git
 cd Medical-QA-AI-Assistant
 
-# Create virtual environment
+# 2. Create and activate a Python virtual environment (Python 3.13)
 py -3.13 -m venv medqa_env
 medqa_env\Scripts\activate  # Windows
 
-# Install dependencies
+# 3. Install dependencies
 pip install -r requirements.txt
 ```
 
-## Running the Data Pipeline
+### Running the System
 
 ```bash
-# Step 1: Download, clean, and format the training data (~5 min)
-python src/training/data_prep.py
-
-# Step 2: Run fine-tuning (~3–5 hrs on RTX 4050)
-python src/training/train.py
-
-# Step 3: View training metrics
-mlflow ui   # then open http://localhost:5000
-```
-
-## Running the RAG Pipeline
-
-```bash
-# Build the vector database and retrieve medical documents
-python src/rag/data_collection.py
-python src/rag/chunking.py
-python src/rag/vector_store.py
-
-# Launch the interactive RAG demo (Day 33)
-python -m src.rag.demo
-```
-
-## API Documentation
-
-Start the API server:
-
-```bash
-# For local inference
+# Start the local FastAPI server
 uvicorn src.api.main:app --reload
 
-# For fast cloud inference using Groq
-# Windows: set USE_GROQ=true
-# Mac/Linux: export USE_GROQ=true
-uvicorn src.api.main:app --reload
+# In a separate terminal, launch the Gradio UI
+python app.py
 ```
 
-### Endpoints
+## How It Works
 
-**1. Health Check**
-`GET /health`
+The Medical QA Assistant operates on a **Retrieval-Augmented Generation (RAG)** pipeline. Instead of relying solely on an AI model's static memory, the system fetches real, clinically rooted information to ground its answers in facts.
 
-```bash
-curl http://localhost:8000/health
-```
+When a user asks a medical question, the input is converted into numerical vectors (embeddings) using a specialized medical model (`PubMedBERT`). The system searches a ChromaDB vector database—built from over 100,000 real doctor-patient interactions—for the most relevant historical conversations and document chunks.
 
-Response:
-
-```json
-{
-  "status": "ok"
-}
-```
-
-**2. Ask a Medical Question**
-`POST /ask`
-
-```bash
-curl -X POST "http://localhost:8000/ask" \
-     -H "Content-Type: application/json" \
-     -d '{"question": "What are the symptoms of type 2 diabetes?"}'
-```
-
-Response:
-
-```json
-{
-  "answer": "Common symptoms of type 2 diabetes include increased thirst, frequent urination, increased hunger, unintended weight loss, fatigue, blurred vision, slow-healing sores, and frequent infections. Always consult a healthcare provider for an accurate diagnosis.",
-  "sources": ["Type 2 diabetes signs and symptoms include..."],
-  "confidence": "high",
-  "latency_seconds": 1.25
-}
-```
-
-## Progress
-
-| Week                                                   | Topic                                                | Status         |
-| ------------------------------------------------------ | ---------------------------------------------------- | -------------- |
-| [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
-| [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
-| [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
-| [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
-| [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
-| [Week 5 (Days 34–40)](docs/week_5_mlops_api.md)        | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done        |
-| Week 6 (Days 41–47)                                    | Deployment & Polish — Gradio UI                      | ✅ In Progress |
-| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming    |
+To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrieved results, filtering out low-quality matches. Finally, the highest-scoring medical contexts are passed alongside the user's question to a high-speed cloud LLM (via Groq), which synthesizes a clear, accurate, and transparent response that cites the retrieved sources directly.
 
 ## Limitations
 
-- This is an educational project — **NOT** a substitute for real medical advice.
-- The model may hallucinate — always verify with a qualified healthcare professional.
-- Trained on a limited dataset; rare conditions may not be well-covered.
+- **Not a substitute for real medical advice.** Always consult a qualified healthcare provider.
+- **Model may hallucinate.** While grounded in RAG, the model can still generate inaccurate information.
+- **Trained on a limited dataset.** Rare conditions or highly specialized medical contexts may not be covered effectively.
