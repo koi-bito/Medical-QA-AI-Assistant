@@ -67,8 +67,8 @@ To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrie
 | [Week 3 (Days 20–26)](docs/week_3_fine_tuning.md)      | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
 | [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
 | [Week 5 (Days 34–40)](docs/week_5_mlops_api.md)        | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done        |
-| Week 6 (Days 41–47)                                    | Deployment & Polish — Gradio UI                      | ✅ Done        |
-| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ✅ Done        |
+| Week 6 (Days 41–47)                                    | Deployment & Polish — Gradio UI                      | ✅ In Progress |
+| Week 7 (Days 48–54)                                    | Deployment — HuggingFace Spaces                      | ⏳ Upcoming    |
 
 ## Limitations
 
