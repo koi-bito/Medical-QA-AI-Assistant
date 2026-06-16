@@ -1,0 +1,7 @@
+gradio
+sentence-transformers
+chromadb
+groq
+transformers
+torch
+huggingface_hub
