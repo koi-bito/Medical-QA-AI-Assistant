@@ -15,7 +15,16 @@ Try the live public demo deployed on Hugging Face Spaces:
 
 ## Architecture
 
-_(Architecture diagram placeholder — to be completed on Day 45)_
+```mermaid
+graph TD
+    A[User Question] --> B[Gradio UI / FastAPI]
+    B --> C[PubMedBERT Embedder]
+    C --> D[ChromaDB Vector Search]
+    D -- Top 10 chunks --> E[Cross-Encoder Re-ranker]
+    E -- Top 3 chunks --> F[Prompt Builder]
+    F --> G[Fine-tuned Phi-3 Mini / Groq API]
+    G --> H[Answer + Sources]
+```
 
 ## What It Does
 

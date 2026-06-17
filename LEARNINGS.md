@@ -388,3 +388,10 @@ What makes an effective project README?
 - **Immediate Value:** A recruiter or user should understand the project within 60 seconds. Putting the Live Demo link, test badges, and a high-level "What It Does" summary at the very top is more important than deep technical implementation details.
 - **Plain English:** Explaining the RAG architecture in plain English (how documents are retrieved and re-ranked) bridges the gap between complex ML engineering and user understanding.
 - **Transparency:** Clearly stating limitations (e.g., "Not a substitute for real medical advice") is essential for responsible AI deployment, particularly in the healthcare domain.
+
+## Day 45
+
+Why is an architecture diagram important for a technical project?
+
+- **Visual Communication:** A clear diagram (like the Mermaid flowchart) instantly conveys how complex components—like the Gradio UI, PubMedBERT Embedder, ChromaDB, and Cross-Encoder—interact. It is much faster for an interviewer or collaborator to understand a visual flow than to read paragraphs of text.
+- **Mermaid Integration:** Using Mermaid diagrams directly within Markdown (like in a README) allows the architecture to be version-controlled alongside the code and renders natively on GitHub.
