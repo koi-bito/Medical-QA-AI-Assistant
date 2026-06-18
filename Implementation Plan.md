@@ -2167,77 +2167,1561 @@ Answer + Sources
 
 ---
 
-### Day 46 — Record Demo Video + LinkedIn Post
+## PHASE 2 — Full-Stack AI Product (Days 46–73)
+
+> **Goal:** Transform this from a machine learning demo into a real, production-quality web application with user authentication, persistent conversation history, and a custom frontend. The HuggingFace Space stays as a lightweight public demo. This new website is the real product.
+
+> **Tech Stack:**
+>
+> - **Backend:** FastAPI (already built — we'll extend it)
+> - **Database:** MySQL (installed locally) + SQLAlchemy ORM
+> - **Auth:** JWT (JSON Web Tokens) with bcrypt password hashing
+> - **Frontend:** Next.js (React-based)
+> - **Deployment:** Docker → Vercel (frontend) + Render (backend)
+
+---
+
+## WEEK 7 — Database & Authentication (Days 46–52)
+
+> **Goal:** Build a secure backend with user registration, login, and protected endpoints. After this week, your API will only serve answers to authenticated users.
+
+---
+
+### Day 46 — MySQL Database + SQLAlchemy Setup
+
+**Time:** 4 hrs
+
+**What you're doing:** Connecting your FastAPI app to your local MySQL database and defining the tables (models) for users and conversations.
+
+**Why SQLAlchemy?** You could write raw SQL, but SQLAlchemy gives you an ORM (Object-Relational Mapper) — you interact with Python objects instead of writing SQL strings. This prevents SQL injection, makes migrations easier, and is the industry standard for FastAPI + databases.
+
+**Tasks:**
+
+1. Open MySQL and create a database for this project:
+
+```sql
+CREATE DATABASE medical_qa;
+```
+
+2. Install the required packages:
+
+```bash
+pip install sqlalchemy pymysql python-dotenv
+```
+
+> **Why `pymysql`?** SQLAlchemy needs a "driver" to talk to MySQL. `pymysql` is a pure-Python MySQL driver that works out of the box on Windows without needing to compile C extensions.
+
+3. Create a `.env` file in the project root to store your database credentials securely:
+
+```
+DATABASE_URL=mysql+pymysql://root:your_password@localhost:3306/medical_qa
+SECRET_KEY=generate-a-random-string-here-at-least-32-characters
+GROQ_API_KEY=your_existing_groq_key
+```
+
+> **Important:** Add `.env` to your `.gitignore` immediately. Never commit secrets to GitHub.
+
+4. Create `src/database/config.py` — the database connection setup:
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+engine = create_engine(DATABASE_URL, echo=False)
+SessionLocal = sessionmaker(bind=engine)
+
+class Base(DeclarativeBase):
+    pass
+
+def get_db():
+    """Dependency that provides a database session per request.
+    FastAPI calls this automatically when an endpoint needs a DB session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+```
+
+> **What's happening here?**
+>
+> - `create_engine` opens a connection pool to your MySQL database.
+> - `SessionLocal` is a factory that creates individual database sessions (one per API request).
+> - `get_db()` is a FastAPI "dependency" — it gives each request its own session and automatically closes it when done. This prevents connection leaks.
+
+5. Create `src/database/models.py` — your database tables as Python classes:
+
+```python
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float
+from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
+from src.database.config import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    email      = Column(String(255), unique=True, nullable=False, index=True)
+    username   = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationship: one user has many conversations
+    conversations = relationship("Conversation", back_populates="user")
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title      = Column(String(255), default="New Conversation")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user     = relationship("User", back_populates="conversations")
+    messages = relationship("Message", back_populates="conversation", order_by="Message.created_at")
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False)
+    role            = Column(String(20), nullable=False)   # "user" or "assistant"
+    content         = Column(Text, nullable=False)
+    sources         = Column(Text, nullable=True)          # JSON string of source chunks
+    confidence      = Column(String(20), nullable=True)
+    latency_seconds = Column(Float, nullable=True)
+    created_at      = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    conversation = relationship("Conversation", back_populates="messages")
+```
+
+> **What are these tables?**
+>
+> - `users` — stores email, username, and hashed password. Never store plain text passwords.
+> - `conversations` — groups messages into threads (like how ChatGPT has separate chats in the sidebar). Each conversation belongs to one user.
+> - `messages` — individual messages within a conversation. The `role` field marks whether the message is from the user or the assistant. Sources and confidence are stored so you can display them later.
+
+6. Create a small script `src/database/init_db.py` to create the tables:
+
+```python
+from src.database.config import engine, Base
+from src.database.models import User, Conversation, Message
+
+def init():
+    """Create all tables in the database.
+    Safe to run multiple times — it won't drop existing tables."""
+    Base.metadata.create_all(bind=engine)
+    print("Database tables created successfully!")
+
+if __name__ == "__main__":
+    init()
+```
+
+7. Run it:
+
+```bash
+python -m src.database.init_db
+```
+
+8. Verify the tables exist in MySQL:
+
+```sql
+USE medical_qa;
+SHOW TABLES;
+DESCRIBE users;
+```
+
+**You're done when:** You see `users`, `conversations`, and `messages` tables in your MySQL database.
+
+---
+
+### Day 47 — Password Hashing & JWT Authentication
+
+**Time:** 4 hrs
+
+**What you're doing:** Building the authentication layer. Users will register with a password (which we hash before storing), and log in to receive a JWT token that they include in every subsequent API request.
+
+**Why JWT?** Traditional session-based auth stores sessions on the server, which doesn't scale. JWT (JSON Web Tokens) encodes the user's identity into a signed token that the client stores. The server never needs to remember who's logged in — it just verifies the token's signature. This is the standard approach for API-first applications.
+
+**Tasks:**
+
+1. Install auth packages:
+
+```bash
+pip install bcrypt python-jose[cryptography]
+```
+
+> **`bcrypt`** — the gold standard for password hashing. It's intentionally slow, making brute-force attacks impractical.
+> **`python-jose`** — a library for creating and verifying JWTs. The `[cryptography]` extra gives it fast cryptographic primitives.
+
+2. Create `src/auth/security.py` — the core auth utilities:
+
+```python
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt
+from bcrypt import hashpw, gensalt, checkpw
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM  = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Token valid for 1 hour
+
+def hash_password(password: str) -> str:
+    """Hash a plain text password using bcrypt."""
+    return hashpw(password.encode('utf-8'), gensalt()).decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Check if a plain text password matches the stored hash."""
+    return checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+def create_access_token(data: dict) -> str:
+    """Create a signed JWT token with an expiration time."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_access_token(token: str) -> dict | None:
+    """Decode and verify a JWT token. Returns None if invalid or expired."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+```
+
+> **How password hashing works:** When a user registers with password "mypassword123", `hash_password()` converts it into something like `$2b$12$LJ3m4...` — a one-way hash. Even if someone steals your database, they can't reverse the hash back to the original password. When the user logs in, `verify_password()` hashes the provided password again and checks if it matches the stored hash.
+
+> **How JWT works:** When a user logs in successfully, the server creates a token containing `{"sub": "user@email.com", "exp": 1234567890}` and signs it with your `SECRET_KEY`. The client sends this token in every request. The server verifies the signature — if it's valid and not expired, the request is authenticated. No database lookup needed.
+
+3. Create `src/auth/dependencies.py` — the FastAPI dependency that protects endpoints:
+
+```python
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from src.auth.security import decode_access_token
+from src.database.config import get_db
+from src.database.models import User
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> User:
+    """Extract and verify the current user from the JWT token.
+    This is used as a dependency on protected endpoints."""
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    email = payload.get("sub")
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    return user
+```
+
+> **How this protects endpoints:** Any endpoint that includes `current_user: User = Depends(get_current_user)` in its function signature will automatically require a valid JWT token. If the token is missing, expired, or forged, FastAPI returns a 401 Unauthorized response before the endpoint code even runs.
+
+4. Test password hashing manually in a Python shell:
+
+```python
+from src.auth.security import hash_password, verify_password
+
+hashed = hash_password("test123")
+print(hashed)                                   # $2b$12$...
+print(verify_password("test123", hashed))        # True
+print(verify_password("wrongpassword", hashed))  # False
+```
+
+**You're done when:** Password hashing and JWT creation/verification work correctly in a Python shell.
+
+---
+
+### Day 48 — Auth Endpoints (Register, Login, Me)
+
+**Time:** 4 hrs
+
+**What you're doing:** Building the actual API routes that let users create accounts, log in, and check who they are.
+
+**Tasks:**
+
+1. Create `src/auth/schemas.py` — the request/response shapes for auth endpoints:
+
+```python
+from pydantic import BaseModel, EmailStr
+
+class UserRegisterRequest(BaseModel):
+    email: str
+    username: str
+    password: str
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    username: str
+
+    class Config:
+        from_attributes = True
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+```
+
+2. Create `src/auth/router.py` — the auth routes:
+
+```python
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from src.database.config import get_db
+from src.database.models import User
+from src.auth.security import hash_password, verify_password, create_access_token
+from src.auth.schemas import UserRegisterRequest, UserLoginRequest, UserResponse, TokenResponse
+from src.auth.dependencies import get_current_user
+
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+@router.post("/register", response_model=UserResponse, status_code=201)
+def register(request: UserRegisterRequest, db: Session = Depends(get_db)):
+    """Create a new user account."""
+    # Check if email already exists
+    if db.query(User).filter(User.email == request.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Check if username already exists
+    if db.query(User).filter(User.username == request.username).first():
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    # Create user with hashed password
+    user = User(
+        email=request.email,
+        username=request.username,
+        password_hash=hash_password(request.password)
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+@router.post("/login", response_model=TokenResponse)
+def login(request: UserLoginRequest, db: Session = Depends(get_db)):
+    """Authenticate and return a JWT token."""
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user or not verify_password(request.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
+    token = create_access_token(data={"sub": user.email})
+    return TokenResponse(access_token=token)
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    """Return the currently logged-in user's info. Requires a valid JWT."""
+    return current_user
+```
+
+> **The flow:**
+>
+> 1. User calls `POST /auth/register` with email, username, and password → gets back their user info.
+> 2. User calls `POST /auth/login` with email and password → gets back a JWT token.
+> 3. User includes the token in headers (`Authorization: Bearer <token>`) on every subsequent request.
+> 4. User calls `GET /auth/me` with the token → gets back their info, confirming the token works.
+
+3. Register the auth router in your main app. Update `src/api/main.py` — add these lines near the top after creating the `app`:
+
+```python
+from src.auth.router import router as auth_router
+from fastapi.middleware.cors import CORSMiddleware
+
+# Allow frontend to talk to backend (CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Next.js dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router)
+```
+
+> **What is CORS?** When your Next.js frontend (running on `localhost:3000`) tries to call your FastAPI backend (running on `localhost:8000`), the browser blocks it by default for security. CORS (Cross-Origin Resource Sharing) middleware tells the browser "it's okay, let requests from `localhost:3000` through."
+
+4. Start the API and test the full auth flow:
+
+```bash
+uvicorn src.api.main:app --reload
+```
+
+5. Open `http://localhost:8000/docs` and test manually:
+   - Hit `POST /auth/register` with a test email, username, and password.
+   - Hit `POST /auth/login` with the same credentials → copy the `access_token` from the response.
+   - Click the green "Authorize" button at the top of the Swagger page, paste your token, and hit `GET /auth/me`.
+
+**You're done when:** You can register, login, and access `/auth/me` with a valid token through the Swagger UI.
+
+---
+
+### Day 49 — Conversation History Endpoints
+
+**Time:** 4 hrs
+
+**What you're doing:** Building endpoints to create conversations, save messages, and retrieve past chat history — all tied to the logged-in user.
+
+**Tasks:**
+
+1. Create `src/conversations/schemas.py`:
+
+```python
+from pydantic import BaseModel
+from datetime import datetime
+
+class ConversationCreate(BaseModel):
+    title: str = "New Conversation"
+
+class ConversationResponse(BaseModel):
+    id: int
+    title: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class MessageResponse(BaseModel):
+    id: int
+    role: str
+    content: str
+    sources: str | None
+    confidence: str | None
+    latency_seconds: float | None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ConversationDetailResponse(BaseModel):
+    id: int
+    title: str
+    created_at: datetime
+    messages: list[MessageResponse]
+
+    class Config:
+        from_attributes = True
+```
+
+2. Create `src/conversations/router.py`:
+
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from src.database.config import get_db
+from src.database.models import User, Conversation, Message
+from src.auth.dependencies import get_current_user
+from src.conversations.schemas import (
+    ConversationCreate, ConversationResponse, ConversationDetailResponse
+)
+
+router = APIRouter(prefix="/conversations", tags=["Conversations"])
+
+@router.post("/", response_model=ConversationResponse, status_code=201)
+def create_conversation(
+    request: ConversationCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Start a new conversation thread."""
+    conv = Conversation(user_id=current_user.id, title=request.title)
+    db.add(conv)
+    db.commit()
+    db.refresh(conv)
+    return conv
+
+@router.get("/", response_model=list[ConversationResponse])
+def list_conversations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List all conversations for the logged-in user, newest first."""
+    return (
+        db.query(Conversation)
+        .filter(Conversation.user_id == current_user.id)
+        .order_by(Conversation.created_at.desc())
+        .all()
+    )
+
+@router.get("/{conversation_id}", response_model=ConversationDetailResponse)
+def get_conversation(
+    conversation_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a conversation with all its messages."""
+    conv = (
+        db.query(Conversation)
+        .filter(Conversation.id == conversation_id, Conversation.user_id == current_user.id)
+        .first()
+    )
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conv
+
+@router.delete("/{conversation_id}", status_code=204)
+def delete_conversation(
+    conversation_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a conversation and all its messages."""
+    conv = (
+        db.query(Conversation)
+        .filter(Conversation.id == conversation_id, Conversation.user_id == current_user.id)
+        .first()
+    )
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    db.delete(conv)
+    db.commit()
+```
+
+3. Register the conversations router in `src/api/main.py`:
+
+```python
+from src.conversations.router import router as conversations_router
+
+app.include_router(conversations_router)
+```
+
+4. Test through Swagger:
+   - Create a conversation (`POST /conversations/`).
+   - List your conversations (`GET /conversations/`).
+   - Get a specific conversation (`GET /conversations/{id}`).
+
+**You're done when:** You can create, list, view, and delete conversations through the Swagger UI while authenticated.
+
+---
+
+### Day 50 — Protect the /ask Endpoint + Save Messages
+
+**Time:** 4 hrs
+
+**What you're doing:** The existing `/ask` endpoint is completely open — anyone can call it. Today you lock it behind authentication and save every question + answer into the database as part of a conversation.
+
+**Tasks:**
+
+1. Refactor the `/ask` endpoint in `src/api/main.py` to require auth and save messages:
+
+```python
+import json
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from src.database.config import get_db
+from src.database.models import User, Conversation, Message
+from src.auth.dependencies import get_current_user
+
+class AskRequest(BaseModel):
+    question: str
+    conversation_id: int | None = None  # Optional: attach to existing conversation
+
+@app.post("/ask", response_model=QuestionResponse)
+def ask(
+    request: AskRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if len(request.question.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Question too short")
+
+    # Create a new conversation if none provided
+    if request.conversation_id:
+        conv = db.query(Conversation).filter(
+            Conversation.id == request.conversation_id,
+            Conversation.user_id == current_user.id
+        ).first()
+        if not conv:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+    else:
+        # Auto-title using the first few words of the question
+        title = request.question[:50] + ("..." if len(request.question) > 50 else "")
+        conv = Conversation(user_id=current_user.id, title=title)
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+
+    start = time.time()
+
+    if USE_GROQ:
+        chunks = retrieve_and_rerank(request.question, collection, embedder, reranker)
+        answer = answer_with_groq(request.question, chunks)
+        sources = chunks
+    else:
+        result = answer_question(request.question, model, tokenizer, embedder, collection, reranker)
+        answer = result['answer']
+        sources = result['sources']
+
+    latency = round(time.time() - start, 2)
+    confidence = estimate_confidence(request.question, sources, embedder)
+
+    # Save user message
+    user_msg = Message(
+        conversation_id=conv.id,
+        role="user",
+        content=request.question
+    )
+    db.add(user_msg)
+
+    # Save assistant message
+    assistant_msg = Message(
+        conversation_id=conv.id,
+        role="assistant",
+        content=answer,
+        sources=json.dumps(sources),
+        confidence=confidence,
+        latency_seconds=latency
+    )
+    db.add(assistant_msg)
+    db.commit()
+
+    return QuestionResponse(
+        answer=answer,
+        sources=sources,
+        confidence=confidence,
+        latency_seconds=latency
+    )
+```
+
+> **What changed?**
+>
+> - The endpoint now requires a valid JWT token (`current_user: User = Depends(get_current_user)`).
+> - Every question and answer is saved as `Message` objects in the database, tied to a `Conversation`.
+> - If no `conversation_id` is provided, a new conversation is created automatically.
+
+2. Also update the `QuestionResponse` schema to include the `conversation_id`:
+
+```python
+class QuestionResponse(BaseModel):
+    answer: str
+    sources: list[str]
+    confidence: str
+    latency_seconds: float
+    conversation_id: int
+```
+
+3. Test the full flow in Swagger:
+   - Login to get a token.
+   - Call `/ask` with a medical question.
+   - Call `GET /conversations/` — you should see a new conversation.
+   - Call `GET /conversations/{id}` — you should see the user question and assistant answer as messages.
+
+**You're done when:** Questions and answers are being saved to MySQL and you can retrieve full conversation histories.
+
+---
+
+### Day 51 — Rate Limiting + Input Validation
+
+**Time:** 3 hrs
+
+**What you're doing:** Preventing users from abusing your API. Without rate limiting, one user could send 1000 requests per minute and burn through your entire Groq API quota.
+
+**Tasks:**
+
+1. Install the rate limiting package:
+
+```bash
+pip install slowapi
+```
+
+2. Add rate limiting to `src/api/main.py`:
+
+```python
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request, exc):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Please try again later."}
+    )
+```
+
+3. Apply the rate limit to your `/ask` endpoint by adding the decorator:
+
+```python
+@app.post("/ask", response_model=QuestionResponse)
+@limiter.limit("10/hour")  # Max 10 questions per hour per IP
+def ask(request: AskRequest, ...):
+    ...
+```
+
+> **Why 10/hour?** This is a reasonable starting point. Groq's free tier has limits, and most legitimate users won't ask more than 10 medical questions in an hour. You can adjust this later.
+
+4. Add input validation — update the `AskRequest` model to enforce limits:
+
+```python
+from pydantic import BaseModel, field_validator
+
+class AskRequest(BaseModel):
+    question: str
+    conversation_id: int | None = None
+
+    @field_validator('question')
+    @classmethod
+    def validate_question(cls, v):
+        v = v.strip()
+        if len(v) < 5:
+            raise ValueError("Question must be at least 5 characters")
+        if len(v) > 1000:
+            raise ValueError("Question must be under 1000 characters")
+        return v
+```
+
+5. Test rate limiting by sending 11 quick requests — the 11th should return a 429 status code.
+
+**You're done when:** Rate limiting is active and returns a 429 error when exceeded.
+
+---
+
+### Day 52 — Backend Tests + CI/CD Update
+
+**Time:** 3 hrs
+
+**What you're doing:** Updating your test suite to test the new auth flow. Your existing tests in `tests/test_api.py` will break because `/ask` now requires authentication. Fix them.
+
+**Tasks:**
+
+1. Update `tests/test_api.py` to handle authentication:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from src.api.main import app
+
+client = TestClient(app)
+
+# Helper: create a test user and get a token
+def get_auth_token():
+    """Register a test user and return a valid JWT token."""
+    # Try to register (might already exist from a previous run)
+    client.post("/auth/register", json={
+        "email": "test@test.com",
+        "username": "testuser",
+        "password": "testpass123"
+    })
+    # Login
+    response = client.post("/auth/login", json={
+        "email": "test@test.com",
+        "password": "testpass123"
+    })
+    return response.json()["access_token"]
+
+def auth_headers():
+    token = get_auth_token()
+    return {"Authorization": f"Bearer {token}"}
+
+def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+def test_register_new_user():
+    response = client.post("/auth/register", json={
+        "email": "newuser@test.com",
+        "username": "newuser",
+        "password": "password123"
+    })
+    assert response.status_code in [201, 400]  # 400 if already exists
+
+def test_login():
+    response = client.post("/auth/login", json={
+        "email": "test@test.com",
+        "password": "testpass123"
+    })
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+def test_ask_without_auth():
+    """Verify that /ask rejects unauthenticated requests."""
+    response = client.post("/ask", json={"question": "What are symptoms of diabetes?"})
+    assert response.status_code == 401
+
+def test_ask_with_auth():
+    response = client.post(
+        "/ask",
+        json={"question": "What are symptoms of diabetes?"},
+        headers=auth_headers()
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "answer" in data
+    assert "conversation_id" in data
+
+def test_conversation_history():
+    headers = auth_headers()
+    # Ask a question (creates a conversation)
+    ask_response = client.post(
+        "/ask",
+        json={"question": "What causes high blood pressure?"},
+        headers=headers
+    )
+    conv_id = ask_response.json()["conversation_id"]
+
+    # Retrieve the conversation
+    conv_response = client.get(f"/conversations/{conv_id}", headers=headers)
+    assert conv_response.status_code == 200
+    messages = conv_response.json()["messages"]
+    assert len(messages) >= 2  # At least 1 user + 1 assistant message
+```
+
+2. Update your `.github/workflows/test.yml` to include new dependencies:
+
+```yaml
+- name: Install dependencies
+  run: |
+    pip install fastapi httpx pytest pydantic uvicorn
+    pip install sqlalchemy pymysql python-dotenv
+    pip install bcrypt python-jose[cryptography] slowapi
+```
+
+> **Note:** For CI, you may need to use SQLite instead of MySQL (since GitHub Actions runners don't have MySQL by default). You can add a conditional in `config.py` that uses SQLite when the `DATABASE_URL` env var isn't set.
+
+3. Run tests locally:
+
+```bash
+pytest tests/ -v
+```
+
+4. Fix any failures, then push and confirm CI passes.
+
+**You're done when:** All tests pass locally and in GitHub Actions.
+
+---
+
+## WEEK 8 — Next.js Frontend Setup (Days 53–59)
+
+> **Goal:** Build the frontend shell — project setup, auth pages, and the main layout. By the end of this week, users can register, log in, and see the main chat layout in their browser.
+
+---
+
+### Day 53 — Initialize the Next.js Project
+
+**Time:** 3 hrs
+
+**What you're doing:** Setting up a Next.js frontend project inside your repository. This will be a separate folder (`frontend/`) that talks to your FastAPI backend.
+
+**Tasks:**
+
+1. Create the Next.js project:
+
+```bash
+npx -y create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir --no-import-alias
+```
+
+> **Why these flags?**
+>
+> - `--typescript` — type safety, catches bugs early.
+> - `--tailwind` — utility-first CSS framework for rapid styling (we'll keep the colors clean and minimal as you requested — no purple/blue gradients).
+> - `--app` — uses Next.js 14+ App Router (the modern approach).
+> - `--src-dir` — puts code in `frontend/src/` for clean organization.
+
+2. Navigate into the frontend directory and start it:
+
+```bash
+cd frontend
+npm run dev
+```
+
+3. Open `http://localhost:3000` — you should see the default Next.js welcome page.
+
+4. Install additional packages you'll need:
+
+```bash
+npm install axios
+```
+
+> **`axios`** — a popular HTTP client for making API calls to your FastAPI backend. It handles headers, JSON parsing, and error handling more cleanly than the native `fetch` API.
+
+5. Create `frontend/src/lib/api.ts` — a centralized API client:
+
+```typescript
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "http://localhost:8000",
+  headers: { "Content-Type": "application/json" },
+});
+
+// Automatically attach JWT token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle 401 errors globally (redirect to login)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  },
+);
+
+export default api;
+```
+
+> **What are interceptors?** Instead of manually adding `Authorization: Bearer <token>` to every single API call, the request interceptor does it automatically. The response interceptor catches 401 errors and redirects to login — so if a token expires mid-session, the user is seamlessly sent to re-authenticate.
+
+**You're done when:** Next.js dev server is running on `localhost:3000` and the API client is configured.
+
+---
+
+### Day 54 — Authentication Pages (Login + Register)
+
+**Time:** 4 hrs
+
+**What you're doing:** Building the login and registration pages. These are the first pages a user will see.
+
+**Design principle:** Keep it clean and minimal. No AI-gradient decorations. Think professional medical SaaS — clean whites, soft grays, clear typography.
+
+**Tasks:**
+
+1. Create `frontend/src/app/login/page.tsx` — the login page. It should have:
+   - An email input field.
+   - A password input field.
+   - A "Log In" button that calls `POST /auth/login`.
+   - On success, store the returned JWT token in `localStorage` and redirect to the main page (`/`).
+   - On failure, show the error message from the API.
+   - A link to the registration page ("Don't have an account? Register").
+
+2. Create `frontend/src/app/register/page.tsx` — the registration page. It should have:
+   - Email, username, and password input fields.
+   - A "Create Account" button that calls `POST /auth/register`.
+   - On success, redirect to the login page.
+   - On failure, show the error message (e.g., "Email already registered").
+   - A link back to the login page ("Already have an account? Log in").
+
+3. Create `frontend/src/context/AuthContext.tsx` — a React context to manage auth state across the entire app:
+   - Store the current user object (from `/auth/me`) and the loading state.
+   - Provide `login()`, `register()`, and `logout()` functions.
+   - On page load, check if a token exists in `localStorage` and call `/auth/me` to verify it's still valid.
+   - Export a `useAuth()` hook for easy access.
+
+4. Create a protected route wrapper `frontend/src/components/ProtectedRoute.tsx`:
+   - If the user is not authenticated, redirect to `/login`.
+   - If the user is authenticated, render the child components.
+   - Show a loading spinner while the auth check is in progress.
+
+5. Test the flow:
+   - Open `localhost:3000/register` → create an account.
+   - Open `localhost:3000/login` → log in.
+   - Verify you're redirected to the main page.
+   - Open browser DevTools → Application → Local Storage → confirm the token is stored.
+
+**You're done when:** You can register and log in through the browser, and the auth state persists across page refreshes.
+
+---
+
+### Day 55 — Main Layout + Chat Interface
+
+**Time:** 4 hrs
+
+**What you're doing:** Building the main chat interface where authenticated users can ask medical questions and see responses.
+
+**Layout:** Think ChatGPT's layout — a sidebar on the left listing conversations, and a main chat area on the right.
+
+**Tasks:**
+
+1. Create the main layout `frontend/src/app/(dashboard)/layout.tsx`:
+   - A sidebar (left panel, ~280px wide) showing the user's conversation list.
+   - A "New Chat" button at the top of the sidebar.
+   - The user's name/email at the bottom of the sidebar with a "Logout" button.
+   - The main content area (right panel) where the chat lives.
+   - Wrap the entire layout in your `ProtectedRoute` component.
+
+2. Create `frontend/src/app/(dashboard)/page.tsx` — the main chat page:
+   - A scrollable message area showing the conversation.
+   - Each message shows the role (user or assistant) with different styling.
+   - Assistant messages should render markdown (install `react-markdown`).
+   - A fixed input bar at the bottom with a text input and a "Send" button.
+
+3. Wire it up to the API:
+   - When the user types a question and hits Send, call `POST /ask` with the question and `conversation_id`.
+   - While waiting for the response, show a loading indicator.
+   - When the response arrives, append both the user message and assistant answer to the chat.
+   - Display the sources in a collapsible section below the answer.
+   - Display the confidence badge (high/medium/low) next to the answer.
+
+4. Add the medical disclaimer — show it prominently at the top of every new conversation.
+
+**You're done when:** You can log in, ask a medical question, and see the answer with sources displayed in a clean chat interface.
+
+---
+
+### Day 56 — Conversation Sidebar + History
+
+**Time:** 4 hrs
+
+**What you're doing:** Making the sidebar functional — users can create new conversations, switch between them, and see their full history.
+
+**Tasks:**
+
+1. Populate the sidebar by calling `GET /conversations/` on page load. Show each conversation's title and date.
+
+2. When a user clicks a conversation in the sidebar, call `GET /conversations/{id}` and render all its messages in the chat area.
+
+3. Implement the "New Chat" button:
+   - Clear the current chat area.
+   - The next question sent will create a new conversation (no `conversation_id` in the request).
+
+4. Implement "Delete Conversation":
+   - Add a small delete icon/button on each sidebar item.
+   - Call `DELETE /conversations/{id}` and remove it from the list.
+
+5. Add visual polish:
+   - Highlight the currently active conversation in the sidebar.
+   - Show "No conversations yet" if the list is empty.
+   - Sort conversations by most recent first.
+
+**You're done when:** The sidebar shows conversation history, you can switch between conversations, and new chats work correctly.
+
+---
+
+### Day 57 — Feedback System + UI Polish
+
+**Time:** 4 hrs
+
+**What you're doing:** Adding a thumbs up/thumbs down feedback mechanism to assistant responses. This is the foundation of a data flywheel — you can use this feedback data to improve the model later via RLHF.
+
+**Tasks:**
+
+1. Add a `feedback` table to the database in `src/database/models.py`:
+
+```python
+class Feedback(Base):
+    __tablename__ = "feedback"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating     = Column(String(10), nullable=False)  # "up" or "down"
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+```
+
+2. Create a feedback endpoint `POST /feedback`:
+
+```python
+@app.post("/feedback")
+def submit_feedback(
+    message_id: int,
+    rating: str,  # "up" or "down"
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    feedback = Feedback(
+        message_id=message_id,
+        user_id=current_user.id,
+        rating=rating
+    )
+    db.add(feedback)
+    db.commit()
+    return {"status": "ok"}
+```
+
+3. In the frontend, add thumbs up/thumbs down icons below each assistant message. When clicked, call the feedback endpoint.
+
+4. UI polish pass:
+   - Add smooth transitions when switching conversations.
+   - Add a loading skeleton while messages are being fetched.
+   - Make the layout responsive (sidebar collapses on mobile).
+   - Add proper error toasts/notifications instead of raw alerts.
+
+5. Run the database migration to create the new `feedback` table:
+
+```bash
+python -m src.database.init_db
+```
+
+**You're done when:** Users can rate responses with thumbs up/down, and the feedback is saved to the database.
+
+---
+
+### Day 58 — Responsive Design + Mobile Support
+
+**Time:** 3 hrs
+
+**What you're doing:** Making the website work well on phones and tablets. A real-world website must be responsive.
+
+**Tasks:**
+
+1. Make the sidebar toggle-able on mobile:
+   - On screens smaller than 768px, hide the sidebar by default.
+   - Add a hamburger menu button that slides the sidebar in and out.
+
+2. Adjust the chat input area:
+   - On mobile, the input bar should be fixed at the bottom of the screen.
+   - The message area should be scrollable above it.
+
+3. Test on multiple screen sizes using browser DevTools:
+   - Desktop (1920px)
+   - Tablet (768px)
+   - Mobile (375px)
+
+4. Add `<meta>` viewport tags and proper SEO metadata in `frontend/src/app/layout.tsx`.
+
+**You're done when:** The website looks and works well on desktop, tablet, and mobile screens.
+
+---
+
+### Day 59 — Week 8 Review + Integration Testing
+
+**Time:** 3 hrs
+
+**What you're doing:** End-to-end testing of the full flow — register, login, ask questions, switch conversations, give feedback, and logout.
+
+**Tasks:**
+
+1. Do a full end-to-end walkthrough:
+   - Register a brand new account.
+   - Log in.
+   - Ask 5 different medical questions.
+   - Check that conversations appear in the sidebar.
+   - Switch between conversations.
+   - Give thumbs up/down feedback on answers.
+   - Log out and verify you're redirected to the login page.
+   - Log back in and confirm your conversation history is preserved.
+
+2. Fix any bugs found during testing.
+
+3. Update `requirements.txt` with all new Python dependencies.
+
+4. Commit everything and push to GitHub.
+
+**You're done when:** The full flow works without bugs end-to-end.
+
+---
+
+## WEEK 9 — Docker + Deployment (Days 60–66)
+
+> **Goal:** Containerize everything with Docker and deploy to the cloud. After this week, your website is live on the internet.
+
+---
+
+### Day 60 — Dockerize the FastAPI Backend
+
+**Time:** 4 hrs
+
+**What you're doing:** Creating a Docker container for your backend so it runs identically on any machine.
+
+**Tasks:**
+
+1. Create `Dockerfile` in the project root:
+
+```dockerfile
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ src/
+COPY .env .env
+
+EXPOSE 8000
+
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+2. Create a `.dockerignore` file:
+
+```
+medqa_env/
+__pycache__/
+.git/
+node_modules/
+frontend/
+notebooks/
+data/raw/
+models/
+mlruns/
+*.pyc
+```
+
+3. Build and test:
+
+```bash
+docker build -t medical-qa-backend .
+docker run -p 8000:8000 --env-file .env medical-qa-backend
+```
+
+4. Verify `http://localhost:8000/health` returns `{"status": "ok"}`.
+
+**You're done when:** The backend runs correctly inside a Docker container.
+
+---
+
+### Day 61 — Docker Compose (Backend + MySQL)
+
+**Time:** 3 hrs
+
+**What you're doing:** Using Docker Compose to run the backend and a MySQL container together with a single command.
+
+**Tasks:**
+
+1. Create `docker-compose.yml` in the project root:
+
+```yaml
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: medical_qa
+    ports:
+      - "3307:3306" # 3307 to avoid conflict with your local MySQL
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://root:rootpassword@db:3306/medical_qa
+      SECRET_KEY: ${SECRET_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      USE_GROQ: "true"
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
+```
+
+2. Run it:
+
+```bash
+docker-compose up --build
+```
+
+3. Test the full API through `http://localhost:8000/docs`.
+
+**You're done when:** `docker-compose up` starts both MySQL and the backend, and the API works.
+
+---
+
+### Day 62 — Deploy the Backend to Render
+
+**Time:** 4 hrs
+
+**What you're doing:** Deploying your FastAPI backend to Render's free tier so it's accessible on the internet.
+
+> **Important trade-off about the database:** Render's free tier does not include MySQL. For the deployed version, you have two options:
+>
+> 1. Use Render's free PostgreSQL (change `pymysql` to `psycopg2` — SQLAlchemy makes this a one-line change in the connection string).
+> 2. Use a free MySQL service like TiDB Cloud Serverless.
+>    We'll cover the exact steps on this day.
+
+**Tasks:**
+
+1. Create a free account on render.com.
+2. Create a new "Web Service" connected to your GitHub repo.
+3. Set the build command: `pip install -r requirements.txt`
+4. Set the start command: `uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
+5. Add environment variables in Render's dashboard: `DATABASE_URL`, `SECRET_KEY`, `GROQ_API_KEY`, `USE_GROQ`.
+6. Deploy and test the `/health` endpoint at your Render URL.
+
+**You're done when:** Your backend API is live at `https://your-app.onrender.com`.
+
+---
+
+### Day 63 — Deploy the Frontend to Vercel
+
+**Time:** 3 hrs
+
+**What you're doing:** Deploying your Next.js frontend to Vercel (which is built by the same team that created Next.js — best possible hosting for it, free forever for personal projects).
+
+**Tasks:**
+
+1. Create a free account on vercel.com.
+2. Import your GitHub repo and point it to the `frontend/` directory.
+3. Set the environment variable `NEXT_PUBLIC_API_URL` to your Render backend URL.
+4. Update `frontend/src/lib/api.ts` to use the environment variable instead of `localhost`:
+
+```typescript
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  headers: { "Content-Type": "application/json" },
+});
+```
+
+5. Deploy. Vercel will auto-deploy on every push to `main`.
+6. Update CORS in `src/api/main.py` to include your Vercel domain:
+
+```python
+allow_origins=["http://localhost:3000", "https://your-app.vercel.app"],
+```
+
+7. Test the full flow on the live site.
+
+**You're done when:** The live website is accessible at `https://your-app.vercel.app` and can register users, login, and ask questions.
+
+---
+
+### Day 64 — Custom Domain + SSL (Optional)
+
+**Time:** 2 hrs
+
+**What you're doing:** If you own a domain name, connecting it to your Vercel deployment so your site is at `yourdomain.com` instead of `your-app.vercel.app`. If you don't have a domain, skip this day.
+
+**Tasks:**
+
+1. Buy a domain from Namecheap, Google Domains, or Cloudflare (~$10/year for a `.com`).
+2. In Vercel, go to your project → Settings → Domains → Add your domain.
+3. Update DNS records as Vercel instructs (usually an A record or CNAME).
+4. Vercel auto-provisions an SSL certificate (HTTPS) for free.
+5. Update CORS origins in FastAPI to include your custom domain.
+
+**You're done when:** Your website is live at your custom domain with HTTPS.
+
+---
+
+### Day 65 — Logging + Error Monitoring
+
+**Time:** 3 hrs
+
+**What you're doing:** Adding proper logging to the backend so you can debug production issues. Right now, if something breaks on the live site, you have no way to know what happened.
+
+**Tasks:**
+
+1. Replace all `print()` statements in your backend with Python's `logging` module:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Instead of: print("Loading models...")
+# Use: logger.info("Loading models...")
+```
+
+2. Add structured logging to key events:
+   - `logger.info(f"User {user.email} asked: {question[:50]}")` — log every question.
+   - `logger.warning(f"Rate limit hit by {request.client.host}")` — log rate limit events.
+   - `logger.error(f"Groq API error: {str(e)}")` — log API failures.
+
+3. Add a global error handler in FastAPI:
+
+```python
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logger.error(f"Unhandled error: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal error occurred. Please try again."}
+    )
+```
+
+**You're done when:** All key events are logged and errors are caught gracefully.
+
+---
+
+### Day 66 — Week 9 Review + Full E2E Test on Production
+
+**Time:** 3 hrs
+
+**Tasks:**
+
+1. Run the complete end-to-end flow on the live production site:
+   - Register, login, ask 10 questions, switch conversations, give feedback, logout.
+2. Check Render logs for any errors.
+3. Share the live URL with someone and watch them use it. Note pain points.
+4. Fix any bugs found.
+
+**You're done when:** The production site is stable and tested.
+
+---
+
+## WEEK 10 — Final Polish + Portfolio (Days 67–73)
+
+> **Goal:** Polish everything and make this portfolio-ready.
+
+---
+
+### Day 67 — Design Inspiration Pass
+
+**Time:** 4 hrs
+
+**What you're doing:** Applying the specific design inspiration you chose for the website (you mentioned you'll share this later). This is the day to overhaul the visual design.
+
+**Tasks:**
+
+1. Study your chosen design inspiration — note the color palette, typography, spacing, and component styles.
+2. Update the frontend's global styles and Tailwind config to match.
+3. Apply the design to all pages: login, register, chat, sidebar.
+4. Ensure consistency across all components.
+
+**You're done when:** The website matches your design inspiration and feels polished.
+
+---
+
+### Day 68 — Update the README + Architecture Diagram
+
+**Time:** 3 hrs
+
+**Tasks:**
+
+1. Update the README to reflect the full-stack architecture:
+   - Add a new architecture diagram showing the frontend → backend → database flow.
+   - Update the "Setup" section with instructions for running both frontend and backend.
+   - Add a "Tech Stack" section listing all technologies used.
+   - Update the "What It Does" section to mention user auth, conversation history, and feedback.
+
+2. Update the Mermaid architecture diagram to include the new components:
+
+```
+User → Next.js Frontend → FastAPI Backend → MySQL Database
+                                          → RAG Pipeline → ChromaDB
+                                          → Groq API
+```
+
+**You're done when:** README accurately describes the full-stack application.
+
+---
+
+### Day 69 — Security Audit
+
+**Time:** 3 hrs
+
+**What you're doing:** Reviewing your application for common security vulnerabilities.
+
+**Checklist:**
+
+1. **Passwords:** Verify all passwords are hashed with bcrypt. Never stored in plain text.
+2. **SQL Injection:** Confirm you're using SQLAlchemy ORM (parameterized queries) everywhere and never building raw SQL strings.
+3. **JWT Security:** Verify tokens expire properly. Test with an expired token to confirm it's rejected.
+4. **CORS:** Make sure `allow_origins` only includes your actual domains, not `"*"`.
+5. **Rate Limiting:** Confirm rate limiting works on production.
+6. **Environment Variables:** Verify `.env` is gitignored and secrets are only in Render/Vercel dashboards.
+7. **Input Validation:** Confirm all user inputs are validated (question length, email format, etc.).
+8. **HTTPS:** Verify the live site uses HTTPS (Vercel handles this automatically).
+
+**You're done when:** All 8 checks pass.
+
+---
+
+### Day 70 — Record Demo Video + LinkedIn Post
 
 **Time:** 3 hrs
 
 **Tasks:**
 
 1. Download Loom (free screen recorder).
-2. Record a 2-minute demo:
-   - 0:00–0:20: "This is a medical QA assistant I built. Here's how it works." (show diagram)
-   - 0:20–1:20: Ask 3 real questions live. Show answers + sources.
-   - 1:20–1:40: "Under the hood: fine-tuned Phi-3, RAG with re-ranking, deployed on HuggingFace"
-   - 1:40–2:00: "Here's the GitHub with full code and CI/CD pipeline"
+2. Record a 2–3 minute demo:
+   - 0:00–0:20: "I built a medical QA assistant — here's the live site." (show the login page)
+   - 0:20–0:40: Register a new account and log in.
+   - 0:40–1:30: Ask 3 medical questions. Show answers with sources and confidence.
+   - 1:30–1:50: Show conversation history in the sidebar. Switch between chats.
+   - 1:50–2:10: Show the thumbs up/down feedback system.
+   - 2:10–2:40: "Under the hood: fine-tuned Phi-3, RAG with re-ranking, FastAPI with JWT auth, MySQL database, Next.js frontend."
+   - 2:40–3:00: "Here's the GitHub with full code, CI/CD, and Docker support."
 3. Add the Loom link to your README.
-4. Post on LinkedIn with a short write-up of what you built and what you learned.
+4. Post on LinkedIn.
 
 **You're done when:** Demo video is live and LinkedIn post is up.
 
 ---
 
-### Day 47 — Final Polish + Resume Bullet
+### Day 71 — Code Cleanup + Documentation
 
 **Time:** 3 hrs
 
 **Tasks:**
 
-1. Go through every file. Remove debug print statements, clean up commented code.
-2. Make sure every notebook has a markdown cell at the top explaining what it does.
-3. Write your resume bullet:
+1. Go through every file. Remove debug `print()` statements, clean up commented-out code.
+2. Add docstrings to every Python function that doesn't have one.
+3. Add JSDoc comments to key TypeScript functions.
+4. Make sure every notebook has a markdown cell at the top explaining what it does.
+5. Create a `docs/API_REFERENCE.md` documenting all API endpoints with example requests and responses.
 
-```
-Built and deployed a medical Q&A assistant — fine-tuned Phi-3 Mini (3.8B)
-on 100k+ real doctor-patient conversations using QLoRA on an RTX 4050, layered
-a RAG pipeline with domain-specific BioMedical embeddings and cross-encoder
-re-ranking, built a FastAPI backend with CI/CD via GitHub Actions, and deployed
-publicly on HuggingFace Spaces.
-```
-
-4. Add it to your resume and LinkedIn.
-
-> 🎉 **Project complete.** You built a production-quality ML project from scratch. That's not a small thing.
+**You're done when:** The codebase is clean and well-documented.
 
 ---
 
-## WEEKS 7–8 — Optional Improvements (Days 48–56)
+### Day 72 — Final Polish + Resume Bullet
 
-Pick any that interest you:
+**Time:** 3 hrs
 
-**Make the model better:**
+**Tasks:**
 
-- Train on the full 100k examples instead of 10k
-- Experiment with different LoRA ranks (r=8 vs r=32) and compare results
-- Try a higher `lora_alpha` value
+1. Do one final end-to-end test on production.
+2. Write your updated resume bullet:
 
-**Make the RAG better:**
+```
+Built and deployed a full-stack medical Q&A web application — fine-tuned Phi-3
+Mini (3.8B) on 100k+ doctor-patient conversations using QLoRA, implemented a RAG
+pipeline with BioMedical embeddings and cross-encoder re-ranking, built a secure
+FastAPI backend with JWT authentication, MySQL database, and rate limiting,
+designed a Next.js frontend with conversation history and user feedback, and
+deployed with Docker on Vercel + Render with CI/CD via GitHub Actions.
+```
 
-- Add more documents (PubMed abstracts via the free PubMed API)
-- Try different chunk sizes (200 tokens vs 600 tokens) and compare quality
-- Add hybrid search (keyword + vector combined)
+3. Add it to your resume and LinkedIn.
 
-**Make the product better:**
+**You're done when:** Resume bullet is updated and you're proud of it.
 
-- Add conversation history (multi-turn chat)
-- Add a "Was this helpful?" feedback button
-- Add a disclaimer checkbox the user must confirm before getting answers
+---
 
-**Make the engineering better:**
+### Day 73 — Ship It 🚀
 
-- Add proper logging with Python's built-in `logging` module
-- Add rate limiting to the FastAPI endpoint
-- Add Docker containerization (`Dockerfile` + `docker-compose.yml`)
-- Write more comprehensive tests with edge cases
+**Time:** 2 hrs
+
+**Tasks:**
+
+1. Share the live URL with 3–5 people. Collect feedback.
+2. Create a GitHub release tag (`v2.0.0 — Full-Stack Release`).
+3. Pin the repo on your GitHub profile.
+4. Celebrate. You built a real, production-quality AI product from scratch.
+
+> 🎉 **Project complete.** You didn't just train a model — you shipped a product. That's what AI Engineers do.
 
 ---
 
