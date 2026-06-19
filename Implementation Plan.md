@@ -3701,7 +3701,7 @@ Mini (3.8B) on 100k+ doctor-patient conversations using QLoRA, implemented a RAG
 pipeline with BioMedical embeddings and cross-encoder re-ranking, built a secure
 FastAPI backend with JWT authentication, MySQL database, and rate limiting,
 designed a Next.js frontend with conversation history and user feedback, and
-deployed with Docker on Vercel + Render with CI/CD via GitHub Actions.
+deployed with Docker on Vercel +s Render with CI/CD via GitHub Actions.
 ```
 
 3. Add it to your resume and LinkedIn.
