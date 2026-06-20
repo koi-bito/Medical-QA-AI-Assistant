@@ -72,9 +72,10 @@ To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrie
 
 ## Progress
 
-| Phase / Week                                           | Topic                                                | Status         |
+### Phase 1: ML Pipeline & Demo
+
+| Week                                                   | Topic                                                | Status         |
 | ------------------------------------------------------ | ---------------------------------------------------- | -------------- |
-| **Phase 1: ML Pipeline & Demo**                        |                                                      |                |
 | [Pre-Week (Days 1–5)](docs/pre_week_foundations.md)    | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
 | [Week 1 (Days 6–12)](docs/week_1_environment_setup.md) | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
 | [Week 2 (Days 13–19)](docs/week_2_data_preparation.md) | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
@@ -82,7 +83,11 @@ To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrie
 | [Week 4 (Days 27–33)](docs/week_4_rag_pipeline.md)     | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
 | [Week 5 (Days 34–40)](docs/week_5_mlops_api.md)        | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done        |
 | [Week 6 (Days 41–45)](docs/week_6_deployment.md)       | Deployment & Polish — Gradio UI, HuggingFace Spaces  | ✅ Done        |
-| **Phase 2: Full-Stack AI Product**                     |                                                      |                |
+
+### Phase 2: Full-Stack AI Product
+
+| Week                                                   | Topic                                                | Status         |
+| ------------------------------------------------------ | ---------------------------------------------------- | -------------- |
 | [Week 7 (Days 46–52)](docs/week_7_database_auth.md)    | Database & Authentication — MySQL, SQLAlchemy, JWT   | ✅ In Progress |
 
 ## Limitations
