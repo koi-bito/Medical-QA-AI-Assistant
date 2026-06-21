@@ -116,12 +116,17 @@ I used PubMedBERT specifically because a domain-specific medical embedder outper
 
 ---
 
-## API Layer
+## API Layer & Database Architecture
 
-The API is built with FastAPI. It exposes two endpoints:
+The API is built with FastAPI and uses a MySQL database (via SQLAlchemy ORM) to persist users, conversations, and messages.
+
+It exposes several core endpoints:
 
 - `GET /health` — uptime check, returns `{"status": "ok"}`
-- `POST /ask` — takes a question, runs the full pipeline, returns the answer
+- `POST /auth/register` and `POST /auth/token` — user registration and JWT login
+- `GET /users/me` — returns the current authenticated user
+- `POST /ask` — protected endpoint that takes a question, runs the RAG pipeline, saves the interaction to the database, and returns the answer
+- `GET /conversations` and `GET /conversations/{id}` — fetch a user's chat history
 
 The `POST /ask` response looks like this:
 
@@ -133,26 +138,39 @@ The `POST /ask` response looks like this:
     "Blood sugar control involves..."
   ],
   "confidence": "high",
-  "latency_seconds": 4.23
+  "latency_seconds": 4.23,
+  "conversation_id": 1
 }
 ```
 
+The system includes multiple layers of API protection:
+1. **JWT Authentication:** Critical endpoints require a valid token passed via the `Authorization: Bearer` header. Passwords are hashed with `bcrypt`.
+2. **Rate Limiting:** The `/ask` endpoint uses `slowapi` to limit requests to 10 per hour per IP address, preventing abuse of the Groq API.
+3. **Input Validation:** Pydantic `@field_validator` ensures questions are between 5 and 1000 characters before processing begins.
+
 The confidence field is a rough heuristic — I compute cosine similarity between the question embedding and the source embeddings. If the average similarity is above 0.5 it's "high", above 0.3 it's "medium", otherwise "low". It's not a calibrated probability, just a sanity signal.
 
-One important implementation detail: all models (Phi-3, PubMedBERT, cross-encoder) are loaded once at server startup and held in memory. If you loaded them per-request, every query would take minutes just for initialization.
+One important implementation detail: all ML models (Phi-3, PubMedBERT, cross-encoder) are loaded once at server startup and held in memory. If you loaded them per-request, every query would take minutes just for initialization.
 
 ---
 
 ## Testing
 
-I wrote four automated tests using FastAPI's `TestClient`:
+I wrote a suite of automated integration tests using FastAPI's `TestClient` and `pytest`. To ensure tests are fast, reliable, and isolated:
 
+- **Mocked ML Dependencies:** The heavy embeddings and LLM pipeline are mocked so tests run instantly without needing PyTorch or a GPU.
+- **SQLite Test Database:** Instead of requiring a live MySQL server, tests override the `DATABASE_URL` to use an in-memory/local SQLite file.
+- **Randomized Credentials:** Test users are created with UUIDs to avoid unique constraint collisions across test runs.
+
+The tests cover:
 1. Health check returns 200
-2. A real question returns an answer longer than 10 characters
-3. An empty/too-short question returns a 400 error
-4. The response includes at least one source chunk
+2. User registration and JWT token generation
+3. Attempting to ask a question without auth returns 401 Unauthorized
+4. A valid question returns a successful answer and conversation ID
+5. An empty/too-short question is rejected by Pydantic with 422 Unprocessable Entity
+6. Conversation history is accurately retrieved
 
-One thing I learned the hard way: you can't run the test suite while the uvicorn server is also running. Both try to load the full model stack into GPU memory, and a 6GB GPU can't hold two copies. Shut down the server first, then run tests.
+One thing I learned the hard way about GitHub Actions CI/CD: you must explicitly set required environment variables (like `SECRET_KEY`) inside the workflow YAML before Python even starts, otherwise module-level imports will resolve to `None` and crash.
 
 ---
 

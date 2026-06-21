@@ -88,7 +88,7 @@ To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrie
 
 | Week                  | Topic                                                | Status         |
 | --------------------- | ---------------------------------------------------- | -------------- |
-| Week 7 (Days 46–52)   | Database & Authentication — MySQL, SQLAlchemy, JWT   | 🔧 In Progress |
+| Week 7 (Days 46–52)   | Database & Authentication — MySQL, SQLAlchemy, JWT   | ✅ Done        |
 
 ## Limitations
 
