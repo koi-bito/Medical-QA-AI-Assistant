@@ -433,6 +433,14 @@ What did you learn about securing the main RAG endpoint and handling hardware cr
 - **Silent C-Level Crashes:** A missing `.env` variable (`USE_GROQ=true`) caused the application to fallback to loading the local 3.8B Phi-3 model using 4-bit `bitsandbytes` quantization. On Windows, without a perfect CUDA environment, this library can trigger a catastrophic C-level segfault. This instantly kills the Python process without printing any error message or stack trace, returning straight to the command prompt. Ensuring the correct configuration skips this heavy loading process.
 - **Auto-Saving Chat History:** By wrapping the existing RAG generation logic inside a database session, the `/ask` endpoint can instantly save both the user's question and the LLM's generated answer into the `messages` table. It also dynamically generates a conversation title based on the first 50 characters of the user's initial prompt, mimicking standard chat interfaces like ChatGPT.
 
+## Day 51
+
+What did you learn about protecting APIs with rate limiting and input validation?
+
+- **Rate Limiting with `slowapi`:** Without rate limiting, a single user (or a bot) can make thousands of requests to your Groq API endpoint, burning through your free-tier quota in seconds. `slowapi` integrates directly with FastAPI using a `@limiter.limit("10/hour")` decorator on the endpoint. It tracks requests by the caller's IP address and automatically returns a `429 Too Many Requests` response when the limit is exceeded — no manual counter logic needed.
+- **`slowapi` Needs the Starlette `Request` Object:** The `@limiter.limit()` decorator works by inspecting the raw HTTP request object. FastAPI's endpoint functions normally only receive Pydantic-parsed body objects, not the raw request. `slowapi` requires that you explicitly add `request: Request` as the **first parameter** of the endpoint function. If it's named anything else (like `http_request`), `slowapi` cannot find it and crashes with `Exception: parameter request must be an instance of starlette.requests.Request`.
+- **Pydantic `@field_validator` vs. Manual `if` Checks:** The old approach was to manually check `if len(question) < 5: raise HTTPException(400, ...)` inside the endpoint body. The better approach is to declare the validation rule directly on the Pydantic model using `@field_validator`. This means the validation runs automatically _before_ the endpoint function even executes, keeping the endpoint code clean and returning a well-structured `422 Unprocessable Entity` response (instead of a custom `400`) with a detailed machine-readable error body — which is the standard REST API convention for invalid input.
+
 ## Day 52
 
 What did you learn about fixing automated tests after adding authentication?
