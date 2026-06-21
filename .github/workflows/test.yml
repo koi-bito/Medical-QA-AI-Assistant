@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install fastapi httpx pytest pydantic uvicorn numpy
+          pip install fastapi httpx pytest pydantic uvicorn numpy sqlalchemy pymysql passlib bcrypt python-jose python-multipart python-dotenv
 
       - name: Run tests
         run: pytest tests/ -v

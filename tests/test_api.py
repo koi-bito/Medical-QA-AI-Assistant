@@ -1,6 +1,10 @@
 import sys
 import numpy as np
 from unittest.mock import MagicMock
+import os
+
+# Set a fallback DATABASE_URL for CI environments BEFORE importing anything from src
+os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 
 # Mock the heavy ML pipeline so tests can run without PyTorch or actual models
 mock_pipeline = MagicMock()
@@ -30,22 +34,49 @@ sys.modules['src.inference.groq_client'] = mock_groq
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from src.api.main import app
+from src.database.config import Base, get_db
+
+# Set up a dedicated SQLite database for testing
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+test_engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+# Create tables in the test database
+Base.metadata.create_all(bind=test_engine)
+
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
 # Helper: create a test user and get a token
 def get_auth_token():
     """Register a test user and return a valid JWT token."""
-    # Try to register (might already exist from a previous run)
+    import uuid
+    # Use a random string so we don't conflict on subsequent test runs
+    rand_id = uuid.uuid4().hex[:8]
+    rand_email = f"user_{rand_id}@test.com"
+    rand_user = f"testuser_{rand_id}"
     client.post("/auth/register", json={
-        "email": "test@test.com",
-        "username": "testuser",
+        "email": rand_email,
+        "username": rand_user,
         "password": "testpass123"
     })
     # Login uses form data (OAuth2PasswordRequestForm)
     response = client.post("/auth/login", data={
-        "username": "test@test.com",
+        "username": rand_email,
         "password": "testpass123"
     })
     return response.json()["access_token"]
@@ -60,29 +91,16 @@ def test_health_check():
     assert response.json()["status"] == "ok"
 
 def test_register_new_user():
-    # Use a random string so we don't conflict on subsequent runs
     import uuid
-    rand_email = f"user_{uuid.uuid4().hex[:8]}@test.com"
+    rand_id = uuid.uuid4().hex[:8]
+    rand_email = f"newuser_{rand_id}@test.com"
+    rand_user = f"newuser_{rand_id}"
     response = client.post("/auth/register", json={
         "email": rand_email,
-        "username": "newuser",
+        "username": rand_user,
         "password": "password123"
     })
     assert response.status_code == 201
-
-def test_login():
-    # Ensure test user exists first
-    client.post("/auth/register", json={
-        "email": "test@test.com",
-        "username": "testuser",
-        "password": "testpass123"
-    })
-    response = client.post("/auth/login", data={
-        "username": "test@test.com",
-        "password": "testpass123"
-    })
-    assert response.status_code == 200
-    assert "access_token" in response.json()
 
 def test_ask_without_auth():
     """Verify that /ask rejects unauthenticated requests."""
