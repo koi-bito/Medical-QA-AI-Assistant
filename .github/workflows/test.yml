@@ -22,4 +22,8 @@ jobs:
           pip install fastapi httpx pytest pydantic uvicorn numpy sqlalchemy pymysql passlib bcrypt python-jose python-multipart python-dotenv
 
       - name: Run tests
+        env:
+          DATABASE_URL: "sqlite:///./test.db"
+          SECRET_KEY: "test-secret-key-for-ci-only"
+          USE_GROQ: "true"
         run: pytest tests/ -v

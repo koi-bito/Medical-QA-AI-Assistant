@@ -3,8 +3,10 @@ import numpy as np
 from unittest.mock import MagicMock
 import os
 
-# Set a fallback DATABASE_URL for CI environments BEFORE importing anything from src
-os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+# Force-set ALL required environment variables for CI environments BEFORE importing anything from src
+os.environ["DATABASE_URL"] = os.environ.get("DATABASE_URL", "sqlite:///./test.db")
+os.environ["SECRET_KEY"] = os.environ.get("SECRET_KEY", "test-secret-key-for-ci-only")
+os.environ["USE_GROQ"] = os.environ.get("USE_GROQ", "true")
 
 # Mock the heavy ML pipeline so tests can run without PyTorch or actual models
 mock_pipeline = MagicMock()
