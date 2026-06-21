@@ -432,3 +432,22 @@ What did you learn about securing the main RAG endpoint and handling hardware cr
 
 - **Silent C-Level Crashes:** A missing `.env` variable (`USE_GROQ=true`) caused the application to fallback to loading the local 3.8B Phi-3 model using 4-bit `bitsandbytes` quantization. On Windows, without a perfect CUDA environment, this library can trigger a catastrophic C-level segfault. This instantly kills the Python process without printing any error message or stack trace, returning straight to the command prompt. Ensuring the correct configuration skips this heavy loading process.
 - **Auto-Saving Chat History:** By wrapping the existing RAG generation logic inside a database session, the `/ask` endpoint can instantly save both the user's question and the LLM's generated answer into the `messages` table. It also dynamically generates a conversation title based on the first 50 characters of the user's initial prompt, mimicking standard chat interfaces like ChatGPT.
+
+## Day 52
+
+What did you learn about fixing automated tests after adding authentication?
+
+- **CI Environments Are Blank Slates:** GitHub Actions runners start from a completely empty Ubuntu machine. There is no `.env` file, no MySQL server, no pre-installed Python packages beyond the standard library. Every dependency the app needs — from `sqlalchemy` to `bcrypt` to `python-jose` — must be explicitly listed in the workflow's `pip install` step, or the import will crash immediately with `ModuleNotFoundError`.
+- **Module-Level Code Runs at Import Time:** Python executes module-level code (like `SECRET_KEY = os.getenv("SECRET_KEY")` in `security.py`) the instant that module is first imported. If the environment variable isn't set *before* the import chain begins, the variable resolves to `None` and JWT signing crashes with `JWSError: Expecting a string- or bytes-formatted key`. Setting env vars via `os.environ.setdefault()` inside the test file can be unreliable if `load_dotenv()` runs first. The bulletproof solution is to set them as `env:` variables directly in the GitHub Actions YAML, so the OS guarantees they exist before Python even starts.
+- **SQLite as a Test Database:** On CI, there is no MySQL server running. By overriding `DATABASE_URL` to point at a local SQLite file (`sqlite:///./test.db`) and using FastAPI's `app.dependency_overrides[get_db]` to swap in a test database session, all database operations (user registration, conversation creation, message saving) work identically without needing a real database server.
+- **Unique Constraint Collisions:** When test helper functions (like `get_auth_token()`) create users, hardcoding the username causes `IntegrityError` on the second call because the database enforces uniqueness. Generating random UUIDs for both email and username (`f"testuser_{uuid4().hex[:8]}"`) ensures every test run creates a genuinely unique user.
+- **Python 3.13 Broke `passlib` on Linux:** Python 3.13 completely removed the `crypt` standard library module. On Linux (GitHub Actions), the `passlib` library assumes `crypt` exists and crashes with `ModuleNotFoundError` when it tries to import it. Downgrading the CI runner from Python 3.13 to 3.12 (which still includes `crypt`) fixes the issue without requiring any code changes.
+
+## Week 7 Summary
+
+What does the backend architecture look like now compared to Week 6?
+
+- **From Demo to Product:** In Week 6, the system was a stateless, single-user demo. Now, it is a multi-user API with secure JWT authentication, bcrypt password hashing, and persistent MySQL storage for users, conversations, and messages via SQLAlchemy.
+- **Security First:** Industry-standard password hashing (`bcrypt`) and token generation (`python-jose`) protect all sensitive endpoints. The Swagger UI integration required switching the login endpoint from JSON to `OAuth2PasswordRequestForm` to work with FastAPI's built-in Authorize popup.
+- **CI/CD Resilience:** The test suite was completely rewritten to work in a database-less CI environment by swapping MySQL for SQLite, mocking all ML dependencies, and injecting environment variables at the OS level. All 6 tests pass on both local Windows and GitHub Actions Ubuntu.
+- **Remaining:** Day 51 (Rate Limiting with `slowapi`) is the last piece to protect the Groq API from abuse.
