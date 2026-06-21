@@ -411,3 +411,24 @@ What did you learn about Password Hashing and JWT Authentication?
 - **Password Hashing with bcrypt:** Never store plain text passwords. `bcrypt` is the gold standard because it is intentionally slow (making brute-force attacks impractical) and automatically handles salting to protect against rainbow table attacks.
 - **JWT (JSON Web Tokens):** Traditional session-based authentication requires the server to remember who is logged in. JWT is stateless—it encodes the user's identity into a token signed by the server's `SECRET_KEY`. The server just verifies the signature on subsequent requests, making it highly scalable for API-first applications.
 - **FastAPI Dependencies:** We can protect API routes effortlessly using FastAPI's `Depends`. By creating a `get_current_user` dependency, FastAPI automatically intercepts incoming requests, verifies the JWT token, extracts the user, and blocks unauthorized access before the endpoint code even runs.
+
+## Day 48
+
+What did you learn about building authentication endpoints and integrating with Swagger UI?
+
+- **Swagger UI Forms vs JSON:** Using Pydantic models allows us to precisely define input requirements. However, Swagger UI's built-in green "Authorize" popup specifically sends data as a traditional web form (`application/x-www-form-urlencoded`). For the `/login` endpoint to work natively with Swagger's popup, it must accept `OAuth2PasswordRequestForm` as a dependency rather than a custom JSON schema; otherwise, FastAPI will reject it with a `422 Unprocessable Content` error.
+- **CORS Middleware:** To allow a separate frontend application (like a React or Next.js app running on `localhost:3000`) to communicate with the FastAPI backend on port `8000`, we must explicitly configure `CORSMiddleware`. Without this, the browser will block requests for security reasons.
+
+## Day 49
+
+What did you learn about modeling and storing conversation history?
+
+- **Database Relationships:** By linking the `Conversation` model to the `User` via a foreign key, and the `Message` model to the `Conversation`, we can easily organize and query all past chat threads for a specific authenticated user.
+- **Stateless Identity:** Because the JWT token securely holds the user's identity, the API endpoints do not require the client to manually pass a user ID. `Depends(get_current_user)` securely injects the authenticated user into the route function, guaranteeing that users can only ever access their own chat history.
+
+## Day 50
+
+What did you learn about securing the main RAG endpoint and handling hardware crashes?
+
+- **Silent C-Level Crashes:** A missing `.env` variable (`USE_GROQ=true`) caused the application to fallback to loading the local 3.8B Phi-3 model using 4-bit `bitsandbytes` quantization. On Windows, without a perfect CUDA environment, this library can trigger a catastrophic C-level segfault. This instantly kills the Python process without printing any error message or stack trace, returning straight to the command prompt. Ensuring the correct configuration skips this heavy loading process.
+- **Auto-Saving Chat History:** By wrapping the existing RAG generation logic inside a database session, the `/ask` endpoint can instantly save both the user's question and the LLM's generated answer into the `messages` table. It also dynamically generates a conversation title based on the first 50 characters of the user's initial prompt, mimicking standard chat interfaces like ChatGPT.
