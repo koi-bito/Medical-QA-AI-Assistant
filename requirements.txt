@@ -25,6 +25,7 @@ huggingface_hub
 
 # Cloud inference
 groq
+slowapi
 
 # Utilities
 pandas

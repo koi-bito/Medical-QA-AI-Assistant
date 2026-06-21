@@ -1,7 +1,8 @@
 import os
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, field_validator
 import time
 import numpy as np
 import json
@@ -9,11 +10,25 @@ from sqlalchemy.orm import Session
 from src.database.config import get_db
 from src.database.models import User, Conversation, Message
 from src.auth.dependencies import get_current_user
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from src.auth.router import router as auth_router
 from src.conversations.router import router as conversations_router
 
+# Rate limiter — key by the requester's IP address
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="Medical QA API", version="1.0")
+app.state.limiter = limiter
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Max 10 questions per hour per IP. Please try again later."}
+    )
 
 
 # Allow frontend to talk to backend (CORS)
@@ -50,6 +65,16 @@ class QuestionRequest(BaseModel):
     question: str
     conversation_id: int | None = None
 
+    @field_validator('question')
+    @classmethod
+    def validate_question(cls, v):
+        v = v.strip()
+        if len(v) < 5:
+            raise ValueError("Question must be at least 5 characters")
+        if len(v) > 1000:
+            raise ValueError("Question must be under 1000 characters")
+        return v
+
 class QuestionResponse(BaseModel):
     answer: str
     sources: list[str]
@@ -77,25 +102,26 @@ def health_check():
     return {"status": "ok"}
 
 @app.post("/ask", response_model=QuestionResponse)
+@limiter.limit("10/hour")
 def ask(
-    request: QuestionRequest,
+    request: Request,
+    body: QuestionRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if len(request.question.strip()) < 5:
-        raise HTTPException(status_code=400, detail="Question too short")
+    # Validation is now handled by the Pydantic field_validator above
 
     # Create a new conversation if none provided
-    if request.conversation_id:
+    if body.conversation_id:
         conv = db.query(Conversation).filter(
-            Conversation.id == request.conversation_id,
+            Conversation.id == body.conversation_id,
             Conversation.user_id == current_user.id
         ).first()
         if not conv:
             raise HTTPException(status_code=404, detail="Conversation not found")
     else:
         # Auto-title using the first few words of the question
-        title = request.question[:50] + ("..." if len(request.question) > 50 else "")
+        title = body.question[:50] + ("..." if len(body.question) > 50 else "")
         conv = Conversation(user_id=current_user.id, title=title)
         db.add(conv)
         db.commit()
@@ -104,23 +130,23 @@ def ask(
     start  = time.time()
     
     if USE_GROQ:
-        chunks = retrieve_and_rerank(request.question, collection, embedder, reranker)
-        answer = answer_with_groq(request.question, chunks)
+        chunks = retrieve_and_rerank(body.question, collection, embedder, reranker)
+        answer = answer_with_groq(body.question, chunks)
         sources = chunks
     else:
-        result = answer_question(request.question, model, tokenizer, embedder, collection, reranker)
+        result = answer_question(body.question, model, tokenizer, embedder, collection, reranker)
         answer = result['answer']
         sources = result['sources']
         
     latency = round(time.time() - start, 2)
 
-    confidence = estimate_confidence(request.question, sources, embedder)
+    confidence = estimate_confidence(body.question, sources, embedder)
 
     # Save user message
     user_msg = Message(
         conversation_id=conv.id,
         role="user",
-        content=request.question
+        content=body.question
     )
     db.add(user_msg)
 

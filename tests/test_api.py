@@ -121,12 +121,13 @@ def test_ask_with_auth():
     assert "conversation_id" in data
 
 def test_ask_empty_question():
+    """Empty/short questions are now rejected by Pydantic with 422."""
     response = client.post(
         "/ask", 
         json={"question": ""},
         headers=auth_headers()
     )
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 def test_conversation_history():
     headers = auth_headers()
