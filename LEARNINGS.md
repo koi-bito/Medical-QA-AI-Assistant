@@ -459,3 +459,19 @@ What does the backend architecture look like now compared to Week 6?
 - **Security First:** Industry-standard password hashing (`bcrypt`) and token generation (`python-jose`) protect all sensitive endpoints. The Swagger UI integration required switching the login endpoint from JSON to `OAuth2PasswordRequestForm` to work with FastAPI's built-in Authorize popup.
 - **CI/CD Resilience:** The test suite was completely rewritten to work in a database-less CI environment by swapping MySQL for SQLite, mocking all ML dependencies, and injecting environment variables at the OS level. All 6 tests pass on both local Windows and GitHub Actions Ubuntu.
 - **Remaining:** Day 51 (Rate Limiting with `slowapi`) is the last piece to protect the Groq API from abuse.
+
+## Day 53
+
+What did you learn about setting up a Next.js frontend and connecting it to the backend?
+
+- **Next.js Initialization:** Using `npx create-next-app` with flags like `--app` and `--src-dir` sets up a modern Next.js 14+ project using the App Router and a clean directory structure.
+- **Axios Interceptors:** Configuring a centralized Axios client with request and response interceptors is a powerful pattern. It automatically attaches the JWT token from `localStorage` to every outgoing request and universally handles `401 Unauthorized` errors by redirecting the user to the login page, eliminating the need to write auth checks on every single API call.
+
+## Day 54
+
+What did you learn about building authentication flows in React and handling backend crashes?
+
+- **React Context for Auth:** Creating an `AuthContext` provides a centralized global state for the user's authentication status. This allows any component in the app to access the current user, loading state, or trigger login/logout without prop drilling.
+- **Protected Routes:** A wrapper component (`ProtectedRoute`) elegantly prevents unauthenticated users from accessing specific pages by checking the global auth state and redirecting them to `/login` if necessary, displaying a loading spinner during the initial verification.
+- **Form Data for OAuth2:** Even though modern APIs typically communicate via JSON, when a backend endpoint uses FastAPI's `OAuth2PasswordRequestForm` (to remain compatible with Swagger UI), the frontend must explicitly send the login credentials using `URLSearchParams` and the `application/x-www-form-urlencoded` content type.
+- **Misleading CORS Errors:** A `500 Internal Server Error` (such as a database connection failure) during an API request can sometimes manifest as a CORS error in the browser. This happens because the backend crashes before it can append the `Access-Control-Allow-Origin` headers to the response. If you see a sudden CORS error on a route that was previously working, check the backend logs for a crash!
