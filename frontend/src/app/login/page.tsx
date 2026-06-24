@@ -30,7 +30,7 @@ export default function LoginPage() {
 
       await login(response.data.access_token);
       router.push("/");
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(
         err.response?.data?.detail || "Failed to log in. Please check your credentials."
       );
@@ -103,7 +103,7 @@ export default function LoginPage() {
         </form>
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
               Register here
             </Link>

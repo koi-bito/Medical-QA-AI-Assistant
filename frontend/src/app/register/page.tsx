@@ -27,7 +27,7 @@ export default function RegisterPage() {
 
       // On success, redirect to login
       router.push("/login?registered=true");
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(
         err.response?.data?.detail || "Failed to create account. Please try again."
       );
