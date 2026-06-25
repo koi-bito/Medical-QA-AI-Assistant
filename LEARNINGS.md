@@ -475,3 +475,19 @@ What did you learn about building authentication flows in React and handling bac
 - **Protected Routes:** A wrapper component (`ProtectedRoute`) elegantly prevents unauthenticated users from accessing specific pages by checking the global auth state and redirecting them to `/login` if necessary, displaying a loading spinner during the initial verification.
 - **Form Data for OAuth2:** Even though modern APIs typically communicate via JSON, when a backend endpoint uses FastAPI's `OAuth2PasswordRequestForm` (to remain compatible with Swagger UI), the frontend must explicitly send the login credentials using `URLSearchParams` and the `application/x-www-form-urlencoded` content type.
 - **Misleading CORS Errors:** A `500 Internal Server Error` (such as a database connection failure) during an API request can sometimes manifest as a CORS error in the browser. This happens because the backend crashes before it can append the `Access-Control-Allow-Origin` headers to the response. If you see a sudden CORS error on a route that was previously working, check the backend logs for a crash!
+
+## Day 55
+
+What did you learn about building the main chat layout and interface in Next.js?
+
+- **Server vs Client Components:** The `page.tsx` was designated as a Client Component using `"use client"`. This is necessary when you need React hooks like `useState`, `useEffect`, or `useRef` to manage the interactive chat state and scrolling behavior.
+- **Markdown Rendering:** Chat models output formatting in Markdown. Using `react-markdown` makes it trivial to safely render bold text, lists, and code blocks directly in the chat interface.
+- **Auto-Scrolling:** By attaching a `useRef` to an empty `div` at the bottom of the messages list and calling `scrollIntoView()` inside a `useEffect` that listens to changes in the `messages` array, the chat window automatically scrolls down whenever a new message is sent or received.
+
+## Day 56
+
+What did you learn about managing global React state for the conversation history and sidebar?
+
+- **Context API for Shared State:** The sidebar (in `layout.tsx`) and the chat area (in `page.tsx`) needed a way to communicate which conversation was active. By creating a `ChatContext`, both components can subscribe to and update a shared `activeConversationId` without needing complex URL parameters.
+- **Handling New Chats:** When a user clicks "New Chat", the `activeConversationId` is set to `null`, clearing the chat area. When the user sends their first question, the backend creates a new conversation and returns the ID. The frontend captures this new ID, sets it as active, and fetches the updated conversation list to immediately display the new chat in the sidebar.
+- **ESLint & useEffect Limitations:** Fetching data inside `useEffect` can trigger aggressive linting rules like `react-hooks/set-state-in-effect`. It's a reminder that while `useEffect` is powerful, updating local component state from within an effect must be handled carefully to avoid cascading re-renders.
