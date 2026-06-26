@@ -491,3 +491,12 @@ What did you learn about managing global React state for the conversation histor
 - **Context API for Shared State:** The sidebar (in `layout.tsx`) and the chat area (in `page.tsx`) needed a way to communicate which conversation was active. By creating a `ChatContext`, both components can subscribe to and update a shared `activeConversationId` without needing complex URL parameters.
 - **Handling New Chats:** When a user clicks "New Chat", the `activeConversationId` is set to `null`, clearing the chat area. When the user sends their first question, the backend creates a new conversation and returns the ID. The frontend captures this new ID, sets it as active, and fetches the updated conversation list to immediately display the new chat in the sidebar.
 - **ESLint & useEffect Limitations:** Fetching data inside `useEffect` can trigger aggressive linting rules like `react-hooks/set-state-in-effect`. It's a reminder that while `useEffect` is powerful, updating local component state from within an effect must be handled carefully to avoid cascading re-renders.
+
+## Day 57
+
+What did you learn about implementing feedback systems and UI polish?
+
+- **Database Extensibility:** Adding a new feature like feedback (thumbs up/down) requires tracking the specific `message_id`, `user_id`, and the `rating`. Updating the database schema with SQLAlchemy allows us to create this relational link efficiently.
+- **API Response Hydration:** For the frontend to be able to send feedback on a message immediately after it's generated, the backend must return the newly created `message_id` within the `QuestionResponse` payload. 
+- **Robust Notifications:** Using a dedicated library like `react-hot-toast` provides a significantly better user experience than native browser alerts or silent `console.error` logs, making error handling and success states clear and visually appealing.
+- **Mobile Responsiveness:** Implementing a slide-out hamburger menu with an overlay is an effective pattern for managing complex layouts like a sidebar on smaller screens, ensuring the application remains usable on mobile devices without sacrificing functionality.
