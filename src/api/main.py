@@ -8,7 +8,7 @@ import numpy as np
 import json
 from sqlalchemy.orm import Session
 from src.database.config import get_db
-from src.database.models import User, Conversation, Message
+from src.database.models import User, Conversation, Message, Feedback
 from src.auth.dependencies import get_current_user
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -81,6 +81,11 @@ class QuestionResponse(BaseModel):
     confidence: str
     latency_seconds: float
     conversation_id: int
+    message_id: int
+
+class FeedbackRequest(BaseModel):
+    message_id: int
+    rating: str  # "up" or "down"
 
 def estimate_confidence(question, sources, embedder):
     """Estimate confidence based on how well the sources match the question.
@@ -167,5 +172,21 @@ def ask(
         sources=sources,
         confidence=confidence,
         latency_seconds=latency,
-        conversation_id=conv.id
+        conversation_id=conv.id,
+        message_id=assistant_msg.id
     )
+
+@app.post("/feedback")
+def submit_feedback(
+    request: FeedbackRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    feedback = Feedback(
+        message_id=request.message_id,
+        user_id=current_user.id,
+        rating=request.rating
+    )
+    db.add(feedback)
+    db.commit()
+    return {"status": "ok"}

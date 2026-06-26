@@ -39,3 +39,12 @@ class Message(Base):
     created_at      = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     conversation = relationship("Conversation", back_populates="messages")
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating     = Column(String(10), nullable=False)  # "up" or "down"
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

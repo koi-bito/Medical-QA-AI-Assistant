@@ -10,7 +10,10 @@ import {
   AlertTriangle,
   Info,
   ChevronDown,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useChat } from "@/context/ChatContext";
 
 interface Source {
@@ -21,10 +24,12 @@ interface Source {
 }
 
 interface Message {
+  id?: number;
   role: "user" | "assistant";
   content: string;
   sources?: Source[];
   confidence?: string;
+  feedback?: "up" | "down";
 }
 
 export default function ChatPage() {
@@ -61,11 +66,13 @@ export default function ChatPage() {
           );
           const formattedMessages = response.data.messages.map(
             (m: {
+              id: number;
               role: "user" | "assistant";
               content: string;
               sources: string | null;
               confidence: string | null;
             }) => ({
+              id: m.id,
               role: m.role,
               content: m.content,
               sources: m.sources ? JSON.parse(m.sources) : undefined,
@@ -75,6 +82,7 @@ export default function ChatPage() {
           setMessages(formattedMessages);
         } catch (error) {
           console.error("Failed to load conversation:", error);
+          toast.error("Failed to load conversation.");
         } finally {
           setLoading(false);
         }
@@ -86,6 +94,21 @@ export default function ChatPage() {
       setMessages([]);
     }
   }, [activeConversationId]);
+
+  const handleFeedback = async (messageId: number, rating: "up" | "down", index: number) => {
+    try {
+      await api.post("/feedback", { message_id: messageId, rating });
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        newMessages[index] = { ...newMessages[index], feedback: rating };
+        return newMessages;
+      });
+      toast.success("Feedback submitted!");
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+      toast.error("Failed to submit feedback.");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +128,7 @@ export default function ChatPage() {
       setMessages((prev) => [
         ...prev,
         {
+          id: response.data.message_id,
           role: "assistant",
           content: response.data.answer,
           sources: response.data.sources,
@@ -119,6 +143,7 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error("Failed to get answer:", error);
+      toast.error("Failed to get answer.");
       setMessages((prev) => [
         ...prev,
         {
@@ -135,7 +160,7 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-full relative">
       {/* Disclaimer */}
-      <div className="bg-amber-50 border-b border-amber-200 p-3 flex items-start gap-3 flex-shrink-0 z-10">
+      <div className="bg-amber-50 border-b border-amber-200 p-3 pl-12 md:pl-3 flex items-start gap-3 flex-shrink-0 z-10">
         <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-amber-800">
           <strong>Medical Disclaimer:</strong> This AI assistant provides
@@ -163,7 +188,7 @@ export default function ChatPage() {
             messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex gap-4 ${msg.role === "assistant" ? "bg-gray-50 rounded-xl p-4 sm:p-6" : "px-4 sm:px-6"}`}
+                className={`flex gap-4 transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-2 ${msg.role === "assistant" ? "bg-gray-50 rounded-xl p-4 sm:p-6" : "px-4 sm:px-6"}`}
               >
                 <div className="flex-shrink-0 mt-1">
                   {msg.role === "user" ? (
@@ -190,21 +215,42 @@ export default function ChatPage() {
                   {/* Sources & Confidence */}
                   {msg.role === "assistant" && msg.sources && (
                     <div className="pt-4 border-t border-gray-200 mt-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                          Confidence
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            msg.confidence?.toLowerCase() === "high"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : msg.confidence?.toLowerCase() === "medium"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {msg.confidence || "Unknown"}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                            Confidence
+                          </span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full font-medium ${
+                              msg.confidence?.toLowerCase() === "high"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : msg.confidence?.toLowerCase() === "medium"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {msg.confidence || "Unknown"}
+                          </span>
+                        </div>
+                        
+                        {msg.id && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleFeedback(msg.id!, "up", index)}
+                              className={`p-1 rounded transition-colors ${msg.feedback === "up" ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
+                              title="Helpful"
+                            >
+                              <ThumbsUp className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleFeedback(msg.id!, "down", index)}
+                              className={`p-1 rounded transition-colors ${msg.feedback === "down" ? "text-red-600 bg-red-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
+                              title="Not Helpful"
+                            >
+                              <ThumbsDown className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <details className="group">
