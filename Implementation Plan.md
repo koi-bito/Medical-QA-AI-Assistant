@@ -3285,7 +3285,7 @@ python -m src.database.init_db
 **Time:** 3 hrs
 
 **What you're doing:** Making the website work well on phones and tablets. A real-world website must be responsive.
-
+now
 **Tasks:**
 
 1. Make the sidebar toggle-able on mobile:

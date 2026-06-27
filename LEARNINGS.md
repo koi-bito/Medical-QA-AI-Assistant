@@ -497,6 +497,14 @@ What did you learn about managing global React state for the conversation histor
 What did you learn about implementing feedback systems and UI polish?
 
 - **Database Extensibility:** Adding a new feature like feedback (thumbs up/down) requires tracking the specific `message_id`, `user_id`, and the `rating`. Updating the database schema with SQLAlchemy allows us to create this relational link efficiently.
-- **API Response Hydration:** For the frontend to be able to send feedback on a message immediately after it's generated, the backend must return the newly created `message_id` within the `QuestionResponse` payload. 
+- **API Response Hydration:** For the frontend to be able to send feedback on a message immediately after it's generated, the backend must return the newly created `message_id` within the `QuestionResponse` payload.
 - **Robust Notifications:** Using a dedicated library like `react-hot-toast` provides a significantly better user experience than native browser alerts or silent `console.error` logs, making error handling and success states clear and visually appealing.
 - **Mobile Responsiveness:** Implementing a slide-out hamburger menu with an overlay is an effective pattern for managing complex layouts like a sidebar on smaller screens, ensuring the application remains usable on mobile devices without sacrificing functionality.
+
+## Day 58
+
+What did you learn about fixing database errors and implementing premium UI designs?
+
+- **Database Cascades:** Fixing foreign key constraint errors during deletion (like "Cannot delete or update a parent row") requires properly configuring the SQLAlchemy relationship. Adding `cascade="all, delete-orphan"` to the `Conversation` model ensures that when a conversation is deleted, all its associated messages and feedback are also cleanly removed from the database without violating constraints.
+- **Table Initialization:** When adding new tables (like `Feedback`) or modifying existing ones, you must ensure they are properly initialized in the database using `Base.metadata.create_all(bind=engine)` via a script or migration, otherwise the application will crash with a "table doesn't exist" error.
+- **Glassmorphism and UI/UX Polish:** Using TailwindCSS utility classes like `backdrop-blur-md`, `bg-white/40`, and soft radial gradients allows for the creation of a modern, premium "glassmorphic" aesthetic. Small details, such as replacing standard borders with translucent ones and adding subtle hover micro-animations (`transition-all hover:scale-105`), significantly elevate the perceived quality of a web application from a basic MVP to a professional product.
