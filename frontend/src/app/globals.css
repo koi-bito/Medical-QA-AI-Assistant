@@ -17,10 +17,25 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+  body {
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(210, 100%, 15%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(250, 100%, 15%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(190, 100%, 15%, 1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(230, 100%, 15%, 1) 0px, transparent 50%);
+  }
 }
 
 body {
   background: var(--background);
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(210, 100%, 95%, 1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(250, 100%, 95%, 1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(190, 100%, 95%, 1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(230, 100%, 95%, 1) 0px, transparent 50%);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

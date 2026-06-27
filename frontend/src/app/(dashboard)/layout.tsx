@@ -12,11 +12,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <ProtectedRoute>
       <ChatProvider>
-        <div className="flex h-screen bg-white relative">
+        <div className="flex h-screen bg-transparent relative text-gray-800">
           {/* Mobile sidebar overlay */}
           {sidebarOpen && (
             <div 
-              className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 md:hidden" 
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-20 md:hidden transition-all duration-300" 
               onClick={() => setSidebarOpen(false)}
             />
           )}
@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Main Content */}
-          <main className="flex-1 flex flex-col h-screen overflow-hidden bg-white relative">
+          <main className="flex-1 flex flex-col h-screen overflow-hidden bg-transparent relative">
             <button
               onClick={() => setSidebarOpen(true)}
               className="md:hidden absolute top-3 left-3 z-10 p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100"
