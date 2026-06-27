@@ -24,7 +24,7 @@ class Conversation(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user     = relationship("User", back_populates="conversations")
-    messages = relationship("Message", back_populates="conversation", order_by="Message.created_at")
+    messages = relationship("Message", back_populates="conversation", order_by="Message.created_at", cascade="all, delete-orphan")
 
 class Message(Base):
     __tablename__ = "messages"
@@ -39,6 +39,7 @@ class Message(Base):
     created_at      = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     conversation = relationship("Conversation", back_populates="messages")
+    feedback     = relationship("Feedback", back_populates="message", cascade="all, delete-orphan")
 
 class Feedback(Base):
     __tablename__ = "feedback"
@@ -48,3 +49,5 @@ class Feedback(Base):
     user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
     rating     = Column(String(10), nullable=False)  # "up" or "down"
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    message    = relationship("Message", back_populates="feedback")
