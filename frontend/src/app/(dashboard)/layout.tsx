@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
           
           <div className={`fixed inset-y-0 left-0 z-30 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0 transition duration-200 ease-in-out md:flex`}>
-            <Sidebar />
+            <Sidebar onClose={() => setSidebarOpen(false)} />
           </div>
 
           {/* Main Content */}

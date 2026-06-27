@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useChat } from "@/context/ChatContext";
 import { PlusCircle, LogOut, MessageSquare, Trash2 } from "lucide-react";
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { user, logout } = useAuth();
   const { conversations, activeConversationId, setActiveConversationId, deleteConversation } = useChat();
 
@@ -13,7 +13,10 @@ export default function Sidebar() {
     <aside className="w-72 border-r border-gray-200 bg-gray-50 flex flex-col h-full">
       <div className="p-4">
         <button 
-          onClick={() => setActiveConversationId(null)}
+          onClick={() => {
+            setActiveConversationId(null);
+            if (onClose) onClose();
+          }}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           <PlusCircle className="h-4 w-4" />
@@ -28,7 +31,10 @@ export default function Sidebar() {
           conversations.map((conv) => (
             <div 
               key={conv.id}
-              onClick={() => setActiveConversationId(conv.id)}
+              onClick={() => {
+                setActiveConversationId(conv.id);
+                if (onClose) onClose();
+              }}
               className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
                 activeConversationId === conv.id 
                   ? "bg-blue-100 text-blue-900" 
