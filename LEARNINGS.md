@@ -508,3 +508,114 @@ What did you learn about fixing database errors and implementing premium UI desi
 - **Database Cascades:** Fixing foreign key constraint errors during deletion (like "Cannot delete or update a parent row") requires properly configuring the SQLAlchemy relationship. Adding `cascade="all, delete-orphan"` to the `Conversation` model ensures that when a conversation is deleted, all its associated messages and feedback are also cleanly removed from the database without violating constraints.
 - **Table Initialization:** When adding new tables (like `Feedback`) or modifying existing ones, you must ensure they are properly initialized in the database using `Base.metadata.create_all(bind=engine)` via a script or migration, otherwise the application will crash with a "table doesn't exist" error.
 - **Glassmorphism and UI/UX Polish:** Using TailwindCSS utility classes like `backdrop-blur-md`, `bg-white/40`, and soft radial gradients allows for the creation of a modern, premium "glassmorphic" aesthetic. Small details, such as replacing standard borders with translucent ones and adding subtle hover micro-animations (`transition-all hover:scale-105`), significantly elevate the perceived quality of a web application from a basic MVP to a professional product.
+
+## Day 59
+
+What did the end-to-end integration test reveal, and what is the state of the full system?
+
+- **All 6 Automated Tests Pass:** Running `pytest tests/test_api.py -v` confirmed all tests green — health check, user registration, unauthenticated rejection, authenticated Q&A, empty question validation (422), and conversation history retrieval — in 3.83 seconds. This proves the backend API is stable and all auth/conversation logic is working correctly.
+- **Pydantic V2 Deprecation Warnings:** The test run surfaced deprecation warnings: `PydanticDeprecatedSince20: Support for class-based config is deprecated, use ConfigDict instead`. While these don't break anything today, they will become errors in Pydantic V3. The fix is to replace `class Config:` with `model_config = ConfigDict(...)` in `src/auth/schemas.py` and `src/conversations/schemas.py`. This is a Week 9 clean-up item.
+- **`httpx` vs `httpx2` Warning:** FastAPI's `TestClient` (which wraps Starlette's test client) emitted `StarletteDeprecationWarning: Using httpx with starlette.testclient is deprecated; install httpx2`. This is an upstream library migration issue — the test suite still works perfectly, but the migration to `httpx2` should be noted for production hardening.
+- **The Full Stack is Wired:** Every layer of the application is functional: MySQL database → SQLAlchemy ORM → FastAPI backend (with JWT auth, rate limiting, and RAG) → Axios API client → Next.js frontend (with Auth context, Chat context, Protected routes, glassmorphic UI, and mobile hamburger menu). The system works end-to-end.
+
+---
+
+## 🏆 Week 8 Review — The Full-Stack Frontend (Days 53–59)
+
+**Theme:** Building a production-quality Next.js frontend on top of the FastAPI backend. By the end of this week, the project became a complete, usable web application — not just an API.
+
+---
+
+### Day 53 — Next.js Project Setup + API Client
+
+The week started by bootstrapping the Next.js 14 project with `create-next-app` using the App Router, TypeScript, and TailwindCSS. The most important architectural decision was building a **centralized Axios client** (`src/lib/api.ts`) with two interceptors:
+- **Request interceptor:** Automatically reads the JWT from `localStorage` and attaches `Authorization: Bearer <token>` to every request — eliminating manual auth headers on every API call.
+- **Response interceptor:** Catches any `401 Unauthorized` response globally and redirects the user to `/login` — so token expiry is handled seamlessly without any per-page logic.
+
+**Key Lesson:** Interceptors are one of the most powerful patterns in frontend API design. They are the equivalent of FastAPI's `Depends()` — a single place that enforces a cross-cutting concern (auth) across the entire application.
+
+---
+
+### Day 54 — Authentication Pages + AuthContext
+
+Building the Login and Register pages required solving a subtle protocol mismatch: FastAPI's `OAuth2PasswordRequestForm` endpoint expects `application/x-www-form-urlencoded` data, not JSON. The frontend had to send credentials via `URLSearchParams` rather than `JSON.stringify()`.
+
+The `AuthContext` was the most architecturally important piece: a React context that holds the authenticated user, loading state, and `login/logout/register` functions. On every page load, it calls `GET /auth/me` to verify the stored token is still valid. The `ProtectedRoute` wrapper component uses this context to redirect unauthenticated users before they even see the page.
+
+**Key Lesson:** CORS errors can be misleading. A `500 Internal Server Error` on the backend (like a crashed DB connection) will appear as a CORS error in the browser because the server crashes before it can add the `Access-Control-Allow-Origin` header. Always check backend logs when you see unexpected CORS errors.
+
+---
+
+### Day 55 — Main Chat Interface
+
+The chat page (`(dashboard)/page.tsx`) was a significant engineering effort. Key decisions:
+- **`"use client"`:** Necessary because the entire page is driven by React hooks (`useState`, `useEffect`, `useRef`).
+- **`react-markdown`:** LLMs output markdown-formatted text. Rendering it with `react-markdown` means the frontend automatically displays bold text, bullet lists, and code blocks without any custom parsing.
+- **Auto-scroll:** A `useRef` attached to a dummy `<div>` at the bottom of the message list, combined with `useEffect` watching the `messages` array, achieves automatic scrolling on new messages.
+- **`justCreatedRef` pattern:** A subtle but important ref that prevents a newly created conversation from re-triggering a fetch (which would cause a loading flash). When a new conversation is created from the `/ask` response, we set `justCreatedRef.current = true` to skip the next `useEffect` fetch cycle.
+
+**Key Lesson:** The difference between `useState` and `useRef` matters. A ref change does not re-render the component, making it the right tool for tracking "metadata about the current operation" (like whether we just created a conversation) rather than for storing displayed data.
+
+---
+
+### Day 56 — Conversation Sidebar + History
+
+Made the sidebar fully functional:
+- On load, it fetches `GET /conversations/` and populates the list.
+- Clicking a conversation calls `GET /conversations/{id}` and re-hydrates the message area.
+- "New Chat" clears `activeConversationId` to `null`, which the chat page watches to clear messages.
+- Delete calls `DELETE /conversations/{id}` and removes the item from the local list immediately (optimistic UI update).
+
+The key challenge was state sharing between the sidebar (`layout.tsx`) and the chat area (`page.tsx`) — two sibling components. The solution was a `ChatContext` (mirroring the `AuthContext` pattern) that both components subscribe to.
+
+**Key Lesson:** React's Context API is the right tool when two components at different levels of the tree need to share and update the same state. Passing it as props would require "prop drilling" through intermediate components that don't use the data — which is messy and breaks component reusability.
+
+---
+
+### Day 57 — Feedback System + UI Polish
+
+Added the `Feedback` table to the database (`message_id`, `user_id`, `rating`), a `POST /feedback` endpoint, and thumbs up/down buttons in the frontend. The backend had to be updated to return `message_id` in the `/ask` response so the frontend could immediately send feedback on a newly generated answer.
+
+`react-hot-toast` replaced all raw `alert()` calls and silent `console.error` logs. Toast notifications are dramatically better UX — they appear briefly, don't block the page, and are visually styled to match success/error states.
+
+**Key Lesson:** Every user action that calls an API should have three states handled: loading (spinner/disabled button), success (toast or state update), and error (toast with message). Missing any of these makes the app feel broken or unresponsive.
+
+---
+
+### Day 58 — Responsive Design + Premium UI Overhaul
+
+Fixed the cascade deletion bug (foreign key constraints on `Feedback` → `Message` → `Conversation`) by adding `cascade="all, delete-orphan"` to the SQLAlchemy relationships. Also fixed a Next.js hydration error caused by reading `localStorage` during server-side rendering — the fix was to always guard `localStorage` access inside `useEffect` or check `typeof window !== 'undefined'`.
+
+The UI was completely redesigned with a glassmorphic aesthetic:
+- `backdrop-blur-xl` + `bg-white/60` for the sidebar glass effect
+- Radial gradients in the background
+- `hover:scale-105` micro-animations on buttons
+- Color-coded confidence badges (emerald/amber/red)
+- Animated typing indicator (three bouncing dots) while waiting for responses
+- Mobile hamburger menu with an overlay for sidebar access on small screens
+
+**Key Lesson:** The difference between a good UI and a premium UI is all in the details. Micro-animations (`transition-all duration-300`), subtle shadows (`shadow-[0_4px_24px_rgba(0,0,0,0.04)]`), and consistent use of translucency create an aesthetic that feels modern and intentional rather than generic.
+
+---
+
+### Week 8 Summary — What This Week Built
+
+| Component | Status |
+|---|---|
+| Next.js 14 App Router project | ✅ Done |
+| Centralized Axios client with interceptors | ✅ Done |
+| Login + Register pages | ✅ Done |
+| `AuthContext` + `ProtectedRoute` | ✅ Done |
+| Main chat page with markdown rendering | ✅ Done |
+| Conversation sidebar + history | ✅ Done |
+| `ChatContext` for shared state | ✅ Done |
+| Delete conversation (with cascade fix) | ✅ Done |
+| Thumbs up/down feedback system | ✅ Done |
+| `react-hot-toast` notifications | ✅ Done |
+| Glassmorphic premium UI redesign | ✅ Done |
+| Mobile responsive hamburger menu | ✅ Done |
+| All 6 backend tests passing | ✅ Done |
+
+**The single most important architectural lesson of Week 8:** The **context pattern** (`AuthContext`, `ChatContext`) is the foundation that makes a React app maintainable. Without it, passing auth state and conversation state as props down through every component would quickly become unmanageable. The pattern mirrors dependency injection in backend frameworks — a central store that any component can tap into without knowing where the data came from.
+
+**Next up — Week 9:** Dockerizing the FastAPI backend, setting up Docker Compose with MySQL, and deploying the full stack to the cloud (Render for the backend, Vercel for the frontend).
