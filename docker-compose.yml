@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: medical_qa
+    ports:
+      - "3307:3306" # 3307 to avoid conflict with your local MySQL
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://root:rootpassword@db:3306/medical_qa
+      SECRET_KEY: ${SECRET_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      USE_GROQ: "true"
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:

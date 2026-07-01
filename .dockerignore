@@ -1,0 +1,10 @@
+medqa_env/
+__pycache__/
+.git/
+node_modules/
+frontend/
+notebooks/
+data/raw/
+models/
+mlruns/
+*.pyc
