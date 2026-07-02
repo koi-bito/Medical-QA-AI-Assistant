@@ -20,6 +20,9 @@ def retrieve_and_rerank(query, collection, embedder, reranker, top_k=10, final_k
     # Step 1: Get top 10 candidates via vector search
     candidates = retrieve(query, collection, embedder, top_k=top_k)
 
+    if reranker is None:
+        return candidates[:final_k]
+
     # Step 2: Score each candidate against the query
     pairs  = [(query, chunk) for chunk in candidates]
     scores = reranker.predict(pairs)

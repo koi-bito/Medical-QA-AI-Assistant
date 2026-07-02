@@ -47,6 +47,7 @@ app.include_router(conversations_router)
 
 USE_GROQ = os.environ.get("USE_GROQ", "false").lower() == "true"
 
+DISABLE_RERANKER = os.environ.get("DISABLE_RERANKER", "false").lower() == "true"
 # Load models at startup
 print("Loading models...")
 if USE_GROQ:
@@ -54,7 +55,7 @@ if USE_GROQ:
     from src.rag.retriever import load_retriever, load_reranker, retrieve_and_rerank
     from src.inference.groq_client import answer_with_groq
     embedder, collection = load_retriever()
-    reranker = load_reranker()
+    reranker = None if DISABLE_RERANKER else load_reranker()
     model, tokenizer = None, None
 else:
     print("Using local model for inference. Loading all models...")
