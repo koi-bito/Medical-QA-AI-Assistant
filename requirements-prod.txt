@@ -13,3 +13,4 @@ python-dotenv
 bcrypt
 python-jose[cryptography]
 httpx
+python-multipart
