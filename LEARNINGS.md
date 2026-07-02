@@ -529,6 +529,7 @@ What did the end-to-end integration test reveal, and what is the state of the fu
 ### Day 53 — Next.js Project Setup + API Client
 
 The week started by bootstrapping the Next.js 14 project with `create-next-app` using the App Router, TypeScript, and TailwindCSS. The most important architectural decision was building a **centralized Axios client** (`src/lib/api.ts`) with two interceptors:
+
 - **Request interceptor:** Automatically reads the JWT from `localStorage` and attaches `Authorization: Bearer <token>` to every request — eliminating manual auth headers on every API call.
 - **Response interceptor:** Catches any `401 Unauthorized` response globally and redirects the user to `/login` — so token expiry is handled seamlessly without any per-page logic.
 
@@ -549,6 +550,7 @@ The `AuthContext` was the most architecturally important piece: a React context 
 ### Day 55 — Main Chat Interface
 
 The chat page (`(dashboard)/page.tsx`) was a significant engineering effort. Key decisions:
+
 - **`"use client"`:** Necessary because the entire page is driven by React hooks (`useState`, `useEffect`, `useRef`).
 - **`react-markdown`:** LLMs output markdown-formatted text. Rendering it with `react-markdown` means the frontend automatically displays bold text, bullet lists, and code blocks without any custom parsing.
 - **Auto-scroll:** A `useRef` attached to a dummy `<div>` at the bottom of the message list, combined with `useEffect` watching the `messages` array, achieves automatic scrolling on new messages.
@@ -561,6 +563,7 @@ The chat page (`(dashboard)/page.tsx`) was a significant engineering effort. Key
 ### Day 56 — Conversation Sidebar + History
 
 Made the sidebar fully functional:
+
 - On load, it fetches `GET /conversations/` and populates the list.
 - Clicking a conversation calls `GET /conversations/{id}` and re-hydrates the message area.
 - "New Chat" clears `activeConversationId` to `null`, which the chat page watches to clear messages.
@@ -587,6 +590,7 @@ Added the `Feedback` table to the database (`message_id`, `user_id`, `rating`), 
 Fixed the cascade deletion bug (foreign key constraints on `Feedback` → `Message` → `Conversation`) by adding `cascade="all, delete-orphan"` to the SQLAlchemy relationships. Also fixed a Next.js hydration error caused by reading `localStorage` during server-side rendering — the fix was to always guard `localStorage` access inside `useEffect` or check `typeof window !== 'undefined'`.
 
 The UI was completely redesigned with a glassmorphic aesthetic:
+
 - `backdrop-blur-xl` + `bg-white/60` for the sidebar glass effect
 - Radial gradients in the background
 - `hover:scale-105` micro-animations on buttons
@@ -600,21 +604,21 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 
 ### Week 8 Summary — What This Week Built
 
-| Component | Status |
-|---|---|
-| Next.js 14 App Router project | ✅ Done |
+| Component                                  | Status  |
+| ------------------------------------------ | ------- |
+| Next.js 14 App Router project              | ✅ Done |
 | Centralized Axios client with interceptors | ✅ Done |
-| Login + Register pages | ✅ Done |
-| `AuthContext` + `ProtectedRoute` | ✅ Done |
-| Main chat page with markdown rendering | ✅ Done |
-| Conversation sidebar + history | ✅ Done |
-| `ChatContext` for shared state | ✅ Done |
-| Delete conversation (with cascade fix) | ✅ Done |
-| Thumbs up/down feedback system | ✅ Done |
-| `react-hot-toast` notifications | ✅ Done |
-| Glassmorphic premium UI redesign | ✅ Done |
-| Mobile responsive hamburger menu | ✅ Done |
-| All 6 backend tests passing | ✅ Done |
+| Login + Register pages                     | ✅ Done |
+| `AuthContext` + `ProtectedRoute`           | ✅ Done |
+| Main chat page with markdown rendering     | ✅ Done |
+| Conversation sidebar + history             | ✅ Done |
+| `ChatContext` for shared state             | ✅ Done |
+| Delete conversation (with cascade fix)     | ✅ Done |
+| Thumbs up/down feedback system             | ✅ Done |
+| `react-hot-toast` notifications            | ✅ Done |
+| Glassmorphic premium UI redesign           | ✅ Done |
+| Mobile responsive hamburger menu           | ✅ Done |
+| All 6 backend tests passing                | ✅ Done |
 
 **The single most important architectural lesson of Week 8:** The **context pattern** (`AuthContext`, `ChatContext`) is the foundation that makes a React app maintainable. Without it, passing auth state and conversation state as props down through every component would quickly become unmanageable. The pattern mirrors dependency injection in backend frameworks — a central store that any component can tap into without knowing where the data came from.
 
@@ -641,25 +645,27 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 
 **The Full Battle Log:**
 
-| Attempt | Error | Root Cause | Fix |
-|---|---|---|---|
-| 1 | Build failed | `COPY .env .env` — file not in repo | Remove the line |
-| 2 | Out of memory (512MB) | Full `requirements.txt` installs GPU PyTorch (2GB+) | Create `requirements-prod.txt` with CPU-only PyTorch |
-| 3 | `RuntimeError: python-multipart required` | FastAPI needs this for OAuth2 login forms; it was a hidden dependency of `gradio` which we removed | Add `python-multipart` explicitly |
-| 4 | Out of memory (512MB) | CPU PyTorch + PubMedBERT (440MB) + FastAPI > 512MB | Try switching to smaller model |
-| 5 | `ModuleNotFoundError: No module named 'chromadb'` | `LIGHTWEIGHT_MODE` env var not yet set when auto-deploy triggered | Auto-detect lightweight mode via `try/except ImportError` |
-| 6 | ✅ **Live!** | Auto-detection worked | App deployed in ~80MB RAM |
+| Attempt | Error                                             | Root Cause                                                                                         | Fix                                                       |
+| ------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 1       | Build failed                                      | `COPY .env .env` — file not in repo                                                                | Remove the line                                           |
+| 2       | Out of memory (512MB)                             | Full `requirements.txt` installs GPU PyTorch (2GB+)                                                | Create `requirements-prod.txt` with CPU-only PyTorch      |
+| 3       | `RuntimeError: python-multipart required`         | FastAPI needs this for OAuth2 login forms; it was a hidden dependency of `gradio` which we removed | Add `python-multipart` explicitly                         |
+| 4       | Out of memory (512MB)                             | CPU PyTorch + PubMedBERT (440MB) + FastAPI > 512MB                                                 | Try switching to smaller model                            |
+| 5       | `ModuleNotFoundError: No module named 'chromadb'` | `LIGHTWEIGHT_MODE` env var not yet set when auto-deploy triggered                                  | Auto-detect lightweight mode via `try/except ImportError` |
+| 6       | ✅ **Live!**                                      | Auto-detection worked                                                                              | App deployed in ~80MB RAM                                 |
 
 **The Core Problem with ML on Free Tier Hosting:**
 Render's free tier gives you **512MB of RAM**. A typical ML stack uses:
+
 - `torch` (CPU) — ~200MB
-- `sentence-transformers` + model — ~200MB  
+- `sentence-transformers` + model — ~200MB
 - `chromadb` — ~50MB
 - Python + FastAPI + other libraries — ~100MB
 - **Total: ~550MB** — over the limit before a single request is processed.
 
 **The Solution — Graceful Degradation:**
 The best pattern is to build your app in tiers:
+
 1. **Full RAG mode** (local/paid server): loads all models, uses vector search + reranker
 2. **Groq + RAG mode**: uses cloud GPU (Groq API) for inference, but still does local vector retrieval
 3. **Lightweight mode** (free tier): skips all local ML, sends questions directly to Groq API. Adds this auto-detection logic:
@@ -688,10 +694,12 @@ This means the same codebase works on both a laptop with 16GB RAM and a free clo
 **What we're doing:** Deploying the Next.js frontend to Vercel.
 
 **Vercel Gotchas Discovered:**
+
 - Project names must be all **lowercase** — `Medical-QA-AI-Assistant` is invalid, use `medical-qa-ai-assistant`
 - If a repo of that name already exists under your account, you need to pick a different name
 
 **Tomorrow's tasks:**
+
 - Finish the Vercel deployment
 - Set `NEXT_PUBLIC_API_URL=https://medical-qa-ai-assistant.onrender.com` in Vercel environment variables
 - Update the backend CORS `FRONTEND_URL` on Render to match the live Vercel URL
@@ -701,14 +709,14 @@ This means the same codebase works on both a laptop with 16GB RAM and a free clo
 
 ### Week 9 Summary — What This Week Built
 
-| Component | Status |
-|---|---|
-| `Dockerfile` for backend | ✅ Done |
-| `docker-compose.yml` for local dev | ✅ Done |
-| Backend live on Render | ✅ Done |
-| Lightweight mode for free-tier hosting | ✅ Done |
-| Frontend deployment to Vercel | 🔜 Tomorrow |
-| CORS wired between Render + Vercel | 🔜 Tomorrow |
-| Full end-to-end production test | 🔜 Tomorrow |
+| Component                              | Status      |
+| -------------------------------------- | ----------- |
+| `Dockerfile` for backend               | ✅ Done     |
+| `docker-compose.yml` for local dev     | ✅ Done     |
+| Backend live on Render                 | ✅ Done     |
+| Lightweight mode for free-tier hosting | ✅ Done     |
+| Frontend deployment to Vercel          | 🔜 Tomorrow |
+| CORS wired between Render + Vercel     | 🔜 Tomorrow |
+| Full end-to-end production test        | 🔜 Tomorrow |
 
 **The single most important lesson of Week 9:** Cloud deployment is **not** just "upload your code." Every environment has different constraints — RAM, disk, CPU, OS, Python version. The skill is learning to read error messages, isolate the root cause, and fix the exact problem rather than guessing. Six failures in one day is normal. What matters is that each failure teaches you something specific.
