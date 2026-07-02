@@ -31,10 +31,11 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     )
 
 
+frontend_url = os.environ.get("FRONTEND_URL", "https://your-app.vercel.app")
 # Allow frontend to talk to backend (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js dev server
+    allow_origins=["http://localhost:3000", frontend_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
