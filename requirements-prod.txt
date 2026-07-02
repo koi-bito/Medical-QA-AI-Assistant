@@ -1,0 +1,15 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+sentence-transformers
+chromadb
+fastapi
+uvicorn
+groq
+slowapi
+numpy
+sqlalchemy
+pymysql
+python-dotenv
+bcrypt
+python-jose[cryptography]
+httpx
