@@ -619,3 +619,96 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 **The single most important architectural lesson of Week 8:** The **context pattern** (`AuthContext`, `ChatContext`) is the foundation that makes a React app maintainable. Without it, passing auth state and conversation state as props down through every component would quickly become unmanageable. The pattern mirrors dependency injection in backend frameworks — a central store that any component can tap into without knowing where the data came from.
 
 **Next up — Week 9:** Dockerizing the FastAPI backend, setting up Docker Compose with MySQL, and deploying the full stack to the cloud (Render for the backend, Vercel for the frontend).
+
+---
+
+## Week 9 — Deployment to the Cloud
+
+### Days 60–61 — Docker + Docker Compose
+
+**What we did:** Wrote a `Dockerfile` to containerize the FastAPI backend and a `docker-compose.yml` to spin up the backend + MySQL together with a single command.
+
+**Key Lessons:**
+
+- **Never `COPY .env .env` in a Dockerfile.** The `.env` file is gitignored for security. Since it doesn't exist in your GitHub repo, the Docker build on a remote server (like Render) will instantly fail. Instead, inject environment variables through the hosting platform's dashboard.
+- **Docker Compose is for local development.** It lets you simulate a multi-service production environment (backend + database) on your laptop with one command (`docker-compose up --build`). The actual cloud deployment uses the `Dockerfile` directly.
+
+---
+
+### Day 62 — Deploy the Backend to Render
+
+**What we did:** Deployed the FastAPI backend to Render's free tier. It took 6 attempts and each failure taught us something specific.
+
+**The Full Battle Log:**
+
+| Attempt | Error | Root Cause | Fix |
+|---|---|---|---|
+| 1 | Build failed | `COPY .env .env` — file not in repo | Remove the line |
+| 2 | Out of memory (512MB) | Full `requirements.txt` installs GPU PyTorch (2GB+) | Create `requirements-prod.txt` with CPU-only PyTorch |
+| 3 | `RuntimeError: python-multipart required` | FastAPI needs this for OAuth2 login forms; it was a hidden dependency of `gradio` which we removed | Add `python-multipart` explicitly |
+| 4 | Out of memory (512MB) | CPU PyTorch + PubMedBERT (440MB) + FastAPI > 512MB | Try switching to smaller model |
+| 5 | `ModuleNotFoundError: No module named 'chromadb'` | `LIGHTWEIGHT_MODE` env var not yet set when auto-deploy triggered | Auto-detect lightweight mode via `try/except ImportError` |
+| 6 | ✅ **Live!** | Auto-detection worked | App deployed in ~80MB RAM |
+
+**The Core Problem with ML on Free Tier Hosting:**
+Render's free tier gives you **512MB of RAM**. A typical ML stack uses:
+- `torch` (CPU) — ~200MB
+- `sentence-transformers` + model — ~200MB  
+- `chromadb` — ~50MB
+- Python + FastAPI + other libraries — ~100MB
+- **Total: ~550MB** — over the limit before a single request is processed.
+
+**The Solution — Graceful Degradation:**
+The best pattern is to build your app in tiers:
+1. **Full RAG mode** (local/paid server): loads all models, uses vector search + reranker
+2. **Groq + RAG mode**: uses cloud GPU (Groq API) for inference, but still does local vector retrieval
+3. **Lightweight mode** (free tier): skips all local ML, sends questions directly to Groq API. Adds this auto-detection logic:
+
+```python
+# Auto-detect: if chromadb isn't installed, force lightweight mode
+try:
+    import chromadb
+except ImportError:
+    LIGHTWEIGHT_MODE = True
+```
+
+This means the same codebase works on both a laptop with 16GB RAM and a free cloud server with 512MB — it just gracefully degrades its capabilities.
+
+**Key Lessons:**
+
+- **Read the error message carefully.** Every single deployment failure had a different, specific error. The fix was always in the error text — OOM vs. ModuleNotFoundError vs. RuntimeError are completely different problems with completely different solutions.
+- **Production `requirements.txt` should be separate from development.** In development, you install everything (training libraries, notebooks, visualization tools). In production, you only need what the running server actually imports.
+- **The `--extra-index-url https://download.pytorch.org/whl/cpu` trick.** Adding this line to `requirements.txt` before `torch` tells pip to install the CPU-only PyTorch wheel, which is ~500MB smaller than the GPU version.
+- **Free tiers are real constraints, not temporary inconveniences.** Design your production code to be as lean as possible from the start.
+
+---
+
+### Day 63 — Deploy the Frontend to Vercel (In Progress)
+
+**What we're doing:** Deploying the Next.js frontend to Vercel.
+
+**Vercel Gotchas Discovered:**
+- Project names must be all **lowercase** — `Medical-QA-AI-Assistant` is invalid, use `medical-qa-ai-assistant`
+- If a repo of that name already exists under your account, you need to pick a different name
+
+**Tomorrow's tasks:**
+- Finish the Vercel deployment
+- Set `NEXT_PUBLIC_API_URL=https://medical-qa-ai-assistant.onrender.com` in Vercel environment variables
+- Update the backend CORS `FRONTEND_URL` on Render to match the live Vercel URL
+- Test the full end-to-end flow on production
+
+---
+
+### Week 9 Summary — What This Week Built
+
+| Component | Status |
+|---|---|
+| `Dockerfile` for backend | ✅ Done |
+| `docker-compose.yml` for local dev | ✅ Done |
+| Backend live on Render | ✅ Done |
+| Lightweight mode for free-tier hosting | ✅ Done |
+| Frontend deployment to Vercel | 🔜 Tomorrow |
+| CORS wired between Render + Vercel | 🔜 Tomorrow |
+| Full end-to-end production test | 🔜 Tomorrow |
+
+**The single most important lesson of Week 9:** Cloud deployment is **not** just "upload your code." Every environment has different constraints — RAM, disk, CPU, OS, Python version. The skill is learning to read error messages, isolate the root cause, and fix the exact problem rather than guessing. Six failures in one day is normal. What matters is that each failure teaches you something specific.
