@@ -7,8 +7,8 @@ def build_vector_store(chunks_path="data/processed/chunks.json"):
         chunks = json.load(f)
 
     print(f"Loading embedding model...")
-    # PubMedBERT is trained on medical text — better than a generic embedder
-    embedder = SentenceTransformer("pritamdeka/S-PubMedBert-MS-MARCO")
+    # all-MiniLM-L6-v2 is much smaller (90MB) and fits in Render's 512MB free tier RAM
+    embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
     print("Setting up ChromaDB...")
     client     = chromadb.PersistentClient(path="data/chroma_db")

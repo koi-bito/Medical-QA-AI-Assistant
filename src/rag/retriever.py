@@ -2,7 +2,7 @@ import chromadb
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
 def load_retriever():
-    embedder   = SentenceTransformer("pritamdeka/S-PubMedBert-MS-MARCO")
+    embedder   = SentenceTransformer("all-MiniLM-L6-v2")
     client     = chromadb.PersistentClient(path="data/chroma_db")
     collection = client.get_collection("medical_docs")
     return embedder, collection
