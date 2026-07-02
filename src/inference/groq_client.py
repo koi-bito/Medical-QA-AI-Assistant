@@ -29,6 +29,24 @@ Answer:"""
     )
     return response.choices[0].message.content
 
+def answer_with_groq_no_context(question, model="llama-3.1-8b-instant"):
+    """Lightweight mode: answer using Groq's built-in knowledge (no RAG retrieval).
+    Used on Render free tier where we can't load torch/sentence-transformers."""
+    prompt = f"""You are a helpful medical assistant. Answer the user's question using your medical knowledge.
+If the user is just greeting you or making small talk, respond conversationally.
+Always recommend consulting a healthcare professional for medical questions.
+Be concise but thorough.
+
+Question: {question}
+Answer:"""
+
+    response = client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model=model,
+        max_tokens=500
+    )
+    return response.choices[0].message.content
+
 if __name__ == "__main__":
     # Quick test
     test_answer = answer_with_groq(

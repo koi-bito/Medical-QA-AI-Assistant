@@ -46,11 +46,17 @@ app.include_router(conversations_router)
 
 
 USE_GROQ = os.environ.get("USE_GROQ", "false").lower() == "true"
+LIGHTWEIGHT_MODE = os.environ.get("LIGHTWEIGHT_MODE", "false").lower() == "true"
 
 DISABLE_RERANKER = os.environ.get("DISABLE_RERANKER", "false").lower() == "true"
 # Load models at startup
 print("Loading models...")
-if USE_GROQ:
+if LIGHTWEIGHT_MODE:
+    print("LIGHTWEIGHT MODE: Skipping all ML models. Using Groq API directly.")
+    from src.inference.groq_client import answer_with_groq_no_context
+    embedder, collection, reranker = None, None, None
+    model, tokenizer = None, None
+elif USE_GROQ:
     print("Using Groq for inference. Loading retriever only...")
     from src.rag.retriever import load_retriever, load_reranker, retrieve_and_rerank
     from src.inference.groq_client import answer_with_groq
@@ -136,7 +142,10 @@ def ask(
 
     start  = time.time()
     
-    if USE_GROQ:
+    if LIGHTWEIGHT_MODE:
+        answer = answer_with_groq_no_context(body.question)
+        sources = []
+    elif USE_GROQ:
         chunks = retrieve_and_rerank(body.question, collection, embedder, reranker)
         answer = answer_with_groq(body.question, chunks)
         sources = chunks
@@ -147,7 +156,7 @@ def ask(
         
     latency = round(time.time() - start, 2)
 
-    confidence = estimate_confidence(body.question, sources, embedder)
+    confidence = estimate_confidence(body.question, sources, embedder) if embedder else "medium"
 
     # Save user message
     user_msg = Message(
