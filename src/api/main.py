@@ -48,6 +48,14 @@ app.include_router(conversations_router)
 USE_GROQ = os.environ.get("USE_GROQ", "false").lower() == "true"
 LIGHTWEIGHT_MODE = os.environ.get("LIGHTWEIGHT_MODE", "false").lower() == "true"
 
+# Auto-detect: if chromadb isn't installed, force lightweight mode
+if not LIGHTWEIGHT_MODE:
+    try:
+        import chromadb  # noqa: F401
+    except ImportError:
+        print("chromadb not installed — auto-enabling LIGHTWEIGHT_MODE")
+        LIGHTWEIGHT_MODE = True
+
 DISABLE_RERANKER = os.environ.get("DISABLE_RERANKER", "false").lower() == "true"
 # Load models at startup
 print("Loading models...")
