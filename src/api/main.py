@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,7 +21,23 @@ from src.conversations.router import router as conversations_router
 # Rate limiter — key by the requester's IP address
 limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI(title="Medical QA API", version="1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Runs once at startup before any requests are handled.
+    Creates DB tables if they don't exist — essential on Render where
+    the SQLite file starts empty on every fresh deploy."""
+    from src.database.init_db import init
+    init()
+
+    # Warn early if critical env vars are missing
+    if not os.environ.get("SECRET_KEY"):
+        print("WARNING: SECRET_KEY is not set — JWT signing will fail!")
+    if not os.environ.get("GROQ_API_KEY"):
+        print("WARNING: GROQ_API_KEY is not set — Groq inference will fail!")
+
+    yield  # App runs here
+
+app = FastAPI(title="Medical QA API", version="1.0", lifespan=lifespan)
 app.state.limiter = limiter
 
 @app.exception_handler(RateLimitExceeded)
