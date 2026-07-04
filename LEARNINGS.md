@@ -691,19 +691,22 @@ This means the same codebase works on both a laptop with 16GB RAM and a free clo
 
 ### Day 63 — Deploy the Frontend to Vercel (In Progress)
 
-**What we're doing:** Deploying the Next.js frontend to Vercel.
+**What we did:** Fixed Render backend errors and deployed the Next.js frontend.
 
-**Vercel Gotchas Discovered:**
+**Render Backend Fixes:**
+- **Issue:** SQLite database tables weren't being created on Render startup (free tier instances start fresh).
+- **Fix:** Added a FastAPI `lifespan` handler in `main.py` to call `init_db()` automatically on app startup.
+- **Issue:** Missing `SECRET_KEY` caused cryptic JWT crashes mid-request.
+- **Fix:** Added a `RuntimeError` on startup if `SECRET_KEY` is missing in `security.py` to fail fast and make the logs clear.
+- **Issue:** TiDB/MySQL connection failed with access denied.
+- **Fix:** Switched back to `sqlite:///./medical_qa.db` for the free-tier deployment since it requires zero setup.
 
-- Project names must be all **lowercase** — `Medical-QA-AI-Assistant` is invalid, use `medical-qa-ai-assistant`
-- If a repo of that name already exists under your account, you need to pick a different name
-
-**Tomorrow's tasks:**
-
-- Finish the Vercel deployment
-- Set `NEXT_PUBLIC_API_URL=https://medical-qa-ai-assistant.onrender.com` in Vercel environment variables
-- Update the backend CORS `FRONTEND_URL` on Render to match the live Vercel URL
-- Test the full end-to-end flow on production
+**Frontend Deployment (Switched to Netlify):**
+- **Vercel Issues:** Ran into persistent "Unauthorized" and account linking issues with GitHub.
+- **Solution:** Switched to **Netlify** which handled the Next.js deployment seamlessly.
+- **Netlify Configuration:** Added a `netlify.toml` file to tell Netlify to build from the `frontend/` subdirectory and use the `@netlify/plugin-nextjs` plugin for proper SSR routing.
+- **Environment Variables:** Set `NEXT_PUBLIC_API_URL` on Netlify to point to the Render backend, and `FRONTEND_URL` on Render to allow CORS from the Netlify domain.
+- **Bug Fix:** Changed `autoComplete="username"` to `autoComplete="off"` on the registration page to stop browser password managers from annoyingly auto-filling the email address into the username field.
 
 ---
 
@@ -715,8 +718,8 @@ This means the same codebase works on both a laptop with 16GB RAM and a free clo
 | `docker-compose.yml` for local dev     | ✅ Done     |
 | Backend live on Render                 | ✅ Done     |
 | Lightweight mode for free-tier hosting | ✅ Done     |
-| Frontend deployment to Vercel          | 🔜 Tomorrow |
-| CORS wired between Render + Vercel     | 🔜 Tomorrow |
-| Full end-to-end production test        | 🔜 Tomorrow |
+| Frontend deployment to Netlify         | ✅ Done     |
+| CORS wired between Render + Netlify    | ✅ Done     |
+| Full end-to-end production test        | ✅ Done     |
 
-**The single most important lesson of Week 9:** Cloud deployment is **not** just "upload your code." Every environment has different constraints — RAM, disk, CPU, OS, Python version. The skill is learning to read error messages, isolate the root cause, and fix the exact problem rather than guessing. Six failures in one day is normal. What matters is that each failure teaches you something specific.
+**The single most important lesson of Week 9:** Cloud deployment is **not** just "upload your code." Every environment has different constraints — RAM, disk, CPU, OS, Python version. The skill is learning to read error messages, isolate the root cause, and fix the exact problem rather than guessing. Six failures in one day is normal. What matters is that each failure teaches you something specific. And sometimes, if a platform (like Vercel) fights you, just switch to a comparable alternative (like Netlify) to keep moving forward.
