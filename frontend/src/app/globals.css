@@ -1,41 +1,67 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+/* ─── Design Tokens ────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Warm Beige Base */
+  --bg-base:        #f5f0e8;
+  --bg-surface:     #faf7f2;
+  --bg-card:        #fffdf9;
+
+  /* Crimson Red — primary accent */
+  --crimson-50:     #fff1f1;
+  --crimson-100:    #ffdede;
+  --crimson-500:    #c8102e;
+  --crimson-600:    #a80d25;
+  --crimson-700:    #8b0a1e;
+
+  /* Leaf Green — AI / healing accent */
+  --leaf-50:        #f0f7ee;
+  --leaf-100:       #d6edcf;
+  --leaf-500:       #4a7c59;
+  --leaf-600:       #3a6347;
+  --leaf-700:       #2d4e38;
+
+  /* Warm neutrals */
+  --warm-100:       #ede8df;
+  --warm-200:       #ddd6c8;
+  --warm-700:       #5c5045;
+  --warm-900:       #2e261d;
+
+  --foreground: var(--warm-900);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-  body {
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(210, 100%, 15%, 1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(250, 100%, 15%, 1) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(190, 100%, 15%, 1) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(230, 100%, 15%, 1) 0px, transparent 50%);
-  }
+/* ─── Base Body ─────────────────────────────────────────────────── */
+html, body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  background-image: 
-    radial-gradient(at 0% 0%, hsla(210, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(250, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(190, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(230, 100%, 95%, 1) 0px, transparent 50%);
+  background-color: var(--bg-base);
+  /* Subtle warm texture — no transparent "holes" */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 10% 0%,   rgba(200, 16, 46, 0.06)  0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 0%,   rgba(74, 124, 89, 0.07)  0%, transparent 55%),
+    radial-gradient(ellipse 50% 70% at 50% 100%, rgba(200, 16, 46, 0.04)  0%, transparent 65%);
   background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--warm-100); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--warm-200); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #c8a98a; }
+
+/* ─── Chat surface — solid warm card, no transparency holes ──────── */
+.chat-surface {
+  background-color: var(--bg-card);
+  border: 1px solid var(--warm-100);
+}
+
+/* ─── Smooth page transitions ───────────────────────────────────── */
+* { transition-property: color, background-color, border-color, box-shadow; transition-duration: 150ms; transition-timing-function: ease; }
+

@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ThumbsUp,
   ThumbsDown,
+  Stethoscope,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useChat } from "@/context/ChatContext";
@@ -32,23 +33,27 @@ interface Message {
   feedback?: "up" | "down";
 }
 
+const confidenceStyle = (level?: string) => {
+  const l = level?.toLowerCase();
+  if (l === "high")   return { bg: "#f0f7ee", color: "#3a6347", border: "#d6edcf" };
+  if (l === "medium") return { bg: "#fefce8", color: "#854d0e", border: "#fef08a" };
+  return                     { bg: "#fff1f1", color: "#9b1c1c", border: "#ffdede" };
+};
+
 export default function ChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { activeConversationId, setActiveConversationId, fetchConversations } =
-    useChat();
+  const { activeConversationId, setActiveConversationId, fetchConversations } = useChat();
   const justCreatedRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, loading]);
+  useEffect(() => { scrollToBottom(); }, [messages, loading]);
 
   // Load messages when active conversation changes
   useEffect(() => {
@@ -57,21 +62,12 @@ export default function ChatPage() {
         justCreatedRef.current = false;
         return;
       }
-
       const fetchMessages = async () => {
         setLoading(true);
         try {
-          const response = await api.get(
-            `/conversations/${activeConversationId}`,
-          );
+          const response = await api.get(`/conversations/${activeConversationId}`);
           const formattedMessages = response.data.messages.map(
-            (m: {
-              id: number;
-              role: "user" | "assistant";
-              content: string;
-              sources: string | null;
-              confidence: string | null;
-            }) => ({
+            (m: { id: number; role: "user" | "assistant"; content: string; sources: string | null; confidence: string | null }) => ({
               id: m.id,
               role: m.role,
               content: m.content,
@@ -80,36 +76,28 @@ export default function ChatPage() {
             }),
           );
           setMessages(formattedMessages);
-        } catch (error) {
-          console.error("Failed to load conversation:", error);
+        } catch {
           toast.error("Failed to load conversation.");
         } finally {
           setLoading(false);
         }
       };
-
       fetchMessages();
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([]);
     }
   }, [activeConversationId]);
 
-  const handleFeedback = async (
-    messageId: number,
-    rating: "up" | "down",
-    index: number,
-  ) => {
+  const handleFeedback = async (messageId: number, rating: "up" | "down", index: number) => {
     try {
       await api.post("/feedback", { message_id: messageId, rating });
       setMessages((prev) => {
-        const newMessages = [...prev];
-        newMessages[index] = { ...newMessages[index], feedback: rating };
-        return newMessages;
+        const next = [...prev];
+        next[index] = { ...next[index], feedback: rating };
+        return next;
       });
       toast.success("Feedback submitted!");
-    } catch (error) {
-      console.error("Failed to submit feedback:", error);
+    } catch {
       toast.error("Failed to submit feedback.");
     }
   };
@@ -145,16 +133,11 @@ export default function ChatPage() {
         setActiveConversationId(response.data.conversation_id);
         fetchConversations();
       }
-    } catch (error) {
-      console.error("Failed to get answer:", error);
-      toast.error("Failed to get answer.");
+    } catch {
+      toast.error("Failed to get an answer. Please try again.");
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content:
-            "Sorry, I encountered an error while trying to answer your question.",
-        },
+        { role: "assistant", content: "Sorry, I encountered an error. Please try again." },
       ]);
     } finally {
       setLoading(false);
@@ -162,170 +145,254 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-full relative">
-      {/* Disclaimer */}
-      <div className="backdrop-blur-md bg-white/40 border-b border-white/20 p-2 flex items-center justify-center gap-2 flex-shrink-0 z-10">
-        <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-        <p className="text-xs text-gray-500 font-medium">
-          <span className="font-semibold text-gray-600">
-            Medical Disclaimer:
-          </span>{" "}
-          AI can make mistakes. Always consult a qualified healthcare provider.
+    <div className="flex flex-col h-full relative" style={{ backgroundColor: "#faf7f2" }}>
+
+      {/* ── Disclaimer Banner ── */}
+      <div
+        style={{ backgroundColor: "#fff8f0", borderBottom: "1px solid #ede8df" }}
+        className="flex items-center justify-center gap-2 px-4 py-2 flex-shrink-0 z-10"
+      >
+        <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "#c8102e" }} />
+        <p className="text-xs font-medium" style={{ color: "#5c5045" }}>
+          <span className="font-semibold" style={{ color: "#a80d25" }}>Medical Disclaimer: </span>
+          AI can make mistakes. Always consult a qualified healthcare provider for medical advice.
         </p>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-32">
+      {/* ── Messages Area ── */}
+      {/* Solid background — the core fix for the "hole" problem */}
+      <div
+        className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-36"
+        style={{ backgroundColor: "#faf7f2" }}
+      >
         <div className="max-w-3xl mx-auto space-y-6">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-gray-500 animate-in fade-in zoom-in duration-500">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl flex items-center justify-center shadow-inner mb-6 rotate-3">
-                <Bot className="h-10 w-10 text-indigo-500 -rotate-3" />
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800 tracking-tight">
-                Medical QA Assistant
-              </h2>
-              <p className="text-sm mt-3 text-center max-w-md text-gray-500 leading-relaxed">
-                Ask me a medical question. I will search trusted medical
-                literature to find the answer.
-              </p>
-            </div>
-          ) : (
-            messages.map((msg, index) => (
+
+          {/* Empty state */}
+          {messages.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center min-h-[420px] gap-5">
               <div
-                key={index}
-                className={`flex gap-4 transition-all duration-500 ease-out animate-in fade-in slide-in-from-bottom-4`}
+                style={{ background: "linear-gradient(135deg, #fff1f1 0%, #faf0ef 100%)", border: "2px solid #ffdede" }}
+                className="w-24 h-24 rounded-3xl flex items-center justify-center shadow-sm"
               >
-                <div className="flex-shrink-0 mt-1">
-                  {msg.role === "user" ? (
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
-                      <User className="h-4 w-4 text-white" />
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-md shadow-emerald-500/20">
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                  )}
-                </div>
+                <Stethoscope style={{ color: "#c8102e" }} className="h-12 w-12" />
+              </div>
+              <div className="text-center">
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: "#2e261d" }}>
+                  Medical QA Assistant
+                </h2>
+                <p className="text-sm mt-2 max-w-sm leading-relaxed" style={{ color: "#9b8f85" }}>
+                  Ask any medical question. I'll search trusted clinical literature and provide a sourced, evidence-based answer.
+                </p>
+              </div>
+              {/* Suggestion chips */}
+              <div className="flex flex-wrap justify-center gap-2 mt-2">
+                {[
+                  "What are symptoms of diabetes?",
+                  "Is ibuprofen safe daily?",
+                  "Difference between cold and flu?",
+                ].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setInput(q)}
+                    style={{ background: "#fffdf9", border: "1px solid #ede8df", color: "#5c5045" }}
+                    className="text-xs px-3 py-1.5 rounded-full hover:border-red-300 hover:text-[#c8102e] transition-all duration-150"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Message bubbles */}
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className="flex gap-3 animate-in fade-in slide-in-from-bottom-3 duration-300"
+            >
+              {/* Avatar */}
+              <div className="flex-shrink-0 mt-0.5">
+                {msg.role === "user" ? (
+                  <div
+                    style={{ background: "linear-gradient(135deg, #c8102e 0%, #8b0a1e 100%)", boxShadow: "0 2px 8px rgba(200,16,46,0.3)" }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                  >
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                ) : (
+                  <div
+                    style={{ background: "linear-gradient(135deg, #4a7c59 0%, #2d4e38 100%)", boxShadow: "0 2px 8px rgba(74,124,89,0.3)" }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                  >
+                    <Bot className="h-4 w-4 text-white" />
+                  </div>
+                )}
+              </div>
+
+              {/* Bubble */}
+              <div
+                className="flex-1 min-w-0 rounded-2xl px-5 py-4 shadow-sm"
+                style={
+                  msg.role === "user"
+                    ? {
+                        background: "linear-gradient(135deg, #c8102e 0%, #a80d25 100%)",
+                        color: "#fff",
+                        borderTopLeftRadius: "4px",
+                        boxShadow: "0 4px 16px rgba(200,16,46,0.15)",
+                      }
+                    : {
+                        backgroundColor: "#fffdf9",
+                        border: "1px solid #ede8df",
+                        color: "#2e261d",
+                        borderTopLeftRadius: "4px",
+                        boxShadow: "0 2px 12px rgba(46,38,29,0.05)",
+                      }
+                }
+              >
+                {/* Content */}
                 <div
-                  className={`flex-1 space-y-4 min-w-0 overflow-hidden p-5 rounded-2xl shadow-sm border ${
+                  className={`prose prose-sm max-w-none break-words ${
                     msg.role === "user"
-                      ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-tl-sm border-transparent shadow-blue-500/10"
-                      : "bg-white/80 backdrop-blur-md text-gray-800 rounded-tl-sm border-white/60 shadow-[0_4px_24px_rgba(0,0,0,0.02)]"
+                      ? "prose-p:text-white prose-p:m-0 text-white"
+                      : "prose-headings:text-[#2e261d] prose-p:text-[#3d3129]"
                   }`}
                 >
+                  {msg.role === "user" ? (
+                    <p className="whitespace-pre-wrap m-0 font-medium">{msg.content}</p>
+                  ) : (
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  )}
+                </div>
+
+                {/* Sources & Confidence (assistant only) */}
+                {msg.role === "assistant" && msg.sources !== undefined && (
                   <div
-                    className={`prose prose-sm sm:prose max-w-none break-words ${msg.role === "user" ? "text-white prose-p:text-white" : "text-gray-800"}`}
+                    style={{ borderTop: "1px solid #ede8df" }}
+                    className="mt-4 pt-4 space-y-3"
                   >
-                    {msg.role === "user" ? (
-                      <p className="whitespace-pre-wrap m-0 font-medium">
-                        {msg.content}
-                      </p>
-                    ) : (
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
-                    )}
-                  </div>
-
-                  {/* Sources & Confidence */}
-                  {msg.role === "assistant" && msg.sources && (
-                    <div className="pt-4 border-t border-gray-200 mt-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Confidence
-                          </span>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${
-                              msg.confidence?.toLowerCase() === "high"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : msg.confidence?.toLowerCase() === "medium"
-                                  ? "bg-amber-100 text-amber-700"
-                                  : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {msg.confidence || "Unknown"}
-                          </span>
-                        </div>
-
-                        {msg.id && (
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                handleFeedback(msg.id!, "up", index)
-                              }
-                              className={`p-1 rounded transition-colors ${msg.feedback === "up" ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
-                              title="Helpful"
+                    {/* Confidence + Feedback row */}
+                    <div className="flex items-center justify-between">
+                      {/* Confidence badge */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#9b8f85" }}>
+                          Confidence
+                        </span>
+                        {msg.confidence && (() => {
+                          const s = confidenceStyle(msg.confidence);
+                          return (
+                            <span
+                              className="text-xs px-2.5 py-0.5 rounded-full font-semibold border"
+                              style={{ background: s.bg, color: s.color, borderColor: s.border }}
                             >
-                              <ThumbsUp className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleFeedback(msg.id!, "down", index)
-                              }
-                              className={`p-1 rounded transition-colors ${msg.feedback === "down" ? "text-red-600 bg-red-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
-                              title="Not Helpful"
-                            >
-                              <ThumbsDown className="h-4 w-4" />
-                            </button>
-                          </div>
-                        )}
+                              {msg.confidence}
+                            </span>
+                          );
+                        })()}
                       </div>
 
+                      {/* Thumbs feedback */}
+                      {msg.id && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleFeedback(msg.id!, "up", index)}
+                            title="Helpful"
+                            className="p-1.5 rounded-lg transition-all duration-150"
+                            style={
+                              msg.feedback === "up"
+                                ? { background: "#f0f7ee", color: "#4a7c59" }
+                                : { color: "#c8a98a" }
+                            }
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleFeedback(msg.id!, "down", index)}
+                            title="Not Helpful"
+                            className="p-1.5 rounded-lg transition-all duration-150"
+                            style={
+                              msg.feedback === "down"
+                                ? { background: "#fff1f1", color: "#c8102e" }
+                                : { color: "#c8a98a" }
+                            }
+                          >
+                            <ThumbsDown className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sources collapsible */}
+                    {msg.sources.length > 0 && (
                       <details className="group">
-                        <summary className="text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-900 flex items-center gap-1 list-none select-none">
-                          <Info className="h-4 w-4" />
-                          <span className="flex-1">
-                            View {msg.sources.length} sources
-                          </span>
-                          <span className="transition group-open:rotate-180">
-                            <ChevronDown className="h-4 w-4" />
-                          </span>
+                        <summary
+                          style={{ color: "#5c5045" }}
+                          className="text-xs font-semibold cursor-pointer hover:text-[#c8102e] flex items-center gap-1.5 list-none select-none transition-colors"
+                        >
+                          <Info className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span className="flex-1">View {msg.sources.length} source{msg.sources.length !== 1 ? "s" : ""}</span>
+                          <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 group-open:rotate-180" />
                         </summary>
-                        <div className="mt-3 space-y-3 pl-5 border-l-2 border-gray-200">
+                        <div className="mt-3 space-y-3 pl-4" style={{ borderLeft: "2px solid #ede8df" }}>
                           {msg.sources.map((source, idx) => (
-                            <div key={idx} className="text-sm">
-                              <p className="font-medium text-gray-700">
-                                {source.topic}
-                              </p>
-                              <p className="text-gray-500 text-xs mt-1 line-clamp-3">
+                            <div key={idx}>
+                              <p className="text-xs font-semibold" style={{ color: "#3d3129" }}>{source.topic}</p>
+                              <p className="text-xs mt-0.5 leading-relaxed line-clamp-3" style={{ color: "#9b8f85" }}>
                                 {source.text}
                               </p>
                             </div>
                           ))}
                         </div>
                       </details>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
-            ))
-          )}
+            </div>
+          ))}
+
+          {/* Loading indicator */}
           {loading && (
-            <div className="flex gap-4 p-5">
-              <div className="flex-shrink-0 mt-1">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-md shadow-emerald-500/20">
-                  <Bot className="h-4 w-4 text-white" />
-                </div>
+            <div className="flex gap-3">
+              <div
+                style={{ background: "linear-gradient(135deg, #4a7c59 0%, #2d4e38 100%)" }}
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-md mt-0.5"
+              >
+                <Bot className="h-4 w-4 text-white" />
               </div>
-              <div className="flex-1 flex items-center h-10 bg-white/60 backdrop-blur-md rounded-2xl rounded-tl-sm px-5 border border-white/60 shadow-sm w-fit max-w-[100px]">
+              <div
+                style={{ backgroundColor: "#fffdf9", border: "1px solid #ede8df", borderTopLeftRadius: "4px" }}
+                className="px-5 py-4 rounded-2xl flex items-center shadow-sm"
+              >
                 <div className="flex space-x-1.5">
-                  <div className="w-2 h-2 bg-emerald-500/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-2 h-2 bg-emerald-500/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-2 h-2 bg-emerald-500/60 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: "#4a7c59" }} />
+                  <div className="w-2 h-2 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: "#4a7c59", opacity: 0.7 }} />
+                  <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: "#4a7c59", opacity: 0.4 }} />
                 </div>
               </div>
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-white/80 via-white/50 to-transparent pt-12 backdrop-blur-[2px]">
+      {/* ── Input Bar ── */}
+      {/* Solid gradient fade — no transparent hole at bottom */}
+      <div
+        className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-5 pt-10"
+        style={{
+          background: "linear-gradient(to top, #faf7f2 60%, transparent)",
+        }}
+      >
         <div className="max-w-3xl mx-auto">
           <form
             onSubmit={handleSubmit}
-            className="relative flex items-end shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-white/60 bg-white/70 backdrop-blur-xl rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 focus-within:border-indigo-500 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+            className="relative flex items-end rounded-2xl overflow-hidden transition-all duration-200"
+            style={{
+              backgroundColor: "#fffdf9",
+              border: "1.5px solid #ddd6c8",
+              boxShadow: "0 4px 20px rgba(46,38,29,0.08)",
+            }}
           >
             <textarea
               value={input}
@@ -336,21 +403,25 @@ export default function ChatPage() {
                   handleSubmit(e);
                 }
               }}
-              placeholder="Ask a medical question..."
-              className="w-full max-h-48 py-4 pl-6 pr-14 bg-transparent border-0 focus:ring-0 resize-none outline-none text-sm text-gray-900 placeholder:text-gray-400 font-medium"
+              placeholder="Ask a medical question… (Shift+Enter for new line)"
+              className="w-full resize-none border-0 outline-none py-4 pl-5 pr-14 text-sm font-medium bg-transparent placeholder:text-[#c8a98a]"
+              style={{ color: "#2e261d", minHeight: "56px", maxHeight: "192px" }}
               rows={1}
-              style={{ minHeight: "56px" }}
             />
             <button
               type="submit"
               disabled={!input.trim() || loading}
-              className="absolute right-2 bottom-2 p-2.5 rounded-2xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none transition-all duration-200"
+              className="absolute right-2.5 bottom-2.5 p-2.5 rounded-xl text-white transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+              style={{
+                background: "linear-gradient(135deg, #c8102e 0%, #a80d25 100%)",
+                boxShadow: input.trim() ? "0 4px 12px rgba(200,16,46,0.35)" : "none",
+              }}
             >
               <Send className="h-4 w-4" />
             </button>
           </form>
-          <p className="text-center text-xs text-gray-400 mt-2">
-            AI can make mistakes. Verify important medical information.
+          <p className="text-center text-[11px] mt-2" style={{ color: "#c8a98a" }}>
+            AI-generated content. Always verify medical information with a healthcare professional.
           </p>
         </div>
       </div>
