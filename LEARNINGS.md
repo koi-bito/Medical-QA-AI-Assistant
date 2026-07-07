@@ -723,3 +723,130 @@ This means the same codebase works on both a laptop with 16GB RAM and a free clo
 | Full end-to-end production test        | ✅ Done     |
 
 **The single most important lesson of Week 9:** Cloud deployment is **not** just "upload your code." Every environment has different constraints — RAM, disk, CPU, OS, Python version. The skill is learning to read error messages, isolate the root cause, and fix the exact problem rather than guessing. Six failures in one day is normal. What matters is that each failure teaches you something specific. And sometimes, if a platform (like Vercel) fights you, just switch to a comparable alternative (like Netlify) to keep moving forward.
+
+---
+
+## Week 10 — Final Polish + Portfolio
+
+### Day 67 — Frontend Design Overhaul
+
+**What we did:** Replaced the entire frontend design system — colors, backgrounds, auth pages, sidebar, and chat interface — with a cohesive premium palette. Also diagnosed and fixed a visual bug where the chat area had a disturbing transparent "hole" effect.
+
+**The Design System — Crimson + Beige + Leaf Green:**
+
+The new palette was chosen deliberately for a medical context:
+
+| Color | Hex | Role |
+| --- | --- | --- |
+| Crimson Red | `#c8102e` | Primary accent — urgency, action buttons, user bubbles |
+| Warm Beige | `#f5f0e8` | Base background — warmth, approachability |
+| Off-White Card | `#fffdf9` | Surface cards — clean, readable content areas |
+| Leaf Green | `#4a7c59` | AI/assistant elements — healing, nature, calm |
+| Warm Brown | `#2e261d` | Primary text — earthy, readable |
+
+This isn't just aesthetics. Color carries meaning in medical contexts. Red signals importance and urgency. Green is universally associated with health and healing. Beige avoids the cold, clinical feeling of pure white. Together they feel warm and trustworthy without being alarming.
+
+**The "Hole" Bug — Root Cause and Fix:**
+
+The chat area had a disturbing visual effect where, when scrolled, the background looked like a transparent hole revealing the page background behind it. The cause was:
+
+```tsx
+// Before: transparent backgrounds — showed the body gradient behind
+<div className="flex h-screen bg-transparent relative">
+<main className="flex-1 flex flex-col h-screen overflow-hidden bg-transparent">
+<div className="flex-1 overflow-y-auto p-4"> {/* no background at all */}
+```
+
+When you scroll in an element with `overflow-y-auto` and its background is `transparent`, the browser doesn't fill in the parent's background colour — it just shows whatever is behind the scrollable container, which can look like a dark or distorted hole, especially on some browsers and screen compositions.
+
+**Fix:** Give every layer an explicit, solid background colour:
+
+```tsx
+// After: every layer has a solid warm background
+<div style={{ backgroundColor: "#f5f0e8" }} className="flex h-screen overflow-hidden">
+<main style={{ backgroundColor: "#faf7f2" }} className="flex-1 flex flex-col h-screen overflow-hidden">
+<div style={{ backgroundColor: "#faf7f2" }} className="flex-1 overflow-y-auto">
+```
+
+**Key Lesson:** Glassmorphism (transparency + backdrop-blur) looks beautiful in static screenshots but can cause real visual bugs in scrollable, dynamic layouts. Use it sparingly — only for overlays and modals where the background is genuinely intentional. For the main content area, always use a solid background.
+
+**Other design improvements made:**
+
+- **Login page:** Split-panel layout — a crimson/green gradient decorative panel on the left (desktop only) with feature bullets, and a warm beige form card on the right.
+- **Sidebar:** Added branded logo header (`Heart` icon + app name), better conversation empty state, leaf-green user avatar initials, themed logout button.
+- **Chat empty state:** Added quick-start suggestion chips so users know what kinds of questions to ask.
+- **Loading indicator:** Replaced generic grey dots with leaf-green bouncing dots that match the AI avatar colour.
+- **Toasts:** Themed `react-hot-toast` notifications — green check for success, crimson for errors — matching the design system.
+- **Scrollbar:** Custom styled to match the warm palette instead of the OS default.
+
+---
+
+### Day 67 (cont.) — Local Development Environment Bug
+
+**What we did:** Diagnosed why the backend was crashing on local startup with a `ConnectionRefusedError` after successfully running in production.
+
+**The Bug:**
+
+```
+pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost'
+([WinError 10061] No connection could be made because the target machine actively refused it)")
+```
+
+**Root Cause:**
+
+The `.env` file had `DATABASE_URL` pointing to a local MySQL server:
+```
+DATABASE_URL=mysql+pymysql://username:password@localhost:3306/medical_qa
+```
+
+But MySQL was not running locally. The production environment (Render) has its own database configured via its dashboard's environment variables — those never touch the local `.env` file. So the production deployment was fine, but local dev was broken.
+
+**Fix — SQLite for local dev, MySQL for production:**
+
+```bash
+# .env — local development only (gitignored — safe to edit freely)
+# DATABASE_URL=mysql+pymysql://...   ← commented out
+DATABASE_URL=sqlite:///./medical_qa.db  ← SQLite, zero setup required
+```
+
+The `database/config.py` already had this fallback built in — it just needed the `.env` to be updated:
+
+```python
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medical_qa.db")
+
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)  # MySQL, Postgres, etc.
+```
+
+**The Two-Environment Pattern:**
+
+| Where | Database | How configured |
+| --- | --- | --- |
+| Local development | SQLite (`medical_qa.db` file, auto-created) | `.env` file — no server needed |
+| Production (Render) | MySQL / Postgres (cloud-hosted) | Hosting platform's dashboard env vars |
+
+**Key Lessons:**
+
+- **Never commit secrets or environment-specific config.** The `.env` file is gitignored for a reason — it lets you have completely different configurations for local vs. production without touching any code.
+- **SQLite is underrated for local dev.** It requires zero installation, creates its own file on the fly, supports all SQL operations, and SQLAlchemy switches between it and MySQL/Postgres with a single connection string change. There is no reason to run a full MySQL server locally just to test your app.
+- **Design for environment portability from day one.** The `os.getenv("DATABASE_URL", "sqlite:///./medical_qa.db")` pattern — use the env var if it exists, fall back to SQLite — means your app works anywhere without code changes.
+
+---
+
+### Week 10 Summary (In Progress)
+
+| Task | Status |
+| --- | --- |
+| Frontend design overhaul — crimson/beige/green palette | ✅ Done |
+| Fixed chat background "hole" visual bug | ✅ Done |
+| Login + Register pages redesigned | ✅ Done |
+| Sidebar branding + conversation UI | ✅ Done |
+| Local dev environment fixed (SQLite fallback) | ✅ Done |
+| README update with full-stack architecture | ⏳ Pending |
+| Security audit checklist | ⏳ Pending |
+| Demo video + LinkedIn post | ⏳ Pending |
+| Code cleanup + docstrings | ⏳ Pending |
+
+**Next up:** Update the README to reflect the full-stack architecture, record a demo video, and complete the final code cleanup pass.
