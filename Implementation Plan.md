@@ -2174,10 +2174,12 @@ Answer + Sources
 > **Tech Stack:**
 >
 > - **Backend:** FastAPI (already built — we'll extend it)
-> - **Database:** MySQL (installed locally) + SQLAlchemy ORM
+> - **Database:** PostgreSQL (Render free tier) + SQLAlchemy ORM
 > - **Auth:** JWT (JSON Web Tokens) with bcrypt password hashing
 > - **Frontend:** Next.js (React-based)
-> - **Deployment:** Docker → Vercel (frontend) + Render (backend)
+> - **Deployment:** Docker → Netlify (frontend) + Render (backend + PostgreSQL)
+>
+> **Note (actual build):** Originally planned for MySQL locally + Vercel frontend. During deployment, we switched to Render's free PostgreSQL (persistent, no ephemeral wipe issue) and Netlify for the frontend (simpler static site deployment). SQLAlchemy made the MySQL → PostgreSQL switch a one-line change in the connection string.
 
 ---
 
@@ -2187,34 +2189,32 @@ Answer + Sources
 
 ---
 
-### Day 46 — MySQL Database + SQLAlchemy Setup
+### Day 46 — PostgreSQL Database + SQLAlchemy Setup ✅ Done
 
 **Time:** 4 hrs
 
-**What you're doing:** Connecting your FastAPI app to your local MySQL database and defining the tables (models) for users and conversations.
+**What you're doing:** Connecting your FastAPI app to a PostgreSQL database and defining the tables (models) for users and conversations.
 
 **Why SQLAlchemy?** You could write raw SQL, but SQLAlchemy gives you an ORM (Object-Relational Mapper) — you interact with Python objects instead of writing SQL strings. This prevents SQL injection, makes migrations easier, and is the industry standard for FastAPI + databases.
 
+**Note (actual build):** Originally planned for MySQL locally. We used a SQLite fallback for local development (auto-created, zero setup) and Render's free PostgreSQL for production. The `DATABASE_URL` environment variable switches between them automatically.
+
 **Tasks:**
 
-1. Open MySQL and create a database for this project:
-
-```sql
-CREATE DATABASE medical_qa;
-```
-
-2. Install the required packages:
+1. Install the required packages:
 
 ```bash
-pip install sqlalchemy pymysql python-dotenv
+pip install sqlalchemy psycopg2-binary python-dotenv
 ```
 
-> **Why `pymysql`?** SQLAlchemy needs a "driver" to talk to MySQL. `pymysql` is a pure-Python MySQL driver that works out of the box on Windows without needing to compile C extensions.
+> **Why `psycopg2-binary`?** SQLAlchemy needs a driver to talk to PostgreSQL. `psycopg2-binary` is the standard, pre-compiled PostgreSQL driver for Python — works on Windows, Mac, and Linux without any extra setup.
 
-3. Create a `.env` file in the project root to store your database credentials securely:
+2. Create a `.env` file in the project root to store your database credentials securely:
 
 ```
-DATABASE_URL=mysql+pymysql://root:your_password@localhost:3306/medical_qa
+# Local dev: leave blank to auto-use SQLite (no setup needed)
+# Production: set to your Render PostgreSQL Internal URL
+DATABASE_URL=postgresql://user:password@host/dbname
 SECRET_KEY=generate-a-random-string-here-at-least-32-characters
 GROQ_API_KEY=your_existing_groq_key
 ```
@@ -2231,9 +2231,13 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medical_qa.db")
 
-engine = create_engine(DATABASE_URL, echo=False)
+# Support both SQLite (local dev) and PostgreSQL (production on Render)
+if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=False)
+else:
+    engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(bind=engine)
 
 class Base(DeclarativeBase):
@@ -2337,7 +2341,7 @@ SHOW TABLES;
 DESCRIBE users;
 ```
 
-**You're done when:** You see `users`, `conversations`, and `messages` tables in your MySQL database.
+**You're done when:** Tables are created — in SQLite locally (`medical_qa.db` appears in the project root), and in PostgreSQL on production (Render auto-runs `init()` on startup via the `lifespan` hook in `main.py`).
 
 ---
 
@@ -2837,7 +2841,7 @@ class QuestionResponse(BaseModel):
    - Call `GET /conversations/` — you should see a new conversation.
    - Call `GET /conversations/{id}` — you should see the user question and assistant answer as messages.
 
-**You're done when:** Questions and answers are being saved to MySQL and you can retrieve full conversation histories.
+**You're done when:** Questions and answers are being saved to the database (SQLite locally, PostgreSQL on Render) and you can retrieve full conversation histories.
 
 ---
 
@@ -3395,113 +3399,81 @@ docker run -p 8000:8000 --env-file .env medical-qa-backend
 
 ---
 
-### Day 61 — Docker Compose (Backend + MySQL)
+### Day 61 — Docker Compose (Backend) ✅ Done
 
 **Time:** 3 hrs
 
-**What you're doing:** Using Docker Compose to run the backend and a MySQL container together with a single command.
+**What you're doing:** Using Docker Compose to run the backend container.
+
+**Note (actual build):** Originally planned to include a MySQL container. Since production uses Render's managed PostgreSQL and local dev uses SQLite (zero setup), the `docker-compose.yml` only runs the backend service. The `DATABASE_URL` env var points to whatever DB you want.
 
 **Tasks:**
 
-1. Create `docker-compose.yml` in the project root:
-
-```yaml
-version: "3.8"
-
-services:
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: medical_qa
-    ports:
-      - "3307:3306" # 3307 to avoid conflict with your local MySQL
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-  backend:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: mysql+pymysql://root:rootpassword@db:3306/medical_qa
-      SECRET_KEY: ${SECRET_KEY}
-      GROQ_API_KEY: ${GROQ_API_KEY}
-      USE_GROQ: "true"
-    depends_on:
-      - db
-
-volumes:
-  mysql_data:
-```
-
-2. Run it:
+1. `docker-compose.yml` in the project root runs the backend.
+2. Set `DATABASE_URL`, `SECRET_KEY`, `GROQ_API_KEY`, and `USE_GROQ` as environment variables.
+3. Run:
 
 ```bash
 docker-compose up --build
 ```
 
-3. Test the full API through `http://localhost:8000/docs`.
+4. Test the full API through `http://localhost:8000/docs`.
 
-**You're done when:** `docker-compose up` starts both MySQL and the backend, and the API works.
+**You're done when:** `docker-compose up` starts the backend and the API works.
 
 ---
 
-### Day 62 — Deploy the Backend to Render
+### Day 62 — Deploy the Backend to Render ✅ Done
 
 **Time:** 4 hrs
 
-**What you're doing:** Deploying your FastAPI backend to Render's free tier so it's accessible on the internet.
+**What you're doing:** Deploying your FastAPI backend to Render's free tier.
 
-> **Important trade-off about the database:** Render's free tier does not include MySQL. For the deployed version, you have two options:
->
-> 1. Use Render's free PostgreSQL (change `pymysql` to `psycopg2` — SQLAlchemy makes this a one-line change in the connection string).
-> 2. Use a free MySQL service like TiDB Cloud Serverless.
->    We'll cover the exact steps on this day.
-
-**Tasks:**
+**Actual steps taken:**
 
 1. Create a free account on render.com.
-2. Create a new "Web Service" connected to your GitHub repo.
-3. Set the build command: `pip install -r requirements.txt`
-4. Set the start command: `uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
-5. Add environment variables in Render's dashboard: `DATABASE_URL`, `SECRET_KEY`, `GROQ_API_KEY`, `USE_GROQ`.
-6. Deploy and test the `/health` endpoint at your Render URL.
+2. Create a **New → PostgreSQL** on Render (free plan, same region as the web service). Copy the **Internal Database URL**.
+3. Create a **New → Web Service** connected to your GitHub repo.
+4. Set the build command: `pip install -r requirements-prod.txt`
+5. Set the start command: `uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
+6. Add these environment variables in Render's dashboard:
+   - `DATABASE_URL` — the Internal PostgreSQL URL from Step 2
+   - `SECRET_KEY` — a long random string
+   - `GROQ_API_KEY` — your Groq key
+   - `USE_GROQ` — `true`
+   - `LIGHTWEIGHT_MODE` — `true`
+   - `FRONTEND_URL` — your Netlify URL (e.g. `https://medical-qa-ai-assistant.netlify.app`)
+7. Deploy and test `/health` at your Render URL.
 
-**You're done when:** Your backend API is live at `https://your-app.onrender.com`.
+> **Why Internal URL?** Both the Web Service and PostgreSQL are in the same Render region (Singapore). Using the Internal URL routes traffic over Render's private network — faster and no bandwidth charges.
+
+> **Why `requirements-prod.txt`?** The main `requirements.txt` includes heavy ML libraries (torch, transformers) that Render's free tier can't install. `requirements-prod.txt` only includes the lightweight production dependencies.
+
+**You're done when:** Your backend API is live at `https://medical-qa-ai-assistant.onrender.com` and `/health` returns `{"status": "ok"}`.
 
 ---
 
-### Day 63 — Deploy the Frontend to Vercel
+### Day 63 — Deploy the Frontend to Netlify ✅ Done
 
 **Time:** 3 hrs
 
-**What you're doing:** Deploying your Next.js frontend to Vercel (which is built by the same team that created Next.js — best possible hosting for it, free forever for personal projects).
+**What you're doing:** Deploying your Next.js frontend. We used **Netlify** instead of Vercel — both work equally well for Next.js.
 
-**Tasks:**
+**Actual steps taken:**
 
-1. Create a free account on vercel.com.
-2. Import your GitHub repo and point it to the `frontend/` directory.
-3. Set the environment variable `NEXT_PUBLIC_API_URL` to your Render backend URL.
-4. Update `frontend/src/lib/api.ts` to use the environment variable instead of `localhost`:
+1. Create a free account on netlify.com.
+2. Connect your GitHub repo and set the **Base directory** to `frontend/` and **Build command** to `npm run build`.
+3. In Netlify → Site configuration → Environment variables, add:
+   - `NEXT_PUBLIC_API_URL` = `https://medical-qa-ai-assistant.onrender.com` (no trailing slash)
+4. Trigger a redeploy after adding the env var (Netlify bakes env vars into the build).
+5. Rename the auto-generated Netlify URL (e.g., `delightful-vacherin`) to something readable like `medical-qa-ai-assistant` via Site configuration → Site details → Change site name.
+6. Update `FRONTEND_URL` on Render to match the new Netlify URL.
 
-```typescript
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
-  headers: { "Content-Type": "application/json" },
-});
-```
+> **Critical:** After changing the Netlify site name, update `FRONTEND_URL` on Render immediately — otherwise CORS will block logins from the new URL.
 
-5. Deploy. Vercel will auto-deploy on every push to `main`.
-6. Update CORS in `src/api/main.py` to include your Vercel domain:
+> **Why Netlify?** Both Netlify and Vercel offer free Next.js hosting. Netlify was used here.
 
-```python
-allow_origins=["http://localhost:3000", "https://your-app.vercel.app"],
-```
-
-7. Test the full flow on the live site.
-
-**You're done when:** The live website is accessible at `https://your-app.vercel.app` and can register users, login, and ask questions.
+**You're done when:** The live website is accessible at `https://medical-qa-ai-assistant.netlify.app` and can register users, login, and ask questions.
 
 ---
 
@@ -3509,58 +3481,38 @@ allow_origins=["http://localhost:3000", "https://your-app.vercel.app"],
 
 **Time:** 2 hrs
 
-**What you're doing:** If you own a domain name, connecting it to your Vercel deployment so your site is at `yourdomain.com` instead of `your-app.vercel.app`. If you don't have a domain, skip this day.
+**What you're doing:** Connecting a custom domain to your Netlify deployment so your site is at `yourdomain.com` instead of `your-app.netlify.app`. If you don't have a domain, skip this day.
 
 **Tasks:**
 
 1. Buy a domain from Namecheap, Google Domains, or Cloudflare (~$10/year for a `.com`).
-2. In Vercel, go to your project → Settings → Domains → Add your domain.
-3. Update DNS records as Vercel instructs (usually an A record or CNAME).
-4. Vercel auto-provisions an SSL certificate (HTTPS) for free.
-5. Update CORS origins in FastAPI to include your custom domain.
+2. In Netlify, go to your site → Domain management → Add custom domain.
+3. Update DNS records as Netlify instructs (usually an A record or CNAME).
+4. Netlify auto-provisions an SSL certificate (HTTPS) for free via Let's Encrypt.
+5. Update `FRONTEND_URL` on Render and CORS origins in FastAPI to include your custom domain.
 
 **You're done when:** Your website is live at your custom domain with HTTPS.
 
 ---
 
-### Day 65 — Logging + Error Monitoring
+### Day 65 — Logging + Error Monitoring ✅ Done
 
 **Time:** 3 hrs
 
-**What you're doing:** Adding proper logging to the backend so you can debug production issues. Right now, if something breaks on the live site, you have no way to know what happened.
+**What you're doing:** Replacing `print()` statements with Python's `logging` module so logs on Render have timestamps, severity levels, and are filterable.
 
-**Tasks:**
-
-1. Replace all `print()` statements in your backend with Python's `logging` module:
+**Actual implementation:** Used `logging.getLogger("uvicorn.error")` to pipe logs directly into Uvicorn's existing logging infrastructure — no extra configuration needed. All `print()` statements in `src/api/main.py` were replaced with `logger.info()` and `logger.warning()`.
 
 ```python
 import logging
+logger = logging.getLogger("uvicorn.error")
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Instead of: print("Loading models...")
-# Use: logger.info("Loading models...")
+# Example:
+logger.info("Loading models...")
+logger.warning("SECRET_KEY is not set — JWT signing will fail!")
 ```
 
-2. Add structured logging to key events:
-   - `logger.info(f"User {user.email} asked: {question[:50]}")` — log every question.
-   - `logger.warning(f"Rate limit hit by {request.client.host}")` — log rate limit events.
-   - `logger.error(f"Groq API error: {str(e)}")` — log API failures.
-
-3. Add a global error handler in FastAPI:
-
-```python
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    logger.error(f"Unhandled error: {str(exc)}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "An internal error occurred. Please try again."}
-    )
-```
-
-**You're done when:** All key events are logged and errors are caught gracefully.
+**You're done when:** All key events are logged and visible in the Render service logs dashboard.
 
 ---
 
@@ -3638,11 +3590,11 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 1. **Passwords:** Verify all passwords are hashed with bcrypt. Never stored in plain text.
 2. **SQL Injection:** Confirm you're using SQLAlchemy ORM (parameterized queries) everywhere and never building raw SQL strings.
 3. **JWT Security:** Verify tokens expire properly. Test with an expired token to confirm it's rejected.
-4. **CORS:** Make sure `allow_origins` only includes your actual domains, not `"*"`.
-5. **Rate Limiting:** Confirm rate limiting works on production.
-6. **Environment Variables:** Verify `.env` is gitignored and secrets are only in Render/Vercel dashboards.
+4. **CORS:** Make sure `allow_origins` only includes your actual domains, not `"*"`. Use the `FRONTEND_URL` environment variable on Render.
+5. **Rate Limiting:** Confirm rate limiting works on production (10/hour per IP).
+6. **Environment Variables:** Verify `.env` is gitignored and secrets are only in Render/Netlify dashboards.
 7. **Input Validation:** Confirm all user inputs are validated (question length, email format, etc.).
-8. **HTTPS:** Verify the live site uses HTTPS (Vercel handles this automatically).
+8. **HTTPS:** Verify the live site uses HTTPS (Netlify handles this automatically via Let's Encrypt).
 
 **You're done when:** All 8 checks pass.
 
@@ -3670,17 +3622,17 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 
 ---
 
-### Day 71 — Code Cleanup + Documentation
+### Day 71 — Code Cleanup + Documentation ✅ Done
 
 **Time:** 3 hrs
 
 **Tasks:**
 
-1. Go through every file. Remove debug `print()` statements, clean up commented-out code.
+1. Go through every file. Remove debug `print()` statements, clean up commented-out code. ✅
 2. Add docstrings to every Python function that doesn't have one.
 3. Add JSDoc comments to key TypeScript functions.
 4. Make sure every notebook has a markdown cell at the top explaining what it does.
-5. Create a `docs/API_REFERENCE.md` documenting all API endpoints with example requests and responses.
+5. Create a `docs/API_REFERENCE.md` documenting all API endpoints with example requests and responses. ✅
 
 **You're done when:** The codebase is clean and well-documented.
 
@@ -3699,9 +3651,9 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 Built and deployed a full-stack medical Q&A web application — fine-tuned Phi-3
 Mini (3.8B) on 100k+ doctor-patient conversations using QLoRA, implemented a RAG
 pipeline with BioMedical embeddings and cross-encoder re-ranking, built a secure
-FastAPI backend with JWT authentication, MySQL database, and rate limiting,
+FastAPI backend with JWT authentication, PostgreSQL database, and rate limiting,
 designed a Next.js frontend with conversation history and user feedback, and
-deployed with Docker on Vercel +s Render with CI/CD via GitHub Actions.
+deployed with Docker on Netlify + Render with CI/CD via GitHub Actions.
 ```
 
 3. Add it to your resume and LinkedIn.
