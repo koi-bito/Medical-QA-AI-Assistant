@@ -17,13 +17,15 @@ Try the live public demo deployed on Hugging Face Spaces:
 
 ```mermaid
 graph TD
-    A[User Question] --> B[Gradio UI / FastAPI]
-    B --> C[PubMedBERT Embedder]
-    C --> D[ChromaDB Vector Search]
-    D -- Top 10 chunks --> E[Cross-Encoder Re-ranker]
-    E -- Top 3 chunks --> F[Prompt Builder]
-    F --> G[Fine-tuned Phi-3 Mini / Groq API]
-    G --> H[Answer + Sources]
+    A[User Question] --> B[Next.js Frontend]
+    B --> C[FastAPI Backend]
+    C --> D[PubMedBERT Embedder]
+    C --> E[(PostgreSQL DB)]
+    D --> F[ChromaDB Vector Search]
+    F -- Top 10 chunks --> G[Cross-Encoder Re-ranker]
+    G -- Top 3 chunks --> H[Prompt Builder]
+    H --> I[Fine-tuned Phi-3 Mini / Groq API]
+    I --> J[Answer + Sources]
 ```
 
 ## What It Does
@@ -32,8 +34,8 @@ graph TD
 - **Retrieves relevant medical context** using domain-specific BioMedical embeddings (`PubMedBERT`).
 - **Re-ranks retrieved documents** with a cross-encoder (`ms-marco-MiniLM`) to dramatically improve accuracy.
 - **Provides High-Speed Inference** using Groq's cloud APIs.
-- **Serves answers via a FastAPI backend** equipped with unit tests and GitHub Actions CI/CD pipelines.
-- **Deployed publicly via a Gradio UI** securely hosted on Hugging Face Spaces.
+- **Serves answers via a FastAPI backend** equipped with JWT auth, rate limiting, and a persistent PostgreSQL database.
+- **Full-Stack Web App** with a Next.js (React) frontend deployed on Netlify, allowing users to save their conversation history.
 
 ## Setup
 
@@ -58,8 +60,10 @@ pip install -r requirements.txt
 # Start the local FastAPI server
 uvicorn src.api.main:app --reload
 
-# In a separate terminal, launch the Gradio UI
-python app.py
+# In a separate terminal, launch the Next.js frontend
+cd frontend
+npm install
+npm run dev
 ```
 
 ## How It Works
@@ -68,7 +72,7 @@ The Medical QA Assistant operates on a **Retrieval-Augmented Generation (RAG)** 
 
 When a user asks a medical question, the input is converted into numerical vectors (embeddings) using a specialized medical model (`PubMedBERT`). The system searches a ChromaDB vector database—built from over 100,000 real doctor-patient interactions—for the most relevant historical conversations and document chunks.
 
-To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrieved results, filtering out low-quality matches. Finally, the highest-scoring medical contexts are passed alongside the user's question to a high-speed cloud LLM (via Groq), which synthesizes a clear, accurate, and transparent response that cites the retrieved sources directly.
+To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrieved results, filtering out low-quality matches. Finally, the highest-scoring medical contexts are passed alongside the user's question to a high-speed cloud LLM (via Groq), which synthesizes a clear, accurate, and transparent response that cites the retrieved sources directly. All user queries, authentication states, and conversation histories are securely stored in a PostgreSQL database.
 
 ## Progress
 
@@ -88,7 +92,10 @@ To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrie
 
 | Week                  | Topic                                                | Status         |
 | --------------------- | ---------------------------------------------------- | -------------- |
-| Week 7 (Days 46–52)   | Database & Authentication — MySQL, SQLAlchemy, JWT   | ✅ Done        |
+| Week 7 (Days 46–52)   | Database & Auth — PostgreSQL, SQLAlchemy, JWT        | ✅ Done        |
+| Week 8 (Days 53–59)   | Frontend UI — Next.js, Tailwind, React Context       | ✅ Done        |
+| Week 9 (Days 60–66)   | Production Deployment — Render, Netlify, Docker      | ✅ Done        |
+| Week 10 (Days 67–73)  | Final Polish — Logging, Docs, Portfolio Wrap-up      | 🔄 In Progress |
 
 ## Limitations
 
