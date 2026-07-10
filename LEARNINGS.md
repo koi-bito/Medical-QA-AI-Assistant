@@ -401,8 +401,8 @@ Why is an architecture diagram important for a technical project?
 What did you learn about setting up MySQL and SQLAlchemy for FastAPI?
 
 - **SQLAlchemy ORM:** Using an Object-Relational Mapper (ORM) like SQLAlchemy allows us to interact with the database using Python objects rather than writing raw SQL strings. This prevents SQL injection and makes database schemas easier to manage and migrate.
-- **Connection Strings & Passwords:** The `DATABASE_URL` format used by SQLAlchemy is sensitive to special characters. For example, if a database password contains an `@` symbol, it must be URL-encoded (as `%40`) so SQLAlchemy doesn't misinterpret it as the `@` separating the credentials from the host address (resulting in `getaddrinfo failed`).
-- **Dependencies & Environment:** Using `pymysql` provides a pure-Python MySQL driver that requires no C-extension compilation, keeping the setup lightweight. Storing the database credentials securely in a `.env` file via `python-dotenv` ensures no secrets are hardcoded in the source files.
+- **Connection Strings:** The `DATABASE_URL` format used by SQLAlchemy auto-detects the driver from the scheme prefix (`sqlite:///`, `postgresql://`). For local dev, we use SQLite (zero setup — auto-creates a file). For production, we use Render's free PostgreSQL with `psycopg2-binary` as the driver.
+- **SQLite as a Development Tool:** `sqlite:///./medical_qa.db` is a perfect local dev database — no server, no setup, instant startup. SQLAlchemy switches between SQLite and PostgreSQL with a single connection string change. The code uses `connect_args={"check_same_thread": False}` only for SQLite, since that constraint doesn't apply to PostgreSQL.
 
 ## Day 47
 
@@ -455,10 +455,10 @@ What did you learn about fixing automated tests after adding authentication?
 
 What does the backend architecture look like now compared to Week 6?
 
-- **From Demo to Product:** In Week 6, the system was a stateless, single-user demo. Now, it is a multi-user API with secure JWT authentication, bcrypt password hashing, and persistent MySQL storage for users, conversations, and messages via SQLAlchemy.
+- **From Demo to Product:** In Week 6, the system was a stateless, single-user demo. Now, it is a multi-user API with secure JWT authentication, bcrypt password hashing, and persistent storage for users, conversations, and messages via SQLAlchemy.
+- **PostgreSQL for Production:** We planned for MySQL locally, but ended up using SQLite for local dev (zero setup) and Render's free PostgreSQL for production. SQLAlchemy made this a one-line change in the connection string — this is the power of the ORM abstraction.
 - **Security First:** Industry-standard password hashing (`bcrypt`) and token generation (`python-jose`) protect all sensitive endpoints. The Swagger UI integration required switching the login endpoint from JSON to `OAuth2PasswordRequestForm` to work with FastAPI's built-in Authorize popup.
-- **CI/CD Resilience:** The test suite was completely rewritten to work in a database-less CI environment by swapping MySQL for SQLite, mocking all ML dependencies, and injecting environment variables at the OS level. All 6 tests pass on both local Windows and GitHub Actions Ubuntu.
-- **Remaining:** Day 51 (Rate Limiting with `slowapi`) is the last piece to protect the Groq API from abuse.
+- **CI/CD Resilience:** The test suite was completely rewritten to work in a database-less CI environment by swapping to SQLite, mocking all ML dependencies, and injecting environment variables at the OS level. All 6 tests pass on both local Windows and GitHub Actions Ubuntu.
 
 ## Day 53
 
@@ -622,7 +622,7 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 
 **The single most important architectural lesson of Week 8:** The **context pattern** (`AuthContext`, `ChatContext`) is the foundation that makes a React app maintainable. Without it, passing auth state and conversation state as props down through every component would quickly become unmanageable. The pattern mirrors dependency injection in backend frameworks — a central store that any component can tap into without knowing where the data came from.
 
-**Next up — Week 9:** Dockerizing the FastAPI backend, setting up Docker Compose with MySQL, and deploying the full stack to the cloud (Render for the backend, Vercel for the frontend).
+**Next up — Week 9:** Dockerizing the FastAPI backend, setting up Docker Compose, and deploying the full stack to the cloud (Render for the backend + PostgreSQL, Netlify for the frontend).
 
 ---
 
@@ -835,7 +835,7 @@ else:
 
 ---
 
-### Week 10 Summary (In Progress)
+### Week 10 Summary
 
 | Task | Status |
 | --- | --- |
@@ -844,9 +844,42 @@ else:
 | Login + Register pages redesigned | ✅ Done |
 | Sidebar branding + conversation UI | ✅ Done |
 | Local dev environment fixed (SQLite fallback) | ✅ Done |
-| README update with full-stack architecture | ⏳ Pending |
-| Security audit checklist | ⏳ Pending |
-| Demo video + LinkedIn post | ⏳ Pending |
-| Code cleanup + docstrings | ⏳ Pending |
+| README updated with full-stack architecture (Next.js, PostgreSQL, Netlify, Render) | ✅ Done |
+| Production logging — replaced `print()` with `logging.getLogger("uvicorn.error")` | ✅ Done |
+| `docs/API_REFERENCE.md` created with all endpoints | ✅ Done |
+| Security audit — CORS scoped to Netlify URL, secrets in platform dashboards, HTTPS via Netlify | ✅ Done |
+| Implementation Plan updated to reflect actual tech (PostgreSQL, Netlify, psycopg2-binary) | ✅ Done |
+| Demo video + LinkedIn post | ⏳ Up next |
 
-**Next up:** Update the README to reflect the full-stack architecture, record a demo video, and complete the final code cleanup pass.
+**The project is code-complete.** The only remaining task is recording the demo video and posting on LinkedIn. 🚀
+
+---
+
+## Final Architecture — What Was Actually Built
+
+```
+User → Next.js Frontend (Netlify)
+     → FastAPI Backend (Render)
+          → PostgreSQL Database (Render, persists all users + conversations)
+          → Groq API (cloud LLM inference — Llama 3.1)
+          → ChromaDB / PubMedBERT / Cross-Encoder (lightweight mode bypasses these on free tier)
+```
+
+**Tech Stack Summary:**
+
+| Layer | Technology | Why |
+| --- | --- | --- |
+| Frontend | Next.js 14 (App Router, TypeScript) | Industry standard for React apps |
+| Styling | TailwindCSS + custom inline styles | Precision control over premium UI |
+| Auth (Frontend) | JWT in localStorage + Axios interceptors | Stateless, scalable |
+| Backend | FastAPI (Python) | Fast, async, auto-generates `/docs` |
+| Auth (Backend) | bcrypt + python-jose JWT | Industry standard |
+| Database | PostgreSQL on Render (prod), SQLite (local) | Persistent, relational, free |
+| ORM | SQLAlchemy | Portable between SQLite and PostgreSQL |
+| LLM Inference | Groq API (Llama 3.1) | Free, extremely fast |
+| ML Pipeline | PubMedBERT + ChromaDB + Cross-Encoder | Domain-specific medical retrieval |
+| Hosting (Backend) | Render free tier | Free, auto-deploy from GitHub |
+| Hosting (Frontend) | Netlify free tier | Free, Next.js-native, CDN |
+| CI/CD | GitHub Actions | Auto-tests on every push |
+| Containers | Docker + docker-compose | Local dev reproducibility |
+
