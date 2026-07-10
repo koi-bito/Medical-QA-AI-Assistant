@@ -28,12 +28,15 @@ async def lifespan(app: FastAPI):
     the SQLite file starts empty on every fresh deploy."""
     from src.database.init_db import init
     init()
+    
+    import logging
+    logger = logging.getLogger("uvicorn.error")
 
     # Warn early if critical env vars are missing
     if not os.environ.get("SECRET_KEY"):
-        print("WARNING: SECRET_KEY is not set — JWT signing will fail!")
+        logger.warning("SECRET_KEY is not set — JWT signing will fail!")
     if not os.environ.get("GROQ_API_KEY"):
-        print("WARNING: GROQ_API_KEY is not set — Groq inference will fail!")
+        logger.warning("GROQ_API_KEY is not set — Groq inference will fail!")
 
     yield  # App runs here
 
@@ -65,34 +68,37 @@ app.include_router(conversations_router)
 USE_GROQ = os.environ.get("USE_GROQ", "false").lower() == "true"
 LIGHTWEIGHT_MODE = os.environ.get("LIGHTWEIGHT_MODE", "false").lower() == "true"
 
+import logging
+logger = logging.getLogger("uvicorn.error")
+
 # Auto-detect: if chromadb isn't installed, force lightweight mode
 if not LIGHTWEIGHT_MODE:
     try:
         import chromadb  # noqa: F401
     except ImportError:
-        print("chromadb not installed — auto-enabling LIGHTWEIGHT_MODE")
+        logger.info("chromadb not installed — auto-enabling LIGHTWEIGHT_MODE")
         LIGHTWEIGHT_MODE = True
 
 DISABLE_RERANKER = os.environ.get("DISABLE_RERANKER", "false").lower() == "true"
 # Load models at startup
-print("Loading models...")
+logger.info("Loading models...")
 if LIGHTWEIGHT_MODE:
-    print("LIGHTWEIGHT MODE: Skipping all ML models. Using Groq API directly.")
+    logger.info("LIGHTWEIGHT MODE: Skipping all ML models. Using Groq API directly.")
     from src.inference.groq_client import answer_with_groq_no_context
     embedder, collection, reranker = None, None, None
     model, tokenizer = None, None
 elif USE_GROQ:
-    print("Using Groq for inference. Loading retriever only...")
+    logger.info("Using Groq for inference. Loading retriever only...")
     from src.rag.retriever import load_retriever, load_reranker, retrieve_and_rerank
     from src.inference.groq_client import answer_with_groq
     embedder, collection = load_retriever()
     reranker = None if DISABLE_RERANKER else load_reranker()
     model, tokenizer = None, None
 else:
-    print("Using local model for inference. Loading all models...")
+    logger.info("Using local model for inference. Loading all models...")
     from src.rag.pipeline import load_all, answer_question
     model, tokenizer, embedder, collection, reranker = load_all()
-print("Ready!")
+logger.info("Ready!")
 
 class QuestionRequest(BaseModel):
     question: str
