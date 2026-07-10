@@ -5,6 +5,7 @@ slowapi
 numpy
 sqlalchemy
 pymysql
+psycopg2-binary
 python-dotenv
 bcrypt
 python-jose[cryptography]
