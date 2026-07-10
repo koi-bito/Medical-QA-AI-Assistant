@@ -1,6 +1,6 @@
 # Medical QA AI Assistant — Implementation Plan
 
-### Goal: Build a medical Q&A chatbot using a fine-tuned LLM + RAG pipeline, deployed publicly on HuggingFace Spaces.
+### Goal: Build a medical Q&A chatbot using a fine-tuned LLM + RAG pipeline — deployed as a full-stack web application (Next.js + FastAPI + PostgreSQL) on Netlify + Render, with a lightweight public demo also available on HuggingFace Spaces.
 
 ### Hardware: RTX 4050 (6GB VRAM) | ~20 hrs/week | Beginner-friendly
 
@@ -2169,7 +2169,7 @@ Answer + Sources
 
 ## PHASE 2 — Full-Stack AI Product (Days 46–73)
 
-> **Goal:** Transform this from a machine learning demo into a real, production-quality web application with user authentication, persistent conversation history, and a custom frontend. The HuggingFace Space stays as a lightweight public demo. This new website is the real product.
+> **Goal:** Transform this from a machine learning demo into a real, production-quality web application with user authentication, persistent conversation history, and a custom frontend. The HuggingFace Space stays as a lightweight public demo. **The new full-stack website (Next.js frontend on Netlify + FastAPI backend on Render + PostgreSQL) is the real, shipped product.**
 
 > **Tech Stack:**
 >
