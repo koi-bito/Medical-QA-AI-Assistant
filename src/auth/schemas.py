@@ -13,6 +13,7 @@ class UserResponse(BaseModel):
     id: int
     email: str
     username: str
+    is_verified: bool
 
     class Config:
         from_attributes = True
@@ -20,3 +21,7 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class OTPVerifyRequest(BaseModel):
+    email: str
+    otp: str

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from src.database.config import Base
@@ -11,6 +11,11 @@ class User(Base):
     username   = Column(String(100), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Email verification
+    is_verified      = Column(Boolean, default=False, nullable=False)
+    verification_otp = Column(String(6), nullable=True)
+    otp_expires_at   = Column(DateTime, nullable=True)
 
     # Relationship: one user has many conversations
     conversations = relationship("Conversation", back_populates="user")
