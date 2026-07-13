@@ -4,13 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
-import {
-  Heart,
-  Mail,
-  Lock,
-  User,
-  ArrowRight,
-} from "lucide-react";
+import { Heart, Mail, Lock, User, ArrowRight } from "lucide-react";
 
 export default function RegisterPage() {
   const [email, setEmail]       = useState("");
@@ -20,16 +14,13 @@ export default function RegisterPage() {
   const [loading, setLoading]   = useState(false);
   const router = useRouter();
 
-  const inputClass = "w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-150";
-  const inputStyle = { backgroundColor: "#faf7f2", border: "1.5px solid #ddd6c8", color: "#2e261d" };
-
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       await api.post("/auth/register", { email, username, password });
-      router.push("/login");
+      router.push("/login?registered=true");
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } };
       setError(e.response?.data?.detail || "Failed to create account. Please try again.");
@@ -37,6 +28,9 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  const inputClass = "w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-150";
+  const inputStyle = { backgroundColor: "#faf7f2", border: "1.5px solid #ddd6c8", color: "#2e261d" };
 
   return (
     <div
@@ -82,7 +76,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#9b8f85" }}>
@@ -137,10 +131,12 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Terms note */}
             <p className="text-xs leading-relaxed" style={{ color: "#c8a98a" }}>
               By creating an account, you agree that this tool is for informational purposes only and is not a substitute for professional medical advice.
             </p>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}

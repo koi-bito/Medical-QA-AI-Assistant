@@ -5,20 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import {
-  Heart,
-  Mail,
-  Lock,
-  ArrowRight,
-  Stethoscope,
-} from "lucide-react";
+import { Heart, Mail, Lock, ArrowRight, Stethoscope } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
-
   const router = useRouter();
   const { login } = useAuth();
 
@@ -147,7 +140,11 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-150"
-                    style={{ backgroundColor: "#faf7f2", border: "1.5px solid #ddd6c8", color: "#2e261d" }}
+                    style={{
+                      backgroundColor: "#faf7f2",
+                      border: "1.5px solid #ddd6c8",
+                      color: "#2e261d",
+                    }}
                     onFocus={(e) => (e.target.style.borderColor = "#c8102e")}
                     onBlur={(e) => (e.target.style.borderColor = "#ddd6c8")}
                   />
@@ -170,7 +167,11 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-150"
-                    style={{ backgroundColor: "#faf7f2", border: "1.5px solid #ddd6c8", color: "#2e261d" }}
+                    style={{
+                      backgroundColor: "#faf7f2",
+                      border: "1.5px solid #ddd6c8",
+                      color: "#2e261d",
+                    }}
                     onFocus={(e) => (e.target.style.borderColor = "#c8102e")}
                     onBlur={(e) => (e.target.style.borderColor = "#ddd6c8")}
                   />
