@@ -12,10 +12,8 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Email verification
-    is_verified      = Column(Boolean, default=False, nullable=False)
-    verification_otp = Column(String(6), nullable=True)
-    otp_expires_at   = Column(DateTime, nullable=True)
+    # All users are auto-verified on registration (no email OTP required)
+    is_verified = Column(Boolean, default=True, nullable=False)
 
     # Relationship: one user has many conversations
     conversations = relationship("Conversation", back_populates="user")

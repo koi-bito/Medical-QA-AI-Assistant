@@ -1,13 +1,11 @@
 from pydantic import BaseModel
 
+
 class UserRegisterRequest(BaseModel):
     email: str
     username: str
     password: str
 
-class UserLoginRequest(BaseModel):
-    email: str
-    password: str
 
 class UserResponse(BaseModel):
     id: int
@@ -18,10 +16,7 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-
-class OTPVerifyRequest(BaseModel):
-    email: str
-    otp: str
