@@ -1,23 +1,39 @@
 """Email utilities for sending OTP verification emails."""
 
 import os
+import logging
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
-# Build connection config from environment variables.
-# Defaults are safe no-ops so the app won't crash on startup if vars are missing.
-conf = ConnectionConfig(
-    MAIL_USERNAME   = os.getenv("MAIL_USERNAME", ""),
-    MAIL_PASSWORD   = os.getenv("MAIL_PASSWORD", ""),
-    MAIL_FROM       = os.getenv("MAIL_FROM", "noreply@medqa.app"),
-    MAIL_PORT       = int(os.getenv("MAIL_PORT", "587")),
-    MAIL_SERVER     = os.getenv("MAIL_SERVER", "smtp.gmail.com"),
-    MAIL_STARTTLS   = os.getenv("MAIL_STARTTLS", "true").lower() == "true",
-    MAIL_SSL_TLS    = os.getenv("MAIL_SSL_TLS", "false").lower() == "true",
-    USE_CREDENTIALS = True,
-    VALIDATE_CERTS  = True,
-)
+logger = logging.getLogger("uvicorn.error")
 
-_mail = FastMail(conf)
+
+def _get_mail_client() -> FastMail:
+    """
+    Build FastMail lazily so the app starts cleanly even when SMTP
+    environment variables are not configured (e.g. Render without email vars set).
+    Raises RuntimeError with a clear message if credentials are missing.
+    """
+    username = os.getenv("MAIL_USERNAME", "")
+    password = os.getenv("MAIL_PASSWORD", "")
+
+    if not username or not password:
+        raise RuntimeError(
+            "SMTP credentials not configured. "
+            "Set MAIL_USERNAME and MAIL_PASSWORD environment variables on Render."
+        )
+
+    conf = ConnectionConfig(
+        MAIL_USERNAME   = username,
+        MAIL_PASSWORD   = password,
+        MAIL_FROM       = os.getenv("MAIL_FROM", username),
+        MAIL_PORT       = int(os.getenv("MAIL_PORT", "587")),
+        MAIL_SERVER     = os.getenv("MAIL_SERVER", "smtp.gmail.com"),
+        MAIL_STARTTLS   = os.getenv("MAIL_STARTTLS", "true").lower() == "true",
+        MAIL_SSL_TLS    = os.getenv("MAIL_SSL_TLS", "false").lower() == "true",
+        USE_CREDENTIALS = True,
+        VALIDATE_CERTS  = True,
+    )
+    return FastMail(conf)
 
 
 async def send_verification_email(email: str, otp: str) -> None:
@@ -82,11 +98,19 @@ async def send_verification_email(email: str, otp: str) -> None:
     </div>
     """
 
-    message = MessageSchema(
-        subject="Your MedQA verification code",
-        recipients=[email],
-        body=html_body,
-        subtype=MessageType.html,
-    )
-
-    await _mail.send_message(message)
+    try:
+        mail_client = _get_mail_client()
+        message = MessageSchema(
+            subject="Your MedQA verification code",
+            recipients=[email],
+            body=html_body,
+            subtype=MessageType.html,
+        )
+        await mail_client.send_message(message)
+    except RuntimeError as exc:
+        # Credentials not configured — log the OTP so it's still usable during dev/testing
+        logger.warning(f"Email not sent ({exc}). OTP for {email}: {otp}")
+    except Exception as exc:
+        # SMTP failure — don't crash the registration flow, just log
+        logger.error(f"Failed to send verification email to {email}: {exc}")
+        logger.warning(f"OTP for {email} (fallback log): {otp}")
