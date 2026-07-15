@@ -31,6 +31,7 @@ sys.modules['src.rag.retriever'] = mock_retriever
 
 mock_groq = MagicMock()
 mock_groq.answer_with_groq.return_value = "This is a mocked Groq test answer."
+mock_groq.answer_with_groq_no_context.return_value = "This is a mocked Groq test answer without context."
 sys.modules['src.inference.groq_client'] = mock_groq
 
 
