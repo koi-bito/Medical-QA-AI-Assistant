@@ -1,6 +1,6 @@
 # 🏥 Medical QA Assistant
 
-![Tests](https://github.com/koi-bito/Medical-QA-AI-Assistant/actions/workflows/test.yml/badge.svg) | [Live Demo](https://huggingface.co/spaces/koi-bito/medical-qa) | [Vector DB on HuggingFace](https://huggingface.co/datasets/koi-bito/medical-qa-vectorstore)
+![Tests](https://github.com/koi-bito/Medical-QA-AI-Assistant/actions/workflows/test.yml/badge.svg) | [Live Demo](https://medical-qa-ai-assistant.netlify.app/) | [Vector DB on HuggingFace](https://huggingface.co/datasets/koi-bito/medical-qa-vectorstore)
 
 > A medical Q&A system built with fine-tuned Phi-3 Mini + RAG pipeline
 
