@@ -95,7 +95,7 @@ To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrie
 | Week 7 (Days 46–52)   | Database & Auth — PostgreSQL, SQLAlchemy, JWT        | ✅ Done        |
 | Week 8 (Days 53–59)   | Frontend UI — Next.js, Tailwind, React Context       | ✅ Done        |
 | Week 9 (Days 60–66)   | Production Deployment — Render, Netlify, Docker      | ✅ Done        |
-| Week 10 (Days 67–73)  | Final Polish — Logging, Docs, Portfolio Wrap-up      | 🔄 In Progress |
+| Week 10 (Days 67–73)  | Final Polish — Logging, Docs, Portfolio Wrap-up      | ✅ Done        |
 
 ## Limitations
 
