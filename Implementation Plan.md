@@ -1,6 +1,6 @@
-# Medical QA AI Assistant — Implementation Plan
+# Medical QA AI Assistant - Implementation Plan
 
-### Goal: Build a medical Q&A chatbot using a fine-tuned LLM + RAG pipeline — deployed as a full-stack web application (Next.js + FastAPI + PostgreSQL) on Netlify + Render, with a lightweight public demo also available on HuggingFace Spaces.
+### Goal: Build a medical Q&A chatbot using a fine-tuned LLM + RAG pipeline - deployed as a full-stack web application (Next.js + FastAPI + PostgreSQL) on Netlify + Render, with a lightweight public demo also available on HuggingFace Spaces.
 
 ### Hardware: RTX 4050 (6GB VRAM) | ~20 hrs/week | Beginner-friendly
 
@@ -9,18 +9,18 @@
 > **How to use this plan:**
 > Each day has one clear goal, exact steps, and a "you're done when" checkpoint.
 > Estimated time per day: 3–4 hours.
-> Keep a file called `LEARNINGS.md` in your repo. Write 3–5 sentences every day — what you learned, what confused you, how you fixed it.
-> **Dataset:** We're using `lavita/ChatDoctor-HealthCareMagic-100k` — a dataset of 100k+ real doctor-patient conversations. This dataset has `instruction`, `input`, and `output` fields.
+> Keep a file called `LEARNINGS.md` in your repo. Write 3–5 sentences every day - what you learned, what confused you, how you fixed it.
+> **Dataset:** We're using `lavita/ChatDoctor-HealthCareMagic-100k` - a dataset of 100k+ real doctor-patient conversations. This dataset has `instruction`, `input`, and `output` fields.
 
 ---
 
-## PRE-WEEK — Foundations (Days 1–5)
+## PRE-WEEK - Foundations (Days 1–5)
 
 > **Goal:** Understand the concepts before writing a single line of code. This week prevents weeks of confusion later.
 
 ---
 
-### Day 1 — How Neural Networks Work
+### Day 1 - How Neural Networks Work
 
 **Time:** 3–4 hrs
 
@@ -28,7 +28,7 @@
 
 **Tasks:**
 
-1. Watch 3Blue1Brown's "Neural Networks" series on YouTube — Episodes 1, 2, and 3 only (~1 hr total). Best visual explanation that exists.
+1. Watch 3Blue1Brown's "Neural Networks" series on YouTube - Episodes 1, 2, and 3 only (~1 hr total). Best visual explanation that exists.
 2. Read "What is a Large Language Model?" on HuggingFace's blog (search it, it's free).
 3. Write in `LEARNINGS.md`: What is a weight? What does "training" mean in your own words?
 
@@ -36,7 +36,7 @@
 
 ---
 
-### Day 2 — What Embeddings Are (Critical for RAG)
+### Day 2 - What Embeddings Are (Critical for RAG)
 
 **Time:** 3 hrs
 
@@ -44,7 +44,7 @@
 
 **Tasks:**
 
-1. Search YouTube: "Word Embeddings explained visually" — watch any 10-minute video.
+1. Search YouTube: "Word Embeddings explained visually" - watch any 10-minute video.
 2. Open Google Colab (free, no setup needed) and run this:
 
 ```python
@@ -70,7 +70,7 @@ print("Headache vs Pizza:", cosine_similarity([embeddings[0]], [embeddings[2]]))
 
 ---
 
-### Day 3 — What Fine-tuning Means
+### Day 3 - What Fine-tuning Means
 
 **Time:** 3 hrs
 
@@ -78,16 +78,16 @@ print("Headache vs Pizza:", cosine_similarity([embeddings[0]], [embeddings[2]]))
 
 **Tasks:**
 
-1. Read this analogy carefully: A base LLM is like a very smart person who has read the entire internet. Fine-tuning is like giving that person a 6-month internship at a hospital. They learn the specific language, format, and behavior you want — without forgetting everything they knew before.
-2. Search YouTube: "Fine-tuning LLMs explained" — watch any video under 15 minutes.
-3. Search "What is LoRA fine-tuning" — read one blog post. Key idea: instead of updating all billions of model weights, LoRA adds tiny new layers and only trains those. That's why it fits on a 6GB GPU.
+1. Read this analogy carefully: A base LLM is like a very smart person who has read the entire internet. Fine-tuning is like giving that person a 6-month internship at a hospital. They learn the specific language, format, and behavior you want - without forgetting everything they knew before.
+2. Search YouTube: "Fine-tuning LLMs explained" - watch any video under 15 minutes.
+3. Search "What is LoRA fine-tuning" - read one blog post. Key idea: instead of updating all billions of model weights, LoRA adds tiny new layers and only trains those. That's why it fits on a 6GB GPU.
 4. Write in `LEARNINGS.md`: What is the difference between a base model and a fine-tuned model? Why does QLoRA exist?
 
 **You're done when:** You understand why we fine-tune instead of just prompting the model.
 
 ---
 
-### Day 4 — What RAG Is and Why It Exists
+### Day 4 - What RAG Is and Why It Exists
 
 **Time:** 3 hrs
 
@@ -95,8 +95,8 @@ print("Headache vs Pizza:", cosine_similarity([embeddings[0]], [embeddings[2]]))
 
 **Tasks:**
 
-1. Understand the core problem: LLMs are frozen in time. They can't know what's in a document you wrote yesterday. RAG (Retrieval-Augmented Generation) solves this — it searches relevant documents at query time and feeds them into the prompt as context.
-2. Watch YouTube: "RAG explained" — any video under 15 minutes.
+1. Understand the core problem: LLMs are frozen in time. They can't know what's in a document you wrote yesterday. RAG (Retrieval-Augmented Generation) solves this - it searches relevant documents at query time and feeds them into the prompt as context.
+2. Watch YouTube: "RAG explained" - any video under 15 minutes.
 3. Draw the RAG pipeline on paper (physically draw it):
    ```
    User question
@@ -115,7 +115,7 @@ print("Headache vs Pizza:", cosine_similarity([embeddings[0]], [embeddings[2]]))
 
 ---
 
-### Day 5 — HuggingFace Orientation + Dataset Preview
+### Day 5 - HuggingFace Orientation + Dataset Preview
 
 **Time:** 3–4 hrs
 
@@ -124,7 +124,7 @@ print("Headache vs Pizza:", cosine_similarity([embeddings[0]], [embeddings[2]]))
 **Tasks:**
 
 1. Create a free account at huggingface.co.
-2. Search for `microsoft/Phi-3-mini-4k-instruct` on HuggingFace. Read the model card. Don't try to understand everything — just get familiar with how model pages look.
+2. Search for `microsoft/Phi-3-mini-4k-instruct` on HuggingFace. Read the model card. Don't try to understand everything - just get familiar with how model pages look.
 3. Search for `lavita/ChatDoctor-HealthCareMagic-100k` on HuggingFace Datasets. Click "Dataset Viewer" to see what the data looks like.
 4. Run this in Google Colab to actually load and inspect the data:
 
@@ -145,14 +145,14 @@ print(dataset['train'][0])
 
 ---
 
-## WEEK 1 — Environment Setup & GitHub (Days 6–12)
+## WEEK 1 - Environment Setup & GitHub (Days 6–12)
 
 > **Goal:** Get your full local development environment working without errors.
-> **Heads up:** This is the most frustrating week. That's normal — everyone goes through it.
+> **Heads up:** This is the most frustrating week. That's normal - everyone goes through it.
 
 ---
 
-### Day 6 — Python Environment Setup
+### Day 6 - Python Environment Setup
 
 **Time:** 3–4 hrs
 
@@ -162,7 +162,7 @@ print(dataset['train'][0])
 
 **Tasks:**
 
-1. Install Python 3.13 from python.org. Use 3.13 specifically — libraries have updated since this plan was written and 3.13 is the stable stable release standard now.
+1. Install Python 3.13 from python.org. Use 3.13 specifically - libraries have updated since this plan was written and 3.13 is the stable stable release standard now.
 2. Install VS Code from code.visualstudio.com. Then install the "Python" extension from the VS Code extensions panel.
 3. Open a terminal and create your virtual environment:
 
@@ -170,7 +170,7 @@ print(dataset['train'][0])
 # Create the virtual environment
 py -3.13 -m venv medqa_env
 
-# Activate it — pick your OS:
+# Activate it - pick your OS:
 # Windows:
 medqa_env\Scripts\activate
 # Mac/Linux:
@@ -198,9 +198,9 @@ print("hello world")
 
 ---
 
-### Day 7 — PyTorch + CUDA Setup
+### Day 7 - PyTorch + CUDA Setup
 
-**Time:** 4 hrs (budget extra — this day often takes longer)
+**Time:** 4 hrs (budget extra - this day often takes longer)
 
 **What you're doing:** Making sure Python can talk to your GPU.
 
@@ -229,7 +229,7 @@ print("GPU available:", torch.cuda.is_available())   # Must print True
 print("GPU name:", torch.cuda.get_device_name(0))    # Should show RTX 4050
 ```
 
-4. If `cuda.is_available()` returns `False` — don't panic. Google "PyTorch CUDA not available RTX 4050 fix" and follow the top result. This is a very common issue.
+4. If `cuda.is_available()` returns `False` - don't panic. Google "PyTorch CUDA not available RTX 4050 fix" and follow the top result. This is a very common issue.
 
 **You're done when:** `torch.cuda.is_available()` returns `True`.
 
@@ -237,7 +237,7 @@ print("GPU name:", torch.cuda.get_device_name(0))    # Should show RTX 4050
 
 ---
 
-### Day 8 — Install All Project Libraries
+### Day 8 - Install All Project Libraries
 
 **Time:** 3 hrs
 
@@ -287,7 +287,7 @@ print("All imports successful!")
 
 ---
 
-### Day 9 — GitHub Repository Setup
+### Day 9 - GitHub Repository Setup
 
 **Time:** 3 hrs
 
@@ -351,7 +351,7 @@ mlartifacts/
 Thumbs.db
 ```
 
-6. Create a `requirements.txt` with the libraries you actually use (don't use `pip freeze` — it dumps hundreds of transitive dependencies that make the file brittle):
+6. Create a `requirements.txt` with the libraries you actually use (don't use `pip freeze` - it dumps hundreds of transitive dependencies that make the file brittle):
 
 ```
 # Core ML
@@ -398,7 +398,7 @@ git push origin main
 
 ---
 
-### Day 10 — Download and Explore the Dataset
+### Day 10 - Download and Explore the Dataset
 
 **Time:** 4 hrs
 
@@ -443,13 +443,13 @@ print(df.head())
 
 ---
 
-### Day 11 — MLflow Setup and First Experiment Log
+### Day 11 - MLflow Setup and First Experiment Log
 
 **Time:** 3 hrs
 
 **What you're doing:** Setting up experiment tracking so every training run you do gets logged automatically.
 
-**Why MLflow?** It's like a diary for your ML experiments. Every time you train a model, it records the settings you used and the results — so you can compare runs later and know what worked.
+**Why MLflow?** It's like a diary for your ML experiments. Every time you train a model, it records the settings you used and the results - so you can compare runs later and know what worked.
 
 **Tasks:**
 
@@ -484,7 +484,7 @@ mlflow ui
 
 ---
 
-### Day 12 — Week 1 Review + Buffer
+### Day 12 - Week 1 Review + Buffer
 
 **Time:** 3 hrs
 
@@ -495,7 +495,7 @@ mlflow ui
 3. Write a proper `README.md`:
    - What this project is
    - What tech stack you're using
-   - Status: "Week 1 — Environment Setup Complete"
+   - Status: "Week 1 - Environment Setup Complete"
 4. Update `LEARNINGS.md` with a week summary: What was the hardest part? What surprised you?
 5. Push everything.
 
@@ -503,13 +503,13 @@ mlflow ui
 
 ---
 
-## WEEK 2 — Data Preparation (Days 13–19)
+## WEEK 2 - Data Preparation (Days 13–19)
 
 > **Goal:** Clean and format your data. Good data = good model. Don't rush this week.
 
 ---
 
-### Day 13 — Analyze the Data Quality
+### Day 13 - Analyze the Data Quality
 
 **Time:** 3 hrs
 
@@ -547,7 +547,7 @@ print(f"\nVery long answers (> 3000 chars): {len(long_answers)}")
 
 ---
 
-### Day 14 — Clean the Data
+### Day 14 - Clean the Data
 
 **Time:** 4 hrs
 
@@ -605,7 +605,7 @@ python src/training/data_prep.py
 
 ---
 
-### Day 15 — Format Data for Fine-tuning
+### Day 15 - Format Data for Fine-tuning
 
 **Time:** 4 hrs
 
@@ -648,7 +648,7 @@ if __name__ == "__main__":
 
 ---
 
-### Day 16 — Run Phi-3 Mini (Inference Only — No Training Yet)
+### Day 16 - Run Phi-3 Mini (Inference Only - No Training Yet)
 
 **Time:** 4 hrs
 
@@ -713,13 +713,13 @@ for q in questions:
 
 ---
 
-### Day 17 — Understand QLoRA Conceptually + Setup Config
+### Day 17 - Understand QLoRA Conceptually + Setup Config
 
 **Time:** 3 hrs
 
 **What you're doing:** Understanding what LoRA rank and alpha actually mean before you use them.
 
-**Key concept:** LoRA adds small "adapter" matrices to specific layers of the model. During training, only these tiny matrices get updated — not the 3.8 billion base model weights. QLoRA does this with the model loaded in 4-bit, saving VRAM. The result: you train ~2 million parameters instead of 3.8 billion.
+**Key concept:** LoRA adds small "adapter" matrices to specific layers of the model. During training, only these tiny matrices get updated - not the 3.8 billion base model weights. QLoRA does this with the model loaded in 4-bit, saving VRAM. The result: you train ~2 million parameters instead of 3.8 billion.
 
 **Tasks:**
 
@@ -749,7 +749,7 @@ peft_model.print_trainable_parameters()
 
 ---
 
-### Day 18 — Create the Training Script Skeleton
+### Day 18 - Create the Training Script Skeleton
 
 **Time:** 3 hrs
 
@@ -802,28 +802,28 @@ if __name__ == "__main__":
 
 ---
 
-### Day 19 — Week 2 Review + Buffer
+### Day 19 - Week 2 Review + Buffer
 
 **Time:** 3 hrs
 
 **Tasks:**
 
-1. Spot-check 20 random examples in your formatted training data — do they look right?
+1. Spot-check 20 random examples in your formatted training data - do they look right?
 2. Make sure the full data pipeline is clear in your head: raw dataset → clean → format → ready for training.
 3. Update your README: add a "Data" section explaining what dataset you're using and why.
-4. Look ahead at Week 3 — read through the training days so nothing surprises you.
+4. Look ahead at Week 3 - read through the training days so nothing surprises you.
 
 **You're done when:** Data pipeline is fully committed and `LEARNINGS.md` is updated.
 
 ---
 
-## WEEK 3 — Fine-tuning (Days 20–26)
+## WEEK 3 - Fine-tuning (Days 20–26)
 
 > **Goal:** Train your model. This is the core of the project.
 
 ---
 
-### Day 20 — Complete the Model + Data Loading Functions
+### Day 20 - Complete the Model + Data Loading Functions
 
 **Time:** 4–5 hrs
 
@@ -857,7 +857,7 @@ def load_model_and_tokenizer():
 
 def load_training_data():
     df = pd.read_csv(DATA_PATH)
-    # Use 10k examples — enough to see improvement, fast enough to train
+    # Use 10k examples - enough to see improvement, fast enough to train
     df = df.sample(10000, random_state=42).reset_index(drop=True)
 
     # 90/10 train/eval split
@@ -876,7 +876,7 @@ def load_training_data():
 
 ---
 
-### Day 21 — Add LoRA + Training Loop
+### Day 21 - Add LoRA + Training Loop
 
 **Time:** 4 hrs
 
@@ -952,7 +952,7 @@ def train():
 
 ---
 
-### Day 22 — First Training Run (Small Test)
+### Day 22 - First Training Run (Small Test)
 
 **Time:** 4–5 hrs
 
@@ -990,7 +990,7 @@ mlflow ui
 
 ---
 
-### Day 23 — Full Training Run
+### Day 23 - Full Training Run
 
 **Time:** 5–6 hrs (mostly waiting)
 
@@ -1005,7 +1005,7 @@ python src/training/train.py
 ```
 
 2. This will take 3–5 hours on your RTX 4050. While it runs:
-   - Watch the loss numbers — they should generally decrease over time
+   - Watch the loss numbers - they should generally decrease over time
    - If loss becomes `NaN`, stop immediately and investigate
    - Open MLflow UI and watch metrics update live
    - Write in `LEARNINGS.md`: What do you expect the model to be better at after training?
@@ -1024,7 +1024,7 @@ ls models/phi3-medical-lora/
 
 ---
 
-### Day 24 — Evaluate Your Fine-tuned Model
+### Day 24 - Evaluate Your Fine-tuned Model
 
 **Time:** 4 hrs
 
@@ -1073,7 +1073,7 @@ def ask(question):
 
 ---
 
-### Day 25 — Push to HuggingFace Hub
+### Day 25 - Push to HuggingFace Hub
 
 **Time:** 3 hrs
 
@@ -1106,7 +1106,7 @@ print("Model pushed!")
 
 ---
 
-### Day 26 — Week 3 Review + Buffer
+### Day 26 - Week 3 Review + Buffer
 
 **Time:** 3 hrs
 
@@ -1121,13 +1121,13 @@ print("Model pushed!")
 
 ---
 
-## WEEK 4 — RAG Pipeline (Days 27–33)
+## WEEK 4 - RAG Pipeline (Days 27–33)
 
 > **Goal:** Give your model access to external medical knowledge via document retrieval.
 
 ---
 
-### Day 27 — Download Medical Documents
+### Day 27 - Download Medical Documents
 
 **Time:** 4 hrs
 
@@ -1163,7 +1163,7 @@ def fetch_medlineplus_articles():
                 articles.append({"topic": topic, "content": response.text})
                 print(f"Fetched: {topic}")
         except Exception as e:
-            print(f"Failed: {topic} — {e}")
+            print(f"Failed: {topic} - {e}")
 
     with open("data/raw/medlineplus/articles.json", "w") as f:
         json.dump(articles, f)
@@ -1185,13 +1185,13 @@ python src/rag/data_collection.py
 
 ---
 
-### Day 28 — Clean and Chunk Documents
+### Day 28 - Clean and Chunk Documents
 
 **Time:** 4 hrs
 
 **What you're doing:** Splitting large documents into small chunks that can be searched individually.
 
-**Why chunking?** You can't put a 10-page document into a prompt — context windows are limited. Instead, you split it into ~400-word chunks. When a user asks a question, you find the most relevant chunk and include only that.
+**Why chunking?** You can't put a 10-page document into a prompt - context windows are limited. Instead, you split it into ~400-word chunks. When a user asks a question, you find the most relevant chunk and include only that.
 
 **Tasks:**
 
@@ -1253,7 +1253,7 @@ python src/rag/chunking.py
 
 ---
 
-### Day 29 — Build the Vector Database
+### Day 29 - Build the Vector Database
 
 **Time:** 4 hrs
 
@@ -1273,7 +1273,7 @@ def build_vector_store(chunks_path="data/processed/chunks.json"):
         chunks = json.load(f)
 
     print(f"Loading embedding model...")
-    # PubMedBERT is trained on medical text — better than a generic embedder
+    # PubMedBERT is trained on medical text - better than a generic embedder
     embedder = SentenceTransformer("pritamdeka/S-PubMedBert-MS-MARCO")
 
     print("Setting up ChromaDB...")
@@ -1312,7 +1312,7 @@ python src/rag/vector_store.py
 
 ---
 
-### Day 30 — Build the Retrieval Function
+### Day 30 - Build the Retrieval Function
 
 **Time:** 3 hrs
 
@@ -1357,13 +1357,13 @@ if __name__ == "__main__":
 
 ---
 
-### Day 31 — Add Cross-Encoder Re-ranking
+### Day 31 - Add Cross-Encoder Re-ranking
 
 **Time:** 4 hrs
 
 **What you're doing:** Adding a second-pass model that re-scores retrieved chunks for better accuracy.
 
-**Why re-ranking?** Vector search finds chunks that are semantically _similar_ to your question. Re-ranking uses a more powerful model to score each chunk for actual _relevance_. It's slower but more accurate — you get 10 candidates from vector search, then re-rank to keep only the best 3.
+**Why re-ranking?** Vector search finds chunks that are semantically _similar_ to your question. Re-ranking uses a more powerful model to score each chunk for actual _relevance_. It's slower but more accurate - you get 10 candidates from vector search, then re-rank to keep only the best 3.
 
 **Tasks:**
 
@@ -1396,7 +1396,7 @@ def retrieve_and_rerank(query, collection, embedder, reranker, top_k=10, final_k
 
 ---
 
-### Day 32 — Wire It All Together: Full RAG Pipeline
+### Day 32 - Wire It All Together: Full RAG Pipeline
 
 **Time:** 4 hrs
 
@@ -1468,7 +1468,7 @@ Medical context:
 
 ---
 
-### Day 33 — Week 4 Review + Local Gradio Demo
+### Day 33 - Week 4 Review + Local Gradio Demo
 
 **Time:** 3 hrs
 
@@ -1505,13 +1505,13 @@ demo.launch()
 
 ---
 
-## WEEK 5 — MLOps + API (Days 34–40)
+## WEEK 5 - MLOps + API (Days 34–40)
 
 > **Goal:** Make the project look like real engineering, not just a notebook.
 
 ---
 
-### Day 34 — Build the FastAPI Endpoint
+### Day 34 - Build the FastAPI Endpoint
 
 **Time:** 4 hrs
 
@@ -1586,13 +1586,13 @@ def ask(request: QuestionRequest):
 uvicorn src.api.main:app --reload
 ```
 
-3. Open `http://localhost:8000/docs` — FastAPI auto-generates interactive API docs. Test your `/ask` endpoint from there.
+3. Open `http://localhost:8000/docs` - FastAPI auto-generates interactive API docs. Test your `/ask` endpoint from there.
 
 **You're done when:** The API is running and you can make requests from the browser.
 
 ---
 
-### Day 35 — Write Tests for the API
+### Day 35 - Write Tests for the API
 
 **Time:** 3 hrs
 
@@ -1646,7 +1646,7 @@ pytest tests/ -v
 
 ---
 
-### Day 36 — GitHub Actions CI/CD
+### Day 36 - GitHub Actions CI/CD
 
 **Time:** 3 hrs
 
@@ -1695,7 +1695,7 @@ jobs:
 
 ---
 
-### Day 37 — DVC for Data Versioning
+### Day 37 - DVC for Data Versioning
 
 **Time:** 3 hrs
 
@@ -1725,7 +1725,7 @@ git commit -m "track processed datasets with DVC"
 
 ---
 
-### Day 38 — Evaluation Script
+### Day 38 - Evaluation Script
 
 **Time:** 4 hrs
 
@@ -1743,7 +1743,7 @@ Uses multiple aliases per topic to handle medical synonyms
 import json
 from src.rag.pipeline import load_all, answer_question
 
-# Each topic has a list of aliases — if ANY alias matches, the topic counts as a hit.
+# Each topic has a list of aliases - if ANY alias matches, the topic counts as a hit.
 # This handles cases where the model uses medical terminology instead of plain language.
 TEST_QUESTIONS = [
     {"question": "What are symptoms of type 2 diabetes?",
@@ -1824,19 +1824,19 @@ if __name__ == "__main__":
         exit(1)
 ```
 
-> **Note:** This evaluation uses keyword matching with medical synonyms. It's a simple heuristic — a model could technically mention the right words in the wrong context. For a more robust evaluation, you could use an LLM-as-judge approach (e.g., ask GPT-4 to rate the answers), but keyword matching is a solid starting point.
+> **Note:** This evaluation uses keyword matching with medical synonyms. It's a simple heuristic - a model could technically mention the right words in the wrong context. For a more robust evaluation, you could use an LLM-as-judge approach (e.g., ask GPT-4 to rate the answers), but keyword matching is a solid starting point.
 
 **You're done when:** Evaluation script runs and produces a score.
 
 ---
 
-### Day 39 — Groq API for Fast Cloud Inference
+### Day 39 - Groq API for Fast Cloud Inference
 
 **Time:** 3 hrs
 
-**What you're doing:** Adding Groq as an alternative to local inference — much faster for the public demo.
+**What you're doing:** Adding Groq as an alternative to local inference - much faster for the public demo.
 
-> **Important trade-off:** Groq doesn't support custom fine-tuned models. The public demo will use Groq's Llama 3 (8B) instead of your fine-tuned Phi-3. Your fine-tuned model is still used for local inference and evaluation. Think of it this way: Groq gives you speed for the demo, your fine-tuned model gives you quality for local use. In your README, be transparent about this — mention that the live demo uses Llama 3 via Groq, while the local version uses your fine-tuned Phi-3.
+> **Important trade-off:** Groq doesn't support custom fine-tuned models. The public demo will use Groq's Llama 3 (8B) instead of your fine-tuned Phi-3. Your fine-tuned model is still used for local inference and evaluation. Think of it this way: Groq gives you speed for the demo, your fine-tuned model gives you quality for local use. In your README, be transparent about this - mention that the live demo uses Llama 3 via Groq, while the local version uses your fine-tuned Phi-3.
 
 **Tasks:**
 
@@ -1856,7 +1856,7 @@ import os
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def answer_with_groq(question, context_chunks, model="llama3-8b-8192"):
-    """Use Groq for fast cloud inference — good for the public demo"""
+    """Use Groq for fast cloud inference - good for the public demo"""
     context = "\n\n".join(context_chunks)
     prompt  = f"""You are a helpful medical assistant. Use the context below to answer the question.
 Always recommend consulting a healthcare professional.
@@ -1898,7 +1898,7 @@ python src/inference/groq_client.py
 
 ---
 
-### Day 40 — Week 5 Review + Integration Check
+### Day 40 - Week 5 Review + Integration Check
 
 **Time:** 3 hrs
 
@@ -1907,17 +1907,17 @@ python src/inference/groq_client.py
 1. Make sure all components work together: FastAPI → RAG pipeline → Groq or local inference.
 2. Fix any integration bugs.
 3. Update README with an "API Documentation" section showing example requests.
-4. Look ahead: Week 6 is deployment — the finish line.
+4. Look ahead: Week 6 is deployment - the finish line.
 
 ---
 
-## WEEK 6 — Deployment & Polish (Days 41–47)
+## WEEK 6 - Deployment & Polish (Days 41–47)
 
 > **Goal:** Get it live. The world can see it.
 
 ---
 
-### Day 41 — Build the Gradio UI
+### Day 41 - Build the Gradio UI
 
 **Time:** 4 hrs
 
@@ -1935,7 +1935,7 @@ DISCLAIMER = """⚠️ **Medical Disclaimer:** This tool is for educational purp
 It is NOT a substitute for professional medical advice, diagnosis, or treatment.
 Always consult a qualified healthcare provider."""
 
-# Load retrieval components (no local model needed on Spaces — we use Groq)
+# Load retrieval components (no local model needed on Spaces - we use Groq)
 print("Loading retriever...")
 embedder, collection = load_retriever()
 reranker             = load_reranker()
@@ -1977,13 +1977,13 @@ demo.launch()
 
 ---
 
-### Day 42 — Deploy to HuggingFace Spaces
+### Day 42 - Deploy to HuggingFace Spaces
 
 **Time:** 4 hrs
 
 **What you're doing:** Getting your app live on HuggingFace Spaces so anyone can use it.
 
-**Key challenge:** Your ChromaDB vector store is a local directory — it won't exist on HuggingFace Spaces. You need to upload it as a HuggingFace dataset so the Space can download it at startup.
+**Key challenge:** Your ChromaDB vector store is a local directory - it won't exist on HuggingFace Spaces. You need to upload it as a HuggingFace dataset so the Space can download it at startup.
 
 **Tasks:**
 
@@ -2067,7 +2067,7 @@ git push space main
 
 ---
 
-### Day 43 — Test the Live Demo
+### Day 43 - Test the Live Demo
 
 **Time:** 3 hrs
 
@@ -2086,7 +2086,7 @@ git push space main
 
 ---
 
-### Day 44 — Write the README
+### Day 44 - Write the README
 
 **Time:** 4 hrs
 
@@ -2106,7 +2106,7 @@ Write a README that a recruiter can understand in 60 seconds:
 
 ## Architecture
 
-[Diagram — see Day 45]
+[Diagram - see Day 45]
 
 ## What It Does
 
@@ -2122,12 +2122,12 @@ Write a README that a recruiter can understand in 60 seconds:
 
 ## How It Works
 
-[Explain the pipeline in plain English — 3-4 paragraphs]
+[Explain the pipeline in plain English - 3-4 paragraphs]
 
 ## Limitations
 
 - Not a substitute for real medical advice
-- Model may hallucinate — always verify with a professional
+- Model may hallucinate - always verify with a professional
 - Trained on a limited dataset; rare conditions may not be covered
 ```
 
@@ -2135,7 +2135,7 @@ Write a README that a recruiter can understand in 60 seconds:
 
 ---
 
-### Day 45 — Architecture Diagram
+### Day 45 - Architecture Diagram
 
 **Time:** 2 hrs
 
@@ -2167,13 +2167,13 @@ Answer + Sources
 
 ---
 
-## PHASE 2 — Full-Stack AI Product (Days 46–73)
+## PHASE 2 - Full-Stack AI Product (Days 46–73)
 
 > **Goal:** Transform this from a machine learning demo into a real, production-quality web application with user authentication, persistent conversation history, and a custom frontend. The HuggingFace Space stays as a lightweight public demo. **The new full-stack website (Next.js frontend on Netlify + FastAPI backend on Render + PostgreSQL) is the real, shipped product.**
 
 > **Tech Stack:**
 >
-> - **Backend:** FastAPI (already built — we'll extend it)
+> - **Backend:** FastAPI (already built - we'll extend it)
 > - **Database:** PostgreSQL (Render free tier) + SQLAlchemy ORM
 > - **Auth:** JWT (JSON Web Tokens) with bcrypt password hashing
 > - **Frontend:** Next.js (React-based)
@@ -2183,19 +2183,19 @@ Answer + Sources
 
 ---
 
-## WEEK 7 — Database & Authentication (Days 46–52)
+## WEEK 7 - Database & Authentication (Days 46–52)
 
 > **Goal:** Build a secure backend with user registration, login, and protected endpoints. After this week, your API will only serve answers to authenticated users.
 
 ---
 
-### Day 46 — PostgreSQL Database + SQLAlchemy Setup ✅ Done
+### Day 46 - PostgreSQL Database + SQLAlchemy Setup ✅ Done
 
 **Time:** 4 hrs
 
 **What you're doing:** Connecting your FastAPI app to a PostgreSQL database and defining the tables (models) for users and conversations.
 
-**Why SQLAlchemy?** You could write raw SQL, but SQLAlchemy gives you an ORM (Object-Relational Mapper) — you interact with Python objects instead of writing SQL strings. This prevents SQL injection, makes migrations easier, and is the industry standard for FastAPI + databases.
+**Why SQLAlchemy?** You could write raw SQL, but SQLAlchemy gives you an ORM (Object-Relational Mapper) - you interact with Python objects instead of writing SQL strings. This prevents SQL injection, makes migrations easier, and is the industry standard for FastAPI + databases.
 
 **Note (actual build):** Originally planned for MySQL locally. We used a SQLite fallback for local development (auto-created, zero setup) and Render's free PostgreSQL for production. The `DATABASE_URL` environment variable switches between them automatically.
 
@@ -2207,7 +2207,7 @@ Answer + Sources
 pip install sqlalchemy psycopg2-binary python-dotenv
 ```
 
-> **Why `psycopg2-binary`?** SQLAlchemy needs a driver to talk to PostgreSQL. `psycopg2-binary` is the standard, pre-compiled PostgreSQL driver for Python — works on Windows, Mac, and Linux without any extra setup.
+> **Why `psycopg2-binary`?** SQLAlchemy needs a driver to talk to PostgreSQL. `psycopg2-binary` is the standard, pre-compiled PostgreSQL driver for Python - works on Windows, Mac, and Linux without any extra setup.
 
 2. Create a `.env` file in the project root to store your database credentials securely:
 
@@ -2221,7 +2221,7 @@ GROQ_API_KEY=your_existing_groq_key
 
 > **Important:** Add `.env` to your `.gitignore` immediately. Never commit secrets to GitHub.
 
-4. Create `src/database/config.py` — the database connection setup:
+4. Create `src/database/config.py` - the database connection setup:
 
 ```python
 from sqlalchemy import create_engine
@@ -2257,9 +2257,9 @@ def get_db():
 >
 > - `create_engine` opens a connection pool to your MySQL database.
 > - `SessionLocal` is a factory that creates individual database sessions (one per API request).
-> - `get_db()` is a FastAPI "dependency" — it gives each request its own session and automatically closes it when done. This prevents connection leaks.
+> - `get_db()` is a FastAPI "dependency" - it gives each request its own session and automatically closes it when done. This prevents connection leaks.
 
-5. Create `src/database/models.py` — your database tables as Python classes:
+5. Create `src/database/models.py` - your database tables as Python classes:
 
 ```python
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float
@@ -2307,9 +2307,9 @@ class Message(Base):
 
 > **What are these tables?**
 >
-> - `users` — stores email, username, and hashed password. Never store plain text passwords.
-> - `conversations` — groups messages into threads (like how ChatGPT has separate chats in the sidebar). Each conversation belongs to one user.
-> - `messages` — individual messages within a conversation. The `role` field marks whether the message is from the user or the assistant. Sources and confidence are stored so you can display them later.
+> - `users` - stores email, username, and hashed password. Never store plain text passwords.
+> - `conversations` - groups messages into threads (like how ChatGPT has separate chats in the sidebar). Each conversation belongs to one user.
+> - `messages` - individual messages within a conversation. The `role` field marks whether the message is from the user or the assistant. Sources and confidence are stored so you can display them later.
 
 6. Create a small script `src/database/init_db.py` to create the tables:
 
@@ -2319,7 +2319,7 @@ from src.database.models import User, Conversation, Message
 
 def init():
     """Create all tables in the database.
-    Safe to run multiple times — it won't drop existing tables."""
+    Safe to run multiple times - it won't drop existing tables."""
     Base.metadata.create_all(bind=engine)
     print("Database tables created successfully!")
 
@@ -2341,17 +2341,17 @@ SHOW TABLES;
 DESCRIBE users;
 ```
 
-**You're done when:** Tables are created — in SQLite locally (`medical_qa.db` appears in the project root), and in PostgreSQL on production (Render auto-runs `init()` on startup via the `lifespan` hook in `main.py`).
+**You're done when:** Tables are created - in SQLite locally (`medical_qa.db` appears in the project root), and in PostgreSQL on production (Render auto-runs `init()` on startup via the `lifespan` hook in `main.py`).
 
 ---
 
-### Day 47 — Password Hashing & JWT Authentication
+### Day 47 - Password Hashing & JWT Authentication
 
 **Time:** 4 hrs
 
 **What you're doing:** Building the authentication layer. Users will register with a password (which we hash before storing), and log in to receive a JWT token that they include in every subsequent API request.
 
-**Why JWT?** Traditional session-based auth stores sessions on the server, which doesn't scale. JWT (JSON Web Tokens) encodes the user's identity into a signed token that the client stores. The server never needs to remember who's logged in — it just verifies the token's signature. This is the standard approach for API-first applications.
+**Why JWT?** Traditional session-based auth stores sessions on the server, which doesn't scale. JWT (JSON Web Tokens) encodes the user's identity into a signed token that the client stores. The server never needs to remember who's logged in - it just verifies the token's signature. This is the standard approach for API-first applications.
 
 **Tasks:**
 
@@ -2361,10 +2361,10 @@ DESCRIBE users;
 pip install bcrypt python-jose[cryptography]
 ```
 
-> **`bcrypt`** — the gold standard for password hashing. It's intentionally slow, making brute-force attacks impractical.
-> **`python-jose`** — a library for creating and verifying JWTs. The `[cryptography]` extra gives it fast cryptographic primitives.
+> **`bcrypt`** - the gold standard for password hashing. It's intentionally slow, making brute-force attacks impractical.
+> **`python-jose`** - a library for creating and verifying JWTs. The `[cryptography]` extra gives it fast cryptographic primitives.
 
-2. Create `src/auth/security.py` — the core auth utilities:
+2. Create `src/auth/security.py` - the core auth utilities:
 
 ```python
 from datetime import datetime, timedelta, timezone
@@ -2403,11 +2403,11 @@ def decode_access_token(token: str) -> dict | None:
         return None
 ```
 
-> **How password hashing works:** When a user registers with password "mypassword123", `hash_password()` converts it into something like `$2b$12$LJ3m4...` — a one-way hash. Even if someone steals your database, they can't reverse the hash back to the original password. When the user logs in, `verify_password()` hashes the provided password again and checks if it matches the stored hash.
+> **How password hashing works:** When a user registers with password "mypassword123", `hash_password()` converts it into something like `$2b$12$LJ3m4...` - a one-way hash. Even if someone steals your database, they can't reverse the hash back to the original password. When the user logs in, `verify_password()` hashes the provided password again and checks if it matches the stored hash.
 
-> **How JWT works:** When a user logs in successfully, the server creates a token containing `{"sub": "user@email.com", "exp": 1234567890}` and signs it with your `SECRET_KEY`. The client sends this token in every request. The server verifies the signature — if it's valid and not expired, the request is authenticated. No database lookup needed.
+> **How JWT works:** When a user logs in successfully, the server creates a token containing `{"sub": "user@email.com", "exp": 1234567890}` and signs it with your `SECRET_KEY`. The client sends this token in every request. The server verifies the signature - if it's valid and not expired, the request is authenticated. No database lookup needed.
 
-3. Create `src/auth/dependencies.py` — the FastAPI dependency that protects endpoints:
+3. Create `src/auth/dependencies.py` - the FastAPI dependency that protects endpoints:
 
 ```python
 from fastapi import Depends, HTTPException, status
@@ -2460,7 +2460,7 @@ print(verify_password("wrongpassword", hashed))  # False
 
 ---
 
-### Day 48 — Auth Endpoints (Register, Login, Me)
+### Day 48 - Auth Endpoints (Register, Login, Me)
 
 **Time:** 4 hrs
 
@@ -2468,7 +2468,7 @@ print(verify_password("wrongpassword", hashed))  # False
 
 **Tasks:**
 
-1. Create `src/auth/schemas.py` — the request/response shapes for auth endpoints:
+1. Create `src/auth/schemas.py` - the request/response shapes for auth endpoints:
 
 ```python
 from pydantic import BaseModel, EmailStr
@@ -2495,7 +2495,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 ```
 
-2. Create `src/auth/router.py` — the auth routes:
+2. Create `src/auth/router.py` - the auth routes:
 
 ```python
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -2556,7 +2556,7 @@ def get_me(current_user: User = Depends(get_current_user)):
 > 3. User includes the token in headers (`Authorization: Bearer <token>`) on every subsequent request.
 > 4. User calls `GET /auth/me` with the token → gets back their info, confirming the token works.
 
-3. Register the auth router in your main app. Update `src/api/main.py` — add these lines near the top after creating the `app`:
+3. Register the auth router in your main app. Update `src/api/main.py` - add these lines near the top after creating the `app`:
 
 ```python
 from src.auth.router import router as auth_router
@@ -2591,11 +2591,11 @@ uvicorn src.api.main:app --reload
 
 ---
 
-### Day 49 — Conversation History Endpoints
+### Day 49 - Conversation History Endpoints
 
 **Time:** 4 hrs
 
-**What you're doing:** Building endpoints to create conversations, save messages, and retrieve past chat history — all tied to the logged-in user.
+**What you're doing:** Building endpoints to create conversations, save messages, and retrieve past chat history - all tied to the logged-in user.
 
 **Tasks:**
 
@@ -2729,11 +2729,11 @@ app.include_router(conversations_router)
 
 ---
 
-### Day 50 — Protect the /ask Endpoint + Save Messages
+### Day 50 - Protect the /ask Endpoint + Save Messages
 
 **Time:** 4 hrs
 
-**What you're doing:** The existing `/ask` endpoint is completely open — anyone can call it. Today you lock it behind authentication and save every question + answer into the database as part of a conversation.
+**What you're doing:** The existing `/ask` endpoint is completely open - anyone can call it. Today you lock it behind authentication and save every question + answer into the database as part of a conversation.
 
 **Tasks:**
 
@@ -2838,14 +2838,14 @@ class QuestionResponse(BaseModel):
 3. Test the full flow in Swagger:
    - Login to get a token.
    - Call `/ask` with a medical question.
-   - Call `GET /conversations/` — you should see a new conversation.
-   - Call `GET /conversations/{id}` — you should see the user question and assistant answer as messages.
+   - Call `GET /conversations/` - you should see a new conversation.
+   - Call `GET /conversations/{id}` - you should see the user question and assistant answer as messages.
 
 **You're done when:** Questions and answers are being saved to the database (SQLite locally, PostgreSQL on Render) and you can retrieve full conversation histories.
 
 ---
 
-### Day 51 — Rate Limiting + Input Validation
+### Day 51 - Rate Limiting + Input Validation
 
 **Time:** 3 hrs
 
@@ -2889,7 +2889,7 @@ def ask(request: AskRequest, ...):
 
 > **Why 10/hour?** This is a reasonable starting point. Groq's free tier has limits, and most legitimate users won't ask more than 10 medical questions in an hour. You can adjust this later.
 
-4. Add input validation — update the `AskRequest` model to enforce limits:
+4. Add input validation - update the `AskRequest` model to enforce limits:
 
 ```python
 from pydantic import BaseModel, field_validator
@@ -2909,13 +2909,13 @@ class AskRequest(BaseModel):
         return v
 ```
 
-5. Test rate limiting by sending 11 quick requests — the 11th should return a 429 status code.
+5. Test rate limiting by sending 11 quick requests - the 11th should return a 429 status code.
 
 **You're done when:** Rate limiting is active and returns a 429 error when exceeded.
 
 ---
 
-### Day 52 — Backend Tests + CI/CD Update
+### Day 52 - Backend Tests + CI/CD Update
 
 **Time:** 3 hrs
 
@@ -3030,13 +3030,13 @@ pytest tests/ -v
 
 ---
 
-## WEEK 8 — Next.js Frontend Setup (Days 53–59)
+## WEEK 8 - Next.js Frontend Setup (Days 53–59)
 
-> **Goal:** Build the frontend shell — project setup, auth pages, and the main layout. By the end of this week, users can register, log in, and see the main chat layout in their browser.
+> **Goal:** Build the frontend shell - project setup, auth pages, and the main layout. By the end of this week, users can register, log in, and see the main chat layout in their browser.
 
 ---
 
-### Day 53 — Initialize the Next.js Project
+### Day 53 - Initialize the Next.js Project
 
 **Time:** 3 hrs
 
@@ -3052,10 +3052,10 @@ npx -y create-next-app@latest frontend --typescript --tailwind --eslint --app --
 
 > **Why these flags?**
 >
-> - `--typescript` — type safety, catches bugs early.
-> - `--tailwind` — utility-first CSS framework for rapid styling (we'll keep the colors clean and minimal as you requested — no purple/blue gradients).
-> - `--app` — uses Next.js 14+ App Router (the modern approach).
-> - `--src-dir` — puts code in `frontend/src/` for clean organization.
+> - `--typescript` - type safety, catches bugs early.
+> - `--tailwind` - utility-first CSS framework for rapid styling (we'll keep the colors clean and minimal as you requested - no purple/blue gradients).
+> - `--app` - uses Next.js 14+ App Router (the modern approach).
+> - `--src-dir` - puts code in `frontend/src/` for clean organization.
 
 2. Navigate into the frontend directory and start it:
 
@@ -3064,7 +3064,7 @@ cd frontend
 npm run dev
 ```
 
-3. Open `http://localhost:3000` — you should see the default Next.js welcome page.
+3. Open `http://localhost:3000` - you should see the default Next.js welcome page.
 
 4. Install additional packages you'll need:
 
@@ -3072,9 +3072,9 @@ npm run dev
 npm install axios
 ```
 
-> **`axios`** — a popular HTTP client for making API calls to your FastAPI backend. It handles headers, JSON parsing, and error handling more cleanly than the native `fetch` API.
+> **`axios`** - a popular HTTP client for making API calls to your FastAPI backend. It handles headers, JSON parsing, and error handling more cleanly than the native `fetch` API.
 
-5. Create `frontend/src/lib/api.ts` — a centralized API client:
+5. Create `frontend/src/lib/api.ts` - a centralized API client:
 
 ```typescript
 import axios from "axios";
@@ -3108,23 +3108,23 @@ api.interceptors.response.use(
 export default api;
 ```
 
-> **What are interceptors?** Instead of manually adding `Authorization: Bearer <token>` to every single API call, the request interceptor does it automatically. The response interceptor catches 401 errors and redirects to login — so if a token expires mid-session, the user is seamlessly sent to re-authenticate.
+> **What are interceptors?** Instead of manually adding `Authorization: Bearer <token>` to every single API call, the request interceptor does it automatically. The response interceptor catches 401 errors and redirects to login - so if a token expires mid-session, the user is seamlessly sent to re-authenticate.
 
 **You're done when:** Next.js dev server is running on `localhost:3000` and the API client is configured.
 
 ---
 
-### Day 54 — Authentication Pages (Login + Register)
+### Day 54 - Authentication Pages (Login + Register)
 
 **Time:** 4 hrs
 
 **What you're doing:** Building the login and registration pages. These are the first pages a user will see.
 
-**Design principle:** Keep it clean and minimal. No AI-gradient decorations. Think professional medical SaaS — clean whites, soft grays, clear typography.
+**Design principle:** Keep it clean and minimal. No AI-gradient decorations. Think professional medical SaaS - clean whites, soft grays, clear typography.
 
 **Tasks:**
 
-1. Create `frontend/src/app/login/page.tsx` — the login page. It should have:
+1. Create `frontend/src/app/login/page.tsx` - the login page. It should have:
    - An email input field.
    - A password input field.
    - A "Log In" button that calls `POST /auth/login`.
@@ -3132,14 +3132,14 @@ export default api;
    - On failure, show the error message from the API.
    - A link to the registration page ("Don't have an account? Register").
 
-2. Create `frontend/src/app/register/page.tsx` — the registration page. It should have:
+2. Create `frontend/src/app/register/page.tsx` - the registration page. It should have:
    - Email, username, and password input fields.
    - A "Create Account" button that calls `POST /auth/register`.
    - On success, redirect to the login page.
    - On failure, show the error message (e.g., "Email already registered").
    - A link back to the login page ("Already have an account? Log in").
 
-3. Create `frontend/src/context/AuthContext.tsx` — a React context to manage auth state across the entire app:
+3. Create `frontend/src/context/AuthContext.tsx` - a React context to manage auth state across the entire app:
    - Store the current user object (from `/auth/me`) and the loading state.
    - Provide `login()`, `register()`, and `logout()` functions.
    - On page load, check if a token exists in `localStorage` and call `/auth/me` to verify it's still valid.
@@ -3160,13 +3160,13 @@ export default api;
 
 ---
 
-### Day 55 — Main Layout + Chat Interface
+### Day 55 - Main Layout + Chat Interface
 
 **Time:** 4 hrs
 
 **What you're doing:** Building the main chat interface where authenticated users can ask medical questions and see responses.
 
-**Layout:** Think ChatGPT's layout — a sidebar on the left listing conversations, and a main chat area on the right.
+**Layout:** Think ChatGPT's layout - a sidebar on the left listing conversations, and a main chat area on the right.
 
 **Tasks:**
 
@@ -3177,7 +3177,7 @@ export default api;
    - The main content area (right panel) where the chat lives.
    - Wrap the entire layout in your `ProtectedRoute` component.
 
-2. Create `frontend/src/app/(dashboard)/page.tsx` — the main chat page:
+2. Create `frontend/src/app/(dashboard)/page.tsx` - the main chat page:
    - A scrollable message area showing the conversation.
    - Each message shows the role (user or assistant) with different styling.
    - Assistant messages should render markdown (install `react-markdown`).
@@ -3190,17 +3190,17 @@ export default api;
    - Display the sources in a collapsible section below the answer.
    - Display the confidence badge (high/medium/low) next to the answer.
 
-4. Add the medical disclaimer — show it prominently at the top of every new conversation.
+4. Add the medical disclaimer - show it prominently at the top of every new conversation.
 
 **You're done when:** You can log in, ask a medical question, and see the answer with sources displayed in a clean chat interface.
 
 ---
 
-### Day 56 — Conversation Sidebar + History
+### Day 56 - Conversation Sidebar + History
 
 **Time:** 4 hrs
 
-**What you're doing:** Making the sidebar functional — users can create new conversations, switch between them, and see their full history.
+**What you're doing:** Making the sidebar functional - users can create new conversations, switch between them, and see their full history.
 
 **Tasks:**
 
@@ -3225,11 +3225,11 @@ export default api;
 
 ---
 
-### Day 57 — Feedback System + UI Polish
+### Day 57 - Feedback System + UI Polish
 
 **Time:** 4 hrs
 
-**What you're doing:** Adding a thumbs up/thumbs down feedback mechanism to assistant responses. This is the foundation of a data flywheel — you can use this feedback data to improve the model later via RLHF.
+**What you're doing:** Adding a thumbs up/thumbs down feedback mechanism to assistant responses. This is the foundation of a data flywheel - you can use this feedback data to improve the model later via RLHF.
 
 **Tasks:**
 
@@ -3284,7 +3284,7 @@ python -m src.database.init_db
 
 ---
 
-### Day 58 — Responsive Design + Mobile Support
+### Day 58 - Responsive Design + Mobile Support
 
 **Time:** 3 hrs
 
@@ -3311,11 +3311,11 @@ now
 
 ---
 
-### Day 59 — Week 8 Review + Integration Testing
+### Day 59 - Week 8 Review + Integration Testing
 
 **Time:** 3 hrs
 
-**What you're doing:** End-to-end testing of the full flow — register, login, ask questions, switch conversations, give feedback, and logout.
+**What you're doing:** End-to-end testing of the full flow - register, login, ask questions, switch conversations, give feedback, and logout.
 
 **Tasks:**
 
@@ -3339,13 +3339,13 @@ now
 
 ---
 
-## WEEK 9 — Docker + Deployment (Days 60–66)
+## WEEK 9 - Docker + Deployment (Days 60–66)
 
 > **Goal:** Containerize everything with Docker and deploy to the cloud. After this week, your website is live on the internet.
 
 ---
 
-### Day 60 — Dockerize the FastAPI Backend
+### Day 60 - Dockerize the FastAPI Backend
 
 **Time:** 4 hrs
 
@@ -3399,7 +3399,7 @@ docker run -p 8000:8000 --env-file .env medical-qa-backend
 
 ---
 
-### Day 61 — Docker Compose (Backend) ✅ Done
+### Day 61 - Docker Compose (Backend) ✅ Done
 
 **Time:** 3 hrs
 
@@ -3423,7 +3423,7 @@ docker-compose up --build
 
 ---
 
-### Day 62 — Deploy the Backend to Render ✅ Done
+### Day 62 - Deploy the Backend to Render ✅ Done
 
 **Time:** 4 hrs
 
@@ -3437,15 +3437,15 @@ docker-compose up --build
 4. Set the build command: `pip install -r requirements-prod.txt`
 5. Set the start command: `uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
 6. Add these environment variables in Render's dashboard:
-   - `DATABASE_URL` — the Internal PostgreSQL URL from Step 2
-   - `SECRET_KEY` — a long random string
-   - `GROQ_API_KEY` — your Groq key
-   - `USE_GROQ` — `true`
-   - `LIGHTWEIGHT_MODE` — `true`
-   - `FRONTEND_URL` — your Netlify URL (e.g. `https://medical-qa-ai-assistant.netlify.app`)
+   - `DATABASE_URL` - the Internal PostgreSQL URL from Step 2
+   - `SECRET_KEY` - a long random string
+   - `GROQ_API_KEY` - your Groq key
+   - `USE_GROQ` - `true`
+   - `LIGHTWEIGHT_MODE` - `true`
+   - `FRONTEND_URL` - your Netlify URL (e.g. `https://medical-qa-ai-assistant.netlify.app`)
 7. Deploy and test `/health` at your Render URL.
 
-> **Why Internal URL?** Both the Web Service and PostgreSQL are in the same Render region (Singapore). Using the Internal URL routes traffic over Render's private network — faster and no bandwidth charges.
+> **Why Internal URL?** Both the Web Service and PostgreSQL are in the same Render region (Singapore). Using the Internal URL routes traffic over Render's private network - faster and no bandwidth charges.
 
 > **Why `requirements-prod.txt`?** The main `requirements.txt` includes heavy ML libraries (torch, transformers) that Render's free tier can't install. `requirements-prod.txt` only includes the lightweight production dependencies.
 
@@ -3453,11 +3453,11 @@ docker-compose up --build
 
 ---
 
-### Day 63 — Deploy the Frontend to Netlify ✅ Done
+### Day 63 - Deploy the Frontend to Netlify ✅ Done
 
 **Time:** 3 hrs
 
-**What you're doing:** Deploying your Next.js frontend. We used **Netlify** instead of Vercel — both work equally well for Next.js.
+**What you're doing:** Deploying your Next.js frontend. We used **Netlify** instead of Vercel - both work equally well for Next.js.
 
 **Actual steps taken:**
 
@@ -3469,7 +3469,7 @@ docker-compose up --build
 5. Rename the auto-generated Netlify URL (e.g., `delightful-vacherin`) to something readable like `medical-qa-ai-assistant` via Site configuration → Site details → Change site name.
 6. Update `FRONTEND_URL` on Render to match the new Netlify URL.
 
-> **Critical:** After changing the Netlify site name, update `FRONTEND_URL` on Render immediately — otherwise CORS will block logins from the new URL.
+> **Critical:** After changing the Netlify site name, update `FRONTEND_URL` on Render immediately - otherwise CORS will block logins from the new URL.
 
 > **Why Netlify?** Both Netlify and Vercel offer free Next.js hosting. Netlify was used here.
 
@@ -3477,7 +3477,7 @@ docker-compose up --build
 
 ---
 
-### Day 64 — Custom Domain + SSL (Optional)
+### Day 64 - Custom Domain + SSL (Optional)
 
 **Time:** 2 hrs
 
@@ -3495,13 +3495,13 @@ docker-compose up --build
 
 ---
 
-### Day 65 — Logging + Error Monitoring ✅ Done
+### Day 65 - Logging + Error Monitoring ✅ Done
 
 **Time:** 3 hrs
 
 **What you're doing:** Replacing `print()` statements with Python's `logging` module so logs on Render have timestamps, severity levels, and are filterable.
 
-**Actual implementation:** Used `logging.getLogger("uvicorn.error")` to pipe logs directly into Uvicorn's existing logging infrastructure — no extra configuration needed. All `print()` statements in `src/api/main.py` were replaced with `logger.info()` and `logger.warning()`.
+**Actual implementation:** Used `logging.getLogger("uvicorn.error")` to pipe logs directly into Uvicorn's existing logging infrastructure - no extra configuration needed. All `print()` statements in `src/api/main.py` were replaced with `logger.info()` and `logger.warning()`.
 
 ```python
 import logging
@@ -3509,14 +3509,14 @@ logger = logging.getLogger("uvicorn.error")
 
 # Example:
 logger.info("Loading models...")
-logger.warning("SECRET_KEY is not set — JWT signing will fail!")
+logger.warning("SECRET_KEY is not set - JWT signing will fail!")
 ```
 
 **You're done when:** All key events are logged and visible in the Render service logs dashboard.
 
 ---
 
-### Day 66 — Week 9 Review + Full E2E Test on Production
+### Day 66 - Week 9 Review + Full E2E Test on Production
 
 **Time:** 3 hrs
 
@@ -3532,13 +3532,13 @@ logger.warning("SECRET_KEY is not set — JWT signing will fail!")
 
 ---
 
-## WEEK 10 — Final Polish + Portfolio (Days 67–73)
+## WEEK 10 - Final Polish + Portfolio (Days 67–73)
 
 > **Goal:** Polish everything and make this portfolio-ready.
 
 ---
 
-### Day 67 — Design Inspiration Pass
+### Day 67 - Design Inspiration Pass
 
 **Time:** 4 hrs
 
@@ -3546,7 +3546,7 @@ logger.warning("SECRET_KEY is not set — JWT signing will fail!")
 
 **Tasks:**
 
-1. Study your chosen design inspiration — note the color palette, typography, spacing, and component styles.
+1. Study your chosen design inspiration - note the color palette, typography, spacing, and component styles.
 2. Update the frontend's global styles and Tailwind config to match.
 3. Apply the design to all pages: login, register, chat, sidebar.
 4. Ensure consistency across all components.
@@ -3555,7 +3555,7 @@ logger.warning("SECRET_KEY is not set — JWT signing will fail!")
 
 ---
 
-### Day 68 — Update the README + Architecture Diagram
+### Day 68 - Update the README + Architecture Diagram
 
 **Time:** 3 hrs
 
@@ -3579,7 +3579,7 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 
 ---
 
-### Day 69 — Security Audit
+### Day 69 - Security Audit
 
 **Time:** 3 hrs
 
@@ -3600,7 +3600,7 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 
 ---
 
-### Day 70 — Record Demo Video + LinkedIn Post
+### Day 70 - Record Demo Video + LinkedIn Post
 
 **Time:** 3 hrs
 
@@ -3608,7 +3608,7 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 
 1. Download Loom (free screen recorder).
 2. Record a 2–3 minute demo:
-   - 0:00–0:20: "I built a medical QA assistant — here's the live site." (show the login page)
+   - 0:00–0:20: "I built a medical QA assistant - here's the live site." (show the login page)
    - 0:20–0:40: Register a new account and log in.
    - 0:40–1:30: Ask 3 medical questions. Show answers with sources and confidence.
    - 1:30–1:50: Show conversation history in the sidebar. Switch between chats.
@@ -3622,7 +3622,7 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 
 ---
 
-### Day 71 — Code Cleanup + Documentation ✅ Done
+### Day 71 - Code Cleanup + Documentation ✅ Done
 
 **Time:** 3 hrs
 
@@ -3638,7 +3638,7 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 
 ---
 
-### Day 72 — Final Polish + Resume Bullet
+### Day 72 - Final Polish + Resume Bullet
 
 **Time:** 3 hrs
 
@@ -3648,7 +3648,7 @@ User → Next.js Frontend → FastAPI Backend → MySQL Database
 2. Write your updated resume bullet:
 
 ```
-Built and deployed a full-stack medical Q&A web application — fine-tuned Phi-3
+Built and deployed a full-stack medical Q&A web application - fine-tuned Phi-3
 Mini (3.8B) on 100k+ doctor-patient conversations using QLoRA, implemented a RAG
 pipeline with BioMedical embeddings and cross-encoder re-ranking, built a secure
 FastAPI backend with JWT authentication, PostgreSQL database, and rate limiting,
@@ -3662,18 +3662,18 @@ deployed with Docker on Netlify + Render with CI/CD via GitHub Actions.
 
 ---
 
-### Day 73 — Ship It 🚀
+### Day 73 - Ship It 🚀
 
 **Time:** 2 hrs
 
 **Tasks:**
 
 1. Share the live URL with 3–5 people. Collect feedback.
-2. Create a GitHub release tag (`v2.0.0 — Full-Stack Release`).
+2. Create a GitHub release tag (`v2.0.0 - Full-Stack Release`).
 3. Pin the repo on your GitHub profile.
 4. Celebrate. You built a real, production-quality AI product from scratch.
 
-> 🎉 **Project complete.** You didn't just train a model — you shipped a product. That's what AI Engineers do.
+> 🎉 **Project complete.** You didn't just train a model - you shipped a product. That's what AI Engineers do.
 
 ---
 
@@ -3690,11 +3690,11 @@ Use this every single day:
 
 ## When You Get Stuck (You Will)
 
-1. **Read the error message carefully** — it usually tells you exactly what's wrong
+1. **Read the error message carefully** - it usually tells you exactly what's wrong
 2. **Google the exact error message** in quotes
-3. **Check HuggingFace forums** at discuss.huggingface.co — most errors have been seen before
+3. **Check HuggingFace forums** at discuss.huggingface.co - most errors have been seen before
 4. **Check GPU memory:** `nvidia-smi` in terminal
-5. **Restart the kernel** — fixes mysterious issues more often than it should
+5. **Restart the kernel** - fixes mysterious issues more often than it should
 6. **Reduce batch size** if you get "CUDA out of memory" errors
 
 ---
