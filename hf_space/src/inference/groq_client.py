@@ -8,7 +8,7 @@ if not api_key:
 
 client = Groq(api_key=api_key)
 
-def answer_with_groq(question, context_chunks, model="llama-3.1-8b-instant"):
+def answer_with_groq(question, context_chunks, model="openai/gpt-oss-20b"):
     """Use Groq for fast cloud inference — good for the public demo"""
     context = "\n\n".join(context_chunks)
     prompt  = f"""You are a strict and helpful medical assistant. Use the context below to answer the question.

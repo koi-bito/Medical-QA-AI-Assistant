@@ -173,17 +173,24 @@ def ask(
 
     start  = time.time()
     
-    if LIGHTWEIGHT_MODE:
-        answer = answer_with_groq_no_context(body.question)
-        sources = []
-    elif USE_GROQ:
-        chunks = retrieve_and_rerank(body.question, collection, embedder, reranker)
-        answer = answer_with_groq(body.question, chunks)
-        sources = chunks
-    else:
-        result = answer_question(body.question, model, tokenizer, embedder, collection, reranker)
-        answer = result['answer']
-        sources = result['sources']
+    try:
+        if LIGHTWEIGHT_MODE:
+            answer = answer_with_groq_no_context(body.question)
+            sources = []
+        elif USE_GROQ:
+            chunks = retrieve_and_rerank(body.question, collection, embedder, reranker)
+            answer = answer_with_groq(body.question, chunks)
+            sources = chunks
+        else:
+            result = answer_question(body.question, model, tokenizer, embedder, collection, reranker)
+            answer = result['answer']
+            sources = result['sources']
+    except Exception as e:
+        logger.error(f"Inference failed: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI inference failed: {str(e)}"
+        )
         
     latency = round(time.time() - start, 2)
 
