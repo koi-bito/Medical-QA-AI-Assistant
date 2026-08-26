@@ -1,6 +1,6 @@
 # 🏥 Medical QA Assistant
 
-![Tests](https://github.com/koi-bito/Medical-QA-AI-Assistant/actions/workflows/test.yml/badge.svg) | [Live Demo](https://huggingface.co/spaces/koi-bito/medical-qa) | [Vector DB on HuggingFace](https://huggingface.co/datasets/koi-bito/medical-qa-vectorstore)
+![Tests](https://github.com/koi-bito/Medical-QA-AI-Assistant/actions/workflows/test.yml/badge.svg) | [Live Demo](https://medical-qa-ai-assistant.netlify.app/) | [Vector DB on HuggingFace](https://huggingface.co/datasets/koi-bito/medical-qa-vectorstore)
 
 > A medical Q&A system built with fine-tuned Phi-3 Mini + RAG pipeline
 
@@ -70,7 +70,7 @@ npm run dev
 
 The Medical QA Assistant operates on a **Retrieval-Augmented Generation (RAG)** pipeline. Instead of relying solely on an AI model's static memory, the system fetches real, clinically rooted information to ground its answers in facts.
 
-When a user asks a medical question, the input is converted into numerical vectors (embeddings) using a specialized medical model (`PubMedBERT`). The system searches a ChromaDB vector database—built from over 100,000 real doctor-patient interactions—for the most relevant historical conversations and document chunks.
+When a user asks a medical question, the input is converted into numerical vectors (embeddings) using a specialized medical model (`PubMedBERT`). The system searches a ChromaDB vector database-built from over 100,000 real doctor-patient interactions-for the most relevant historical conversations and document chunks.
 
 To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrieved results, filtering out low-quality matches. Finally, the highest-scoring medical contexts are passed alongside the user's question to a high-speed cloud LLM (via Groq), which synthesizes a clear, accurate, and transparent response that cites the retrieved sources directly. All user queries, authentication states, and conversation histories are securely stored in a PostgreSQL database.
 
@@ -80,22 +80,22 @@ To ensure accuracy, a Cross-Encoder heavily analyzes and re-ranks the top retrie
 
 | Week                  | Topic                                                | Status         |
 | --------------------- | ---------------------------------------------------- | -------------- |
-| Pre-Week (Days 1–5)   | Foundations — NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
-| Week 1 (Days 6–12)    | Environment Setup — Python, CUDA, Libraries, GitHub  | ✅ Done        |
-| Week 2 (Days 13–19)   | Data Preparation — Clean, Format, Baseline Inference | ✅ Done        |
-| Week 3 (Days 20–26)   | Fine-tuning — QLoRA training on Phi-3 Mini           | ✅ Done        |
-| Week 4 (Days 27–33)   | RAG Pipeline — ChromaDB, PubMedBERT embeddings       | ✅ Done        |
-| Week 5 (Days 34–40)   | MLOps + API — FastAPI, Tests, CI/CD, Evaluation      | ✅ Done        |
-| Week 6 (Days 41–45)   | Deployment & Polish — Gradio UI, HuggingFace Spaces  | ✅ Done        |
+| Pre-Week (Days 1–5)   | Foundations - NN, Embeddings, RAG, HuggingFace       | ✅ Done        |
+| Week 1 (Days 6–12)    | Environment Setup - Python, CUDA, Libraries, GitHub  | ✅ Done        |
+| Week 2 (Days 13–19)   | Data Preparation - Clean, Format, Baseline Inference | ✅ Done        |
+| Week 3 (Days 20–26)   | Fine-tuning - QLoRA training on Phi-3 Mini           | ✅ Done        |
+| Week 4 (Days 27–33)   | RAG Pipeline - ChromaDB, PubMedBERT embeddings       | ✅ Done        |
+| Week 5 (Days 34–40)   | MLOps + API - FastAPI, Tests, CI/CD, Evaluation      | ✅ Done        |
+| Week 6 (Days 41–45)   | Deployment & Polish - Gradio UI, HuggingFace Spaces  | ✅ Done        |
 
 ### Phase 2: Full-Stack AI Product
 
 | Week                  | Topic                                                | Status         |
 | --------------------- | ---------------------------------------------------- | -------------- |
-| Week 7 (Days 46–52)   | Database & Auth — PostgreSQL, SQLAlchemy, JWT        | ✅ Done        |
-| Week 8 (Days 53–59)   | Frontend UI — Next.js, Tailwind, React Context       | ✅ Done        |
-| Week 9 (Days 60–66)   | Production Deployment — Render, Netlify, Docker      | ✅ Done        |
-| Week 10 (Days 67–73)  | Final Polish — Logging, Docs, Portfolio Wrap-up      | 🔄 In Progress |
+| Week 7 (Days 46–52)   | Database & Auth - PostgreSQL, SQLAlchemy, JWT        | ✅ Done        |
+| Week 8 (Days 53–59)   | Frontend UI - Next.js, Tailwind, React Context       | ✅ Done        |
+| Week 9 (Days 60–66)   | Production Deployment - Render, Netlify, Docker      | ✅ Done        |
+| Week 10 (Days 67–73)  | Final Polish - Logging, Docs, Portfolio Wrap-up      | ✅ Done        |
 
 ## Limitations
 

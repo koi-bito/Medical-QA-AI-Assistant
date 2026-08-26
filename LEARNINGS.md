@@ -14,7 +14,7 @@ What does "training" mean in your own words?
 
 Why are embeddings useful? What does "similar meaning = similar vector" actually mean?
 
-- **An embedding is a list of numbers (a vector) that represents a word, sentence, or piece of text in a multi-dimensional space.Computers can only work with numbers, not words. Embeddings solve this by converting text into a vector — an ordered list of numbers — that captures the meaning of that text.**
+- **An embedding is a list of numbers (a vector) that represents a word, sentence, or piece of text in a multi-dimensional space.Computers can only work with numbers, not words. Embeddings solve this by converting text into a vector - an ordered list of numbers - that captures the meaning of that text.**
 - **When two words or sentences have similar meanings, their vectors end up close together in vector space. For example: "happy" and "joyful" will have vectors that are nearly pointing in the same direction, while "happy" and "car" will be far apart.**
 
 ## Day 3
@@ -63,62 +63,62 @@ What is CUDA? Why does the GPU need special drivers to work with Python?
 
 What does each library do? (One sentence each)
 
-- **transformers** — HuggingFace's library that provides pre-trained models (like Phi-3) and tools to load, tokenize, and run them.
-- **peft** — Parameter-Efficient Fine-Tuning library that implements LoRA and QLoRA, allowing us to fine-tune only tiny adapter layers rather than the full model.
-- **trl** — Transformer Reinforcement Learning library from HuggingFace; provides `SFTTrainer`, a high-level wrapper that makes supervised fine-tuning simple.
-- **bitsandbytes** — Enables 4-bit and 8-bit quantization so a 3.8B model fits in 6GB VRAM.
-- **datasets** — HuggingFace's library for downloading, caching, and streaming datasets efficiently.
-- **accelerate** — Abstracts away the hardware differences (single GPU, multi-GPU, mixed precision) so training code stays simple.
-- **chromadb** — A local vector database that stores embeddings and enables fast similarity search for RAG.
-- **sentence-transformers** — Provides embedding models (like PubMedBERT) that convert text into semantic vectors.
-- **mlflow** — Experiment tracking system that logs hyperparameters, metrics, and artifacts for every training run.
-- **fastapi** — Modern, fast Python web framework for building the REST API endpoint.
-- **uvicorn** — ASGI server that runs the FastAPI app in production.
-- **gradio** — Lets you build simple web UIs for ML models with just a few lines of Python.
-- **dvc** — Data Version Control — tracks large data files separately from Git, like Git for datasets.
-- **huggingface_hub** — CLI and Python API for uploading/downloading models and datasets to/from HuggingFace Hub.
-- **pandas** — The standard library for loading, filtering, and manipulating tabular data (DataFrames).
-- **numpy** — Fundamental library for numerical computing in Python; everything ML-related uses it internally.
-- **pytest** — Python's testing framework for writing and running automated tests.
+- **transformers** - HuggingFace's library that provides pre-trained models (like Phi-3) and tools to load, tokenize, and run them.
+- **peft** - Parameter-Efficient Fine-Tuning library that implements LoRA and QLoRA, allowing us to fine-tune only tiny adapter layers rather than the full model.
+- **trl** - Transformer Reinforcement Learning library from HuggingFace; provides `SFTTrainer`, a high-level wrapper that makes supervised fine-tuning simple.
+- **bitsandbytes** - Enables 4-bit and 8-bit quantization so a 3.8B model fits in 6GB VRAM.
+- **datasets** - HuggingFace's library for downloading, caching, and streaming datasets efficiently.
+- **accelerate** - Abstracts away the hardware differences (single GPU, multi-GPU, mixed precision) so training code stays simple.
+- **chromadb** - A local vector database that stores embeddings and enables fast similarity search for RAG.
+- **sentence-transformers** - Provides embedding models (like PubMedBERT) that convert text into semantic vectors.
+- **mlflow** - Experiment tracking system that logs hyperparameters, metrics, and artifacts for every training run.
+- **fastapi** - Modern, fast Python web framework for building the REST API endpoint.
+- **uvicorn** - ASGI server that runs the FastAPI app in production.
+- **gradio** - Lets you build simple web UIs for ML models with just a few lines of Python.
+- **dvc** - Data Version Control - tracks large data files separately from Git, like Git for datasets.
+- **huggingface_hub** - CLI and Python API for uploading/downloading models and datasets to/from HuggingFace Hub.
+- **pandas** - The standard library for loading, filtering, and manipulating tabular data (DataFrames).
+- **numpy** - Fundamental library for numerical computing in Python; everything ML-related uses it internally.
+- **pytest** - Python's testing framework for writing and running automated tests.
 
 ## Day 9
 
 What is the purpose of each folder in the project structure?
 
-- **data/raw/** — Stores downloaded, unmodified source data. Gitignored and tracked by DVC.
-- **data/processed/** — Stores cleaned and formatted data ready for training. Also DVC-tracked.
-- **models/** — Stores fine-tuned model adapter weights. Gitignored (too large for GitHub).
-- **notebooks/** — Jupyter notebooks for exploration, analysis, and evaluation. These are committed to Git.
-- **src/training/** — Python scripts for data preparation and the QLoRA training loop.
-- **src/rag/** — Scripts for the full RAG pipeline: data collection, chunking, vector store, retriever.
-- **src/api/** — FastAPI backend that serves the QA system as a REST endpoint.
-- **src/inference/** — Groq API client for fast cloud inference in the public demo.
-- **src/evaluation/** — Script that evaluates the system on a fixed set of test questions.
-- **tests/** — pytest test files for automated testing of the API.
+- **data/raw/** - Stores downloaded, unmodified source data. Gitignored and tracked by DVC.
+- **data/processed/** - Stores cleaned and formatted data ready for training. Also DVC-tracked.
+- **models/** - Stores fine-tuned model adapter weights. Gitignored (too large for GitHub).
+- **notebooks/** - Jupyter notebooks for exploration, analysis, and evaluation. These are committed to Git.
+- **src/training/** - Python scripts for data preparation and the QLoRA training loop.
+- **src/rag/** - Scripts for the full RAG pipeline: data collection, chunking, vector store, retriever.
+- **src/api/** - FastAPI backend that serves the QA system as a REST endpoint.
+- **src/inference/** - Groq API client for fast cloud inference in the public demo.
+- **src/evaluation/** - Script that evaluates the system on a fixed set of test questions.
+- **tests/** - pytest test files for automated testing of the API.
 
 ## Day 10
 
 What does one training example look like after loading with `pandas`? What did you observe exploring the data?
 
 - **The dataset has three columns: `instruction`, `input`, and `output`.** The `instruction` field is identical for almost every row ("If you are a doctor, please answer the medical questions based on the patient's description."), so it acts as a fixed system prompt rather than a variable input.
-- **The `input` field is the real patient question** — ranging from a single line ("I have a headache") to several paragraphs describing complex symptom histories. Quality varies a lot.
-- **The `output` field contains the doctor's response.** The best answers are 200–800 characters long, specific, and end with a recommendation to see a professional. The worst are one-liners like "Please consult a doctor" — not useful for training.
+- **The `input` field is the real patient question** - ranging from a single line ("I have a headache") to several paragraphs describing complex symptom histories. Quality varies a lot.
+- **The `output` field contains the doctor's response.** The best answers are 200–800 characters long, specific, and end with a recommendation to see a professional. The worst are one-liners like "Please consult a doctor" - not useful for training.
 - **Key insight:** You can't just dump the raw dataset into training. Looking at it manually revealed that a significant portion of examples are either too short to teach the model anything or so long they'd overflow the model's context window.
 
 ## Day 11
 
 Why is experiment tracking useful? What would happen if you didn't track your runs?
 
-- **Experiment tracking is like a lab notebook for ML.** Without it, after 3 runs you won't remember which hyperparameters produced which loss. With MLflow, every run is permanently logged — the settings, the metrics, and when it was run.
+- **Experiment tracking is like a lab notebook for ML.** Without it, after 3 runs you won't remember which hyperparameters produced which loss. With MLflow, every run is permanently logged - the settings, the metrics, and when it was run.
 - **The practical problem it solves:** If you train twice with different learning rates and don't track it, you're forced to either remember or re-run everything. MLflow makes every run reproducible and comparable in a browser UI with zero extra effort.
-- **What surprised me:** MLflow creates a local `mlruns/` folder automatically. You don't need a server — `mlflow ui` just reads that folder. The UI at `localhost:5000` shows every experiment run as a row in a table, fully searchable.
+- **What surprised me:** MLflow creates a local `mlruns/` folder automatically. You don't need a server - `mlflow ui` just reads that folder. The UI at `localhost:5000` shows every experiment run as a row in a table, fully searchable.
 
 ## Day 12
 
-Week 1 summary — what was the hardest part? What surprised you?
+Week 1 summary - what was the hardest part? What surprised you?
 
 - **Hardest part: the PyTorch + CUDA setup (Day 7).** Getting `torch.cuda.is_available()` to return `True` required making sure the CUDA version in the `pip install` URL matched the actual driver version shown by `nvidia-smi`. One mismatch and the GPU is completely invisible to PyTorch.
-- **Most surprising:** How many libraries are needed just to _set up_ the project before writing a single line of real ML code. `bitsandbytes`, `accelerate`, `peft`, `trl` — each one solves a specific hard problem (quantization, hardware abstraction, adapter training, supervised fine-tuning loop). The ecosystem is mature but also complex.
+- **Most surprising:** How many libraries are needed just to _set up_ the project before writing a single line of real ML code. `bitsandbytes`, `accelerate`, `peft`, `trl` - each one solves a specific hard problem (quantization, hardware abstraction, adapter training, supervised fine-tuning loop). The ecosystem is mature but also complex.
 - **Biggest lesson:** Virtual environments are non-negotiable. Installing ML libraries globally would have destroyed my other Python setups.
 
 ## Day 13
@@ -126,8 +126,8 @@ Week 1 summary — what was the hardest part? What surprised you?
 What does good vs bad data look like in the ChatDoctor dataset?
 
 - **Good examples:** Answers that are 200–1000 characters, address the specific symptom mentioned, explain a likely cause, give a practical recommendation, and end with advice to see a professional. These teach the model both _what to say_ and _how to say it_.
-- **Bad examples — too short:** Responses like "Please see a doctor" or "I cannot diagnose you." These have no information content and would train the model to be evasive rather than helpful.
-- **Bad examples — too long:** Some answers exceed 2000+ characters and cover every possible edge case. These overflow the model's context window when combined with the system prompt and question, causing the tokenizer to silently truncate them — which means the model would be trained on incomplete, cut-off answers.
+- **Bad examples - too short:** Responses like "Please see a doctor" or "I cannot diagnose you." These have no information content and would train the model to be evasive rather than helpful.
+- **Bad examples - too long:** Some answers exceed 2000+ characters and cover every possible edge case. These overflow the model's context window when combined with the system prompt and question, causing the tokenizer to silently truncate them - which means the model would be trained on incomplete, cut-off answers.
 - **Key insight:** The `answer_length` distribution has a long right tail. The bulk of examples are 200–800 characters, which is the sweet spot for the 512-token `MAX_SEQ_LEN` we're using.
 
 ## Day 14
@@ -137,7 +137,7 @@ What filtering decisions did you make in `data_prep.py`? Why those thresholds?
 - **Minimum output length of 100 characters:** Anything shorter is either a non-answer ("Please consult a doctor") or so brief it teaches nothing. 100 characters is roughly 2–3 sentences, which is the minimum for a useful medical response.
 - **Maximum output length of 2000 characters:** Phi-3 Mini has a 4k token context window. Once you add the system prompt (~100 tokens), the user question (~100 tokens), and special tokens, an output of 2000 characters (~500 tokens) sits comfortably within the 512 `MAX_SEQ_LEN` training limit.
 - **Minimum input length of 10 characters:** Filters out examples where the patient question is empty or just a punctuation mark. A model can't learn to answer a question that doesn't exist.
-- **Result:** After cleaning, roughly 80–85% of examples pass. The filters are intentionally conservative — it's better to keep a slightly mediocre example than to throw away too much data.
+- **Result:** After cleaning, roughly 80–85% of examples pass. The filters are intentionally conservative - it's better to keep a slightly mediocre example than to throw away too much data.
 
 ## Day 15
 
@@ -154,14 +154,14 @@ Why does the training format matter so much? What is the Phi-3 chat format?
   {doctor answer}<|end|>
   ```
 - **The system prompt is key.** It sets the model's persona and tells it to always recommend consulting a real doctor. Without it, the fine-tuned model might answer confidently even when it should be uncertain.
-- **Lesson:** The formatting function in `data_prep.py` is just string concatenation — but getting it wrong would silently poison the entire training dataset. Always print a few examples before committing to a full run.
+- **Lesson:** The formatting function in `data_prep.py` is just string concatenation - but getting it wrong would silently poison the entire training dataset. Always print a few examples before committing to a full run.
 
 ## Day 16
 
 How did the base Phi-3 Mini perform on medical questions before any fine-tuning?
 
 - **Generally knowledgeable but generic.** On straightforward questions like "What are the symptoms of type 2 diabetes?", the base model gave accurate, well-structured answers. It already knows medicine from pre-training.
-- **Weak on patient-style phrasing.** When questions were phrased the way a real patient would write them — informal, anxious, full of symptom descriptions — the model sometimes gave overly clinical or detached responses, not matching the tone of the ChatDoctor dataset.
+- **Weak on patient-style phrasing.** When questions were phrased the way a real patient would write them - informal, anxious, full of symptom descriptions - the model sometimes gave overly clinical or detached responses, not matching the tone of the ChatDoctor dataset.
 - **Occasional hallucination.** On edge-case questions it gave confident-sounding answers that were partially inaccurate. This is the core problem fine-tuning addresses: teaching the model _when to hedge_ and _how to respond in a medical assistant voice_, not just what medicine is.
 - **This is the baseline.** After training, we'll run the same 5 questions and compare to see if fine-tuning actually improved the responses.
 
@@ -169,28 +169,28 @@ How did the base Phi-3 Mini perform on medical questions before any fine-tuning?
 
 What does the trainable% tell you? What would happen if you increased the LoRA rank?
 
-- **The trainable% (~0.05%) tells you the efficiency of QLoRA.** Instead of updating all 3.8 billion parameters, we update roughly 2 million — the tiny LoRA adapter matrices. This is why training fits on a 6GB GPU that couldn't even _load_ a full-precision version of this model.
-- **If you increase the rank (r=16 → r=64):** The adapter matrices get larger and more expressive — the model can learn more complex transformations. But trainable parameters increase roughly linearly with rank, so VRAM usage goes up. For our 6GB GPU, r=16 is the sweet spot: expressive enough to learn medical tone and response style, small enough to train without OOM errors.
-- **Why target `q_proj`, `v_proj`, `k_proj`, `o_proj`?** These are the Query, Value, Key, and Output projection matrices inside each attention head — the mechanism the model uses to decide which parts of the input to focus on. Adapting these layers has been empirically shown to capture most of the fine-tuning signal. Adapting feed-forward layers too helps marginally but costs more memory.
-- **Key insight from the rank experiment:** Going from r=4 to r=16 roughly quadruples trainable parameters. Going from r=16 to r=64 quadruples again. The loss improvement between r=16 and r=32 is usually marginal — r=16 is the standard recommendation for this model size.
+- **The trainable% (~0.05%) tells you the efficiency of QLoRA.** Instead of updating all 3.8 billion parameters, we update roughly 2 million - the tiny LoRA adapter matrices. This is why training fits on a 6GB GPU that couldn't even _load_ a full-precision version of this model.
+- **If you increase the rank (r=16 → r=64):** The adapter matrices get larger and more expressive - the model can learn more complex transformations. But trainable parameters increase roughly linearly with rank, so VRAM usage goes up. For our 6GB GPU, r=16 is the sweet spot: expressive enough to learn medical tone and response style, small enough to train without OOM errors.
+- **Why target `q_proj`, `v_proj`, `k_proj`, `o_proj`?** These are the Query, Value, Key, and Output projection matrices inside each attention head - the mechanism the model uses to decide which parts of the input to focus on. Adapting these layers has been empirically shown to capture most of the fine-tuning signal. Adapting feed-forward layers too helps marginally but costs more memory.
+- **Key insight from the rank experiment:** Going from r=4 to r=16 roughly quadruples trainable parameters. Going from r=16 to r=64 quadruples again. The loss improvement between r=16 and r=32 is usually marginal - r=16 is the standard recommendation for this model size.
 
 ## Day 18
 
 What does the training script structure look like? Why is it organized this way?
 
-- **`train.py` is split into three clean functions:** `load_model_and_tokenizer()`, `load_training_data()`, and `train()`. This separation means each piece can be tested independently — you can verify the model loads correctly before touching the data, and vice versa.
-- **Why write the full script before running it?** Writing the skeleton first forces you to think through the entire flow — what inputs each function needs, what it returns, how MLflow wraps around the training loop — before you're staring at a 4-hour training job. Bugs caught before training start are cheap; bugs caught 3 hours in are expensive.
-- **The MLflow `with mlflow.start_run()` block wraps the entire training call.** This means if training crashes halfway through, the run is still logged as a failed run with whatever metrics were collected before the crash — which is valuable diagnostic information.
+- **`train.py` is split into three clean functions:** `load_model_and_tokenizer()`, `load_training_data()`, and `train()`. This separation means each piece can be tested independently - you can verify the model loads correctly before touching the data, and vice versa.
+- **Why write the full script before running it?** Writing the skeleton first forces you to think through the entire flow - what inputs each function needs, what it returns, how MLflow wraps around the training loop - before you're staring at a 4-hour training job. Bugs caught before training start are cheap; bugs caught 3 hours in are expensive.
+- **The MLflow `with mlflow.start_run()` block wraps the entire training call.** This means if training crashes halfway through, the run is still logged as a failed run with whatever metrics were collected before the crash - which is valuable diagnostic information.
 - **`gradient_checkpointing=True` is non-negotiable on 6GB VRAM.** It trades compute for memory: instead of storing all intermediate activations during the forward pass (needed for backprop), it recomputes them on the fly during backprop. Training is ~20% slower but uses ~40% less VRAM.
 
 ## Day 19
 
-Week 2 summary — what does the full data pipeline look like? What did spot-checking reveal?
+Week 2 summary - what does the full data pipeline look like? What did spot-checking reveal?
 
 - **The full data pipeline from raw to ready-to-train is three steps:** (1) `load_dataset()` downloads ~100k examples from HuggingFace, (2) `is_good_example()` filters out ~15–20% of low-quality rows, (3) `format_for_training()` wraps each example in Phi-3 Mini's `<|system|>/<|user|>/<|assistant|>` chat format and saves it as a CSV. The whole thing runs with one command: `python src/training/data_prep.py`.
 - **Spot-checking formatted examples revealed one subtle issue to watch for:** some `input` fields from the raw dataset contain newlines and extra whitespace mid-sentence. These don't break training but they look untidy in the formatted text. The current filtering handles the worst cases (empty or near-empty inputs), but a future improvement would be to strip and normalize whitespace inside `data_prep.py`.
-- **Looking ahead to Week 3:** The training script is already fully written in `train.py` — the next step is just running it. The plan: start with a 200-example smoke test to confirm there are no OOM or formatting errors, then kick off the full 10k-example run. The thing to watch during training is the loss curve — it should decrease steadily. A loss that stays flat means the learning rate is too low; a loss that spikes means the learning rate is too high or the data formatting is wrong.
-- **What Week 2 taught overall:** Data preparation is not glamorous but it's where most of the actual model quality is determined. The model can only be as good as what it's trained on — getting the format exactly right and filtering aggressively for quality matters more than most hyperparameter choices.
+- **Looking ahead to Week 3:** The training script is already fully written in `train.py` - the next step is just running it. The plan: start with a 200-example smoke test to confirm there are no OOM or formatting errors, then kick off the full 10k-example run. The thing to watch during training is the loss curve - it should decrease steadily. A loss that stays flat means the learning rate is too low; a loss that spikes means the learning rate is too high or the data formatting is wrong.
+- **What Week 2 taught overall:** Data preparation is not glamorous but it's where most of the actual model quality is determined. The model can only be as good as what it's trained on - getting the format exactly right and filtering aggressively for quality matters more than most hyperparameter choices.
 
 ## Day 20
 
@@ -210,7 +210,7 @@ What did you learn about setting up the training loop?
 
 Why is a small test run important?
 
-- **Failing Fast:** Running a small test with just 200 examples and 1 epoch allows you to catch critical errors—like CUDA out-of-memory errors or tokenization issues—in minutes rather than waiting hours for a full run to crash.
+- **Failing Fast:** Running a small test with just 200 examples and 1 epoch allows you to catch critical errors-like CUDA out-of-memory errors or tokenization issues-in minutes rather than waiting hours for a full run to crash.
 
 ## Day 23
 
@@ -276,7 +276,7 @@ Why do we need to chunk documents for RAG, and why use overlapping chunks?
 
 Why use a vector database like ChromaDB? What does embedding chunks accomplish?
 
-- **Vector Database:** Traditional databases search for exact keyword matches. A vector database stores text as embeddings (numbers), allowing us to perform semantic searches — finding text that has a similar _meaning_ to the user's question, even if different words are used.
+- **Vector Database:** Traditional databases search for exact keyword matches. A vector database stores text as embeddings (numbers), allowing us to perform semantic searches - finding text that has a similar _meaning_ to the user's question, even if different words are used.
 - **ChromaDB:** A lightweight, local vector database that is perfect for this project. It stores our medical chunks and their corresponding embeddings persistently on disk.
 
 ## Day 30
@@ -363,7 +363,7 @@ What did you learn during the Week 5 integration and review?
 
 What did you learn about building the public Gradio UI?
 
-- **Gradio 6 Compatibility:** Building a chat UI with Gradio is incredibly fast, but being mindful of major version updates is critical. Gradio 6 changed how `Chatbot` history works—enforcing a strict dictionary format `[{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]` instead of the older tuple format. It also moved styling options like `theme` out of `gr.Blocks()` and into `demo.launch()`.
+- **Gradio 6 Compatibility:** Building a chat UI with Gradio is incredibly fast, but being mindful of major version updates is critical. Gradio 6 changed how `Chatbot` history works-enforcing a strict dictionary format `[{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]` instead of the older tuple format. It also moved styling options like `theme` out of `gr.Blocks()` and into `demo.launch()`.
 - **Connecting the Pipeline:** The UI seamlessly connects the ChromaDB vector retriever with the Groq inference client, providing an interactive, user-friendly wrapper over the complex RAG architecture we built in previous weeks.
 
 ## Day 42
@@ -393,7 +393,7 @@ What makes an effective project README?
 
 Why is an architecture diagram important for a technical project?
 
-- **Visual Communication:** A clear diagram (like the Mermaid flowchart) instantly conveys how complex components—like the Gradio UI, PubMedBERT Embedder, ChromaDB, and Cross-Encoder—interact. It is much faster for an interviewer or collaborator to understand a visual flow than to read paragraphs of text.
+- **Visual Communication:** A clear diagram (like the Mermaid flowchart) instantly conveys how complex components-like the Gradio UI, PubMedBERT Embedder, ChromaDB, and Cross-Encoder-interact. It is much faster for an interviewer or collaborator to understand a visual flow than to read paragraphs of text.
 - **Mermaid Integration:** Using Mermaid diagrams directly within Markdown (like in a README) allows the architecture to be version-controlled alongside the code and renders natively on GitHub.
 
 ## Day 46
@@ -401,15 +401,15 @@ Why is an architecture diagram important for a technical project?
 What did you learn about setting up MySQL and SQLAlchemy for FastAPI?
 
 - **SQLAlchemy ORM:** Using an Object-Relational Mapper (ORM) like SQLAlchemy allows us to interact with the database using Python objects rather than writing raw SQL strings. This prevents SQL injection and makes database schemas easier to manage and migrate.
-- **Connection Strings:** The `DATABASE_URL` format used by SQLAlchemy auto-detects the driver from the scheme prefix (`sqlite:///`, `postgresql://`). For local dev, we use SQLite (zero setup — auto-creates a file). For production, we use Render's free PostgreSQL with `psycopg2-binary` as the driver.
-- **SQLite as a Development Tool:** `sqlite:///./medical_qa.db` is a perfect local dev database — no server, no setup, instant startup. SQLAlchemy switches between SQLite and PostgreSQL with a single connection string change. The code uses `connect_args={"check_same_thread": False}` only for SQLite, since that constraint doesn't apply to PostgreSQL.
+- **Connection Strings:** The `DATABASE_URL` format used by SQLAlchemy auto-detects the driver from the scheme prefix (`sqlite:///`, `postgresql://`). For local dev, we use SQLite (zero setup - auto-creates a file). For production, we use Render's free PostgreSQL with `psycopg2-binary` as the driver.
+- **SQLite as a Development Tool:** `sqlite:///./medical_qa.db` is a perfect local dev database - no server, no setup, instant startup. SQLAlchemy switches between SQLite and PostgreSQL with a single connection string change. The code uses `connect_args={"check_same_thread": False}` only for SQLite, since that constraint doesn't apply to PostgreSQL.
 
 ## Day 47
 
 What did you learn about Password Hashing and JWT Authentication?
 
 - **Password Hashing with bcrypt:** Never store plain text passwords. `bcrypt` is the gold standard because it is intentionally slow (making brute-force attacks impractical) and automatically handles salting to protect against rainbow table attacks.
-- **JWT (JSON Web Tokens):** Traditional session-based authentication requires the server to remember who is logged in. JWT is stateless—it encodes the user's identity into a token signed by the server's `SECRET_KEY`. The server just verifies the signature on subsequent requests, making it highly scalable for API-first applications.
+- **JWT (JSON Web Tokens):** Traditional session-based authentication requires the server to remember who is logged in. JWT is stateless-it encodes the user's identity into a token signed by the server's `SECRET_KEY`. The server just verifies the signature on subsequent requests, making it highly scalable for API-first applications.
 - **FastAPI Dependencies:** We can protect API routes effortlessly using FastAPI's `Depends`. By creating a `get_current_user` dependency, FastAPI automatically intercepts incoming requests, verifies the JWT token, extracts the user, and blocks unauthorized access before the endpoint code even runs.
 
 ## Day 48
@@ -437,15 +437,15 @@ What did you learn about securing the main RAG endpoint and handling hardware cr
 
 What did you learn about protecting APIs with rate limiting and input validation?
 
-- **Rate Limiting with `slowapi`:** Without rate limiting, a single user (or a bot) can make thousands of requests to your Groq API endpoint, burning through your free-tier quota in seconds. `slowapi` integrates directly with FastAPI using a `@limiter.limit("10/hour")` decorator on the endpoint. It tracks requests by the caller's IP address and automatically returns a `429 Too Many Requests` response when the limit is exceeded — no manual counter logic needed.
+- **Rate Limiting with `slowapi`:** Without rate limiting, a single user (or a bot) can make thousands of requests to your Groq API endpoint, burning through your free-tier quota in seconds. `slowapi` integrates directly with FastAPI using a `@limiter.limit("10/hour")` decorator on the endpoint. It tracks requests by the caller's IP address and automatically returns a `429 Too Many Requests` response when the limit is exceeded - no manual counter logic needed.
 - **`slowapi` Needs the Starlette `Request` Object:** The `@limiter.limit()` decorator works by inspecting the raw HTTP request object. FastAPI's endpoint functions normally only receive Pydantic-parsed body objects, not the raw request. `slowapi` requires that you explicitly add `request: Request` as the **first parameter** of the endpoint function. If it's named anything else (like `http_request`), `slowapi` cannot find it and crashes with `Exception: parameter request must be an instance of starlette.requests.Request`.
-- **Pydantic `@field_validator` vs. Manual `if` Checks:** The old approach was to manually check `if len(question) < 5: raise HTTPException(400, ...)` inside the endpoint body. The better approach is to declare the validation rule directly on the Pydantic model using `@field_validator`. This means the validation runs automatically _before_ the endpoint function even executes, keeping the endpoint code clean and returning a well-structured `422 Unprocessable Entity` response (instead of a custom `400`) with a detailed machine-readable error body — which is the standard REST API convention for invalid input.
+- **Pydantic `@field_validator` vs. Manual `if` Checks:** The old approach was to manually check `if len(question) < 5: raise HTTPException(400, ...)` inside the endpoint body. The better approach is to declare the validation rule directly on the Pydantic model using `@field_validator`. This means the validation runs automatically _before_ the endpoint function even executes, keeping the endpoint code clean and returning a well-structured `422 Unprocessable Entity` response (instead of a custom `400`) with a detailed machine-readable error body - which is the standard REST API convention for invalid input.
 
 ## Day 52
 
 What did you learn about fixing automated tests after adding authentication?
 
-- **CI Environments Are Blank Slates:** GitHub Actions runners start from a completely empty Ubuntu machine. There is no `.env` file, no MySQL server, no pre-installed Python packages beyond the standard library. Every dependency the app needs — from `sqlalchemy` to `bcrypt` to `python-jose` — must be explicitly listed in the workflow's `pip install` step, or the import will crash immediately with `ModuleNotFoundError`.
+- **CI Environments Are Blank Slates:** GitHub Actions runners start from a completely empty Ubuntu machine. There is no `.env` file, no MySQL server, no pre-installed Python packages beyond the standard library. Every dependency the app needs - from `sqlalchemy` to `bcrypt` to `python-jose` - must be explicitly listed in the workflow's `pip install` step, or the import will crash immediately with `ModuleNotFoundError`.
 - **Module-Level Code Runs at Import Time:** Python executes module-level code (like `SECRET_KEY = os.getenv("SECRET_KEY")` in `security.py`) the instant that module is first imported. If the environment variable isn't set _before_ the import chain begins, the variable resolves to `None` and JWT signing crashes with `JWSError: Expecting a string- or bytes-formatted key`. Setting env vars via `os.environ.setdefault()` inside the test file can be unreliable if `load_dotenv()` runs first. The bulletproof solution is to set them as `env:` variables directly in the GitHub Actions YAML, so the OS guarantees they exist before Python even starts.
 - **SQLite as a Test Database:** On CI, there is no MySQL server running. By overriding `DATABASE_URL` to point at a local SQLite file (`sqlite:///./test.db`) and using FastAPI's `app.dependency_overrides[get_db]` to swap in a test database session, all database operations (user registration, conversation creation, message saving) work identically without needing a real database server.
 - **Unique Constraint Collisions:** When test helper functions (like `get_auth_token()`) create users, hardcoding the username causes `IntegrityError` on the second call because the database enforces uniqueness. Generating random UUIDs for both email and username (`f"testuser_{uuid4().hex[:8]}"`) ensures every test run creates a genuinely unique user.
@@ -456,7 +456,7 @@ What did you learn about fixing automated tests after adding authentication?
 What does the backend architecture look like now compared to Week 6?
 
 - **From Demo to Product:** In Week 6, the system was a stateless, single-user demo. Now, it is a multi-user API with secure JWT authentication, bcrypt password hashing, and persistent storage for users, conversations, and messages via SQLAlchemy.
-- **PostgreSQL for Production:** We planned for MySQL locally, but ended up using SQLite for local dev (zero setup) and Render's free PostgreSQL for production. SQLAlchemy made this a one-line change in the connection string — this is the power of the ORM abstraction.
+- **PostgreSQL for Production:** We planned for MySQL locally, but ended up using SQLite for local dev (zero setup) and Render's free PostgreSQL for production. SQLAlchemy made this a one-line change in the connection string - this is the power of the ORM abstraction.
 - **Security First:** Industry-standard password hashing (`bcrypt`) and token generation (`python-jose`) protect all sensitive endpoints. The Swagger UI integration required switching the login endpoint from JSON to `OAuth2PasswordRequestForm` to work with FastAPI's built-in Authorize popup.
 - **CI/CD Resilience:** The test suite was completely rewritten to work in a database-less CI environment by swapping to SQLite, mocking all ML dependencies, and injecting environment variables at the OS level. All 6 tests pass on both local Windows and GitHub Actions Ubuntu.
 
@@ -513,31 +513,31 @@ What did you learn about fixing database errors and implementing premium UI desi
 
 What did the end-to-end integration test reveal, and what is the state of the full system?
 
-- **All 6 Automated Tests Pass:** Running `pytest tests/test_api.py -v` confirmed all tests green — health check, user registration, unauthenticated rejection, authenticated Q&A, empty question validation (422), and conversation history retrieval — in 3.83 seconds. This proves the backend API is stable and all auth/conversation logic is working correctly.
+- **All 6 Automated Tests Pass:** Running `pytest tests/test_api.py -v` confirmed all tests green - health check, user registration, unauthenticated rejection, authenticated Q&A, empty question validation (422), and conversation history retrieval - in 3.83 seconds. This proves the backend API is stable and all auth/conversation logic is working correctly.
 - **Pydantic V2 Deprecation Warnings:** The test run surfaced deprecation warnings: `PydanticDeprecatedSince20: Support for class-based config is deprecated, use ConfigDict instead`. While these don't break anything today, they will become errors in Pydantic V3. The fix is to replace `class Config:` with `model_config = ConfigDict(...)` in `src/auth/schemas.py` and `src/conversations/schemas.py`. This is a Week 9 clean-up item.
-- **`httpx` vs `httpx2` Warning:** FastAPI's `TestClient` (which wraps Starlette's test client) emitted `StarletteDeprecationWarning: Using httpx with starlette.testclient is deprecated; install httpx2`. This is an upstream library migration issue — the test suite still works perfectly, but the migration to `httpx2` should be noted for production hardening.
+- **`httpx` vs `httpx2` Warning:** FastAPI's `TestClient` (which wraps Starlette's test client) emitted `StarletteDeprecationWarning: Using httpx with starlette.testclient is deprecated; install httpx2`. This is an upstream library migration issue - the test suite still works perfectly, but the migration to `httpx2` should be noted for production hardening.
 - **The Full Stack is Wired:** Every layer of the application is functional: MySQL database → SQLAlchemy ORM → FastAPI backend (with JWT auth, rate limiting, and RAG) → Axios API client → Next.js frontend (with Auth context, Chat context, Protected routes, glassmorphic UI, and mobile hamburger menu). The system works end-to-end.
 
 ---
 
-## 🏆 Week 8 Review — The Full-Stack Frontend (Days 53–59)
+## 🏆 Week 8 Review - The Full-Stack Frontend (Days 53–59)
 
-**Theme:** Building a production-quality Next.js frontend on top of the FastAPI backend. By the end of this week, the project became a complete, usable web application — not just an API.
+**Theme:** Building a production-quality Next.js frontend on top of the FastAPI backend. By the end of this week, the project became a complete, usable web application - not just an API.
 
 ---
 
-### Day 53 — Next.js Project Setup + API Client
+### Day 53 - Next.js Project Setup + API Client
 
 The week started by bootstrapping the Next.js 14 project with `create-next-app` using the App Router, TypeScript, and TailwindCSS. The most important architectural decision was building a **centralized Axios client** (`src/lib/api.ts`) with two interceptors:
 
-- **Request interceptor:** Automatically reads the JWT from `localStorage` and attaches `Authorization: Bearer <token>` to every request — eliminating manual auth headers on every API call.
-- **Response interceptor:** Catches any `401 Unauthorized` response globally and redirects the user to `/login` — so token expiry is handled seamlessly without any per-page logic.
+- **Request interceptor:** Automatically reads the JWT from `localStorage` and attaches `Authorization: Bearer <token>` to every request - eliminating manual auth headers on every API call.
+- **Response interceptor:** Catches any `401 Unauthorized` response globally and redirects the user to `/login` - so token expiry is handled seamlessly without any per-page logic.
 
-**Key Lesson:** Interceptors are one of the most powerful patterns in frontend API design. They are the equivalent of FastAPI's `Depends()` — a single place that enforces a cross-cutting concern (auth) across the entire application.
+**Key Lesson:** Interceptors are one of the most powerful patterns in frontend API design. They are the equivalent of FastAPI's `Depends()` - a single place that enforces a cross-cutting concern (auth) across the entire application.
 
 ---
 
-### Day 54 — Authentication Pages + AuthContext
+### Day 54 - Authentication Pages + AuthContext
 
 Building the Login and Register pages required solving a subtle protocol mismatch: FastAPI's `OAuth2PasswordRequestForm` endpoint expects `application/x-www-form-urlencoded` data, not JSON. The frontend had to send credentials via `URLSearchParams` rather than `JSON.stringify()`.
 
@@ -547,7 +547,7 @@ The `AuthContext` was the most architecturally important piece: a React context 
 
 ---
 
-### Day 55 — Main Chat Interface
+### Day 55 - Main Chat Interface
 
 The chat page (`(dashboard)/page.tsx`) was a significant engineering effort. Key decisions:
 
@@ -560,7 +560,7 @@ The chat page (`(dashboard)/page.tsx`) was a significant engineering effort. Key
 
 ---
 
-### Day 56 — Conversation Sidebar + History
+### Day 56 - Conversation Sidebar + History
 
 Made the sidebar fully functional:
 
@@ -569,25 +569,25 @@ Made the sidebar fully functional:
 - "New Chat" clears `activeConversationId` to `null`, which the chat page watches to clear messages.
 - Delete calls `DELETE /conversations/{id}` and removes the item from the local list immediately (optimistic UI update).
 
-The key challenge was state sharing between the sidebar (`layout.tsx`) and the chat area (`page.tsx`) — two sibling components. The solution was a `ChatContext` (mirroring the `AuthContext` pattern) that both components subscribe to.
+The key challenge was state sharing between the sidebar (`layout.tsx`) and the chat area (`page.tsx`) - two sibling components. The solution was a `ChatContext` (mirroring the `AuthContext` pattern) that both components subscribe to.
 
-**Key Lesson:** React's Context API is the right tool when two components at different levels of the tree need to share and update the same state. Passing it as props would require "prop drilling" through intermediate components that don't use the data — which is messy and breaks component reusability.
+**Key Lesson:** React's Context API is the right tool when two components at different levels of the tree need to share and update the same state. Passing it as props would require "prop drilling" through intermediate components that don't use the data - which is messy and breaks component reusability.
 
 ---
 
-### Day 57 — Feedback System + UI Polish
+### Day 57 - Feedback System + UI Polish
 
 Added the `Feedback` table to the database (`message_id`, `user_id`, `rating`), a `POST /feedback` endpoint, and thumbs up/down buttons in the frontend. The backend had to be updated to return `message_id` in the `/ask` response so the frontend could immediately send feedback on a newly generated answer.
 
-`react-hot-toast` replaced all raw `alert()` calls and silent `console.error` logs. Toast notifications are dramatically better UX — they appear briefly, don't block the page, and are visually styled to match success/error states.
+`react-hot-toast` replaced all raw `alert()` calls and silent `console.error` logs. Toast notifications are dramatically better UX - they appear briefly, don't block the page, and are visually styled to match success/error states.
 
 **Key Lesson:** Every user action that calls an API should have three states handled: loading (spinner/disabled button), success (toast or state update), and error (toast with message). Missing any of these makes the app feel broken or unresponsive.
 
 ---
 
-### Day 58 — Responsive Design + Premium UI Overhaul
+### Day 58 - Responsive Design + Premium UI Overhaul
 
-Fixed the cascade deletion bug (foreign key constraints on `Feedback` → `Message` → `Conversation`) by adding `cascade="all, delete-orphan"` to the SQLAlchemy relationships. Also fixed a Next.js hydration error caused by reading `localStorage` during server-side rendering — the fix was to always guard `localStorage` access inside `useEffect` or check `typeof window !== 'undefined'`.
+Fixed the cascade deletion bug (foreign key constraints on `Feedback` → `Message` → `Conversation`) by adding `cascade="all, delete-orphan"` to the SQLAlchemy relationships. Also fixed a Next.js hydration error caused by reading `localStorage` during server-side rendering - the fix was to always guard `localStorage` access inside `useEffect` or check `typeof window !== 'undefined'`.
 
 The UI was completely redesigned with a glassmorphic aesthetic:
 
@@ -602,7 +602,7 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 
 ---
 
-### Week 8 Summary — What This Week Built
+### Week 8 Summary - What This Week Built
 
 | Component                                  | Status  |
 | ------------------------------------------ | ------- |
@@ -620,15 +620,15 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 | Mobile responsive hamburger menu           | ✅ Done |
 | All 6 backend tests passing                | ✅ Done |
 
-**The single most important architectural lesson of Week 8:** The **context pattern** (`AuthContext`, `ChatContext`) is the foundation that makes a React app maintainable. Without it, passing auth state and conversation state as props down through every component would quickly become unmanageable. The pattern mirrors dependency injection in backend frameworks — a central store that any component can tap into without knowing where the data came from.
+**The single most important architectural lesson of Week 8:** The **context pattern** (`AuthContext`, `ChatContext`) is the foundation that makes a React app maintainable. Without it, passing auth state and conversation state as props down through every component would quickly become unmanageable. The pattern mirrors dependency injection in backend frameworks - a central store that any component can tap into without knowing where the data came from.
 
-**Next up — Week 9:** Dockerizing the FastAPI backend, setting up Docker Compose, and deploying the full stack to the cloud (Render for the backend + PostgreSQL, Netlify for the frontend).
+**Next up - Week 9:** Dockerizing the FastAPI backend, setting up Docker Compose, and deploying the full stack to the cloud (Render for the backend + PostgreSQL, Netlify for the frontend).
 
 ---
 
-## Week 9 — Deployment to the Cloud
+## Week 9 - Deployment to the Cloud
 
-### Days 60–61 — Docker + Docker Compose
+### Days 60–61 - Docker + Docker Compose
 
 **What we did:** Wrote a `Dockerfile` to containerize the FastAPI backend and a `docker-compose.yml` to spin up the backend + MySQL together with a single command.
 
@@ -639,7 +639,7 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 
 ---
 
-### Day 62 — Deploy the Backend to Render
+### Day 62 - Deploy the Backend to Render
 
 **What we did:** Deployed the FastAPI backend to Render's free tier. It took 6 attempts and each failure taught us something specific.
 
@@ -647,7 +647,7 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 
 | Attempt | Error                                             | Root Cause                                                                                         | Fix                                                       |
 | ------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| 1       | Build failed                                      | `COPY .env .env` — file not in repo                                                                | Remove the line                                           |
+| 1       | Build failed                                      | `COPY .env .env` - file not in repo                                                                | Remove the line                                           |
 | 2       | Out of memory (512MB)                             | Full `requirements.txt` installs GPU PyTorch (2GB+)                                                | Create `requirements-prod.txt` with CPU-only PyTorch      |
 | 3       | `RuntimeError: python-multipart required`         | FastAPI needs this for OAuth2 login forms; it was a hidden dependency of `gradio` which we removed | Add `python-multipart` explicitly                         |
 | 4       | Out of memory (512MB)                             | CPU PyTorch + PubMedBERT (440MB) + FastAPI > 512MB                                                 | Try switching to smaller model                            |
@@ -657,13 +657,13 @@ The UI was completely redesigned with a glassmorphic aesthetic:
 **The Core Problem with ML on Free Tier Hosting:**
 Render's free tier gives you **512MB of RAM**. A typical ML stack uses:
 
-- `torch` (CPU) — ~200MB
-- `sentence-transformers` + model — ~200MB
-- `chromadb` — ~50MB
-- Python + FastAPI + other libraries — ~100MB
-- **Total: ~550MB** — over the limit before a single request is processed.
+- `torch` (CPU) - ~200MB
+- `sentence-transformers` + model - ~200MB
+- `chromadb` - ~50MB
+- Python + FastAPI + other libraries - ~100MB
+- **Total: ~550MB** - over the limit before a single request is processed.
 
-**The Solution — Graceful Degradation:**
+**The Solution - Graceful Degradation:**
 The best pattern is to build your app in tiers:
 
 1. **Full RAG mode** (local/paid server): loads all models, uses vector search + reranker
@@ -678,18 +678,18 @@ except ImportError:
     LIGHTWEIGHT_MODE = True
 ```
 
-This means the same codebase works on both a laptop with 16GB RAM and a free cloud server with 512MB — it just gracefully degrades its capabilities.
+This means the same codebase works on both a laptop with 16GB RAM and a free cloud server with 512MB - it just gracefully degrades its capabilities.
 
 **Key Lessons:**
 
-- **Read the error message carefully.** Every single deployment failure had a different, specific error. The fix was always in the error text — OOM vs. ModuleNotFoundError vs. RuntimeError are completely different problems with completely different solutions.
+- **Read the error message carefully.** Every single deployment failure had a different, specific error. The fix was always in the error text - OOM vs. ModuleNotFoundError vs. RuntimeError are completely different problems with completely different solutions.
 - **Production `requirements.txt` should be separate from development.** In development, you install everything (training libraries, notebooks, visualization tools). In production, you only need what the running server actually imports.
 - **The `--extra-index-url https://download.pytorch.org/whl/cpu` trick.** Adding this line to `requirements.txt` before `torch` tells pip to install the CPU-only PyTorch wheel, which is ~500MB smaller than the GPU version.
 - **Free tiers are real constraints, not temporary inconveniences.** Design your production code to be as lean as possible from the start.
 
 ---
 
-### Day 63 — Deploy the Frontend to Vercel (In Progress)
+### Day 63 - Deploy the Frontend to Vercel (In Progress)
 
 **What we did:** Fixed Render backend errors and deployed the Next.js frontend.
 
@@ -710,7 +710,7 @@ This means the same codebase works on both a laptop with 16GB RAM and a free clo
 
 ---
 
-### Week 9 Summary — What This Week Built
+### Week 9 Summary - What This Week Built
 
 | Component                              | Status      |
 | -------------------------------------- | ----------- |
@@ -722,42 +722,42 @@ This means the same codebase works on both a laptop with 16GB RAM and a free clo
 | CORS wired between Render + Netlify    | ✅ Done     |
 | Full end-to-end production test        | ✅ Done     |
 
-**The single most important lesson of Week 9:** Cloud deployment is **not** just "upload your code." Every environment has different constraints — RAM, disk, CPU, OS, Python version. The skill is learning to read error messages, isolate the root cause, and fix the exact problem rather than guessing. Six failures in one day is normal. What matters is that each failure teaches you something specific. And sometimes, if a platform (like Vercel) fights you, just switch to a comparable alternative (like Netlify) to keep moving forward.
+**The single most important lesson of Week 9:** Cloud deployment is **not** just "upload your code." Every environment has different constraints - RAM, disk, CPU, OS, Python version. The skill is learning to read error messages, isolate the root cause, and fix the exact problem rather than guessing. Six failures in one day is normal. What matters is that each failure teaches you something specific. And sometimes, if a platform (like Vercel) fights you, just switch to a comparable alternative (like Netlify) to keep moving forward.
 
 ---
 
-## Week 10 — Final Polish + Portfolio
+## Week 10 - Final Polish + Portfolio
 
-### Day 67 — Frontend Design Overhaul
+### Day 67 - Frontend Design Overhaul
 
-**What we did:** Replaced the entire frontend design system — colors, backgrounds, auth pages, sidebar, and chat interface — with a cohesive premium palette. Also diagnosed and fixed a visual bug where the chat area had a disturbing transparent "hole" effect.
+**What we did:** Replaced the entire frontend design system - colors, backgrounds, auth pages, sidebar, and chat interface - with a cohesive premium palette. Also diagnosed and fixed a visual bug where the chat area had a disturbing transparent "hole" effect.
 
-**The Design System — Crimson + Beige + Leaf Green:**
+**The Design System - Crimson + Beige + Leaf Green:**
 
 The new palette was chosen deliberately for a medical context:
 
 | Color | Hex | Role |
 | --- | --- | --- |
-| Crimson Red | `#c8102e` | Primary accent — urgency, action buttons, user bubbles |
-| Warm Beige | `#f5f0e8` | Base background — warmth, approachability |
-| Off-White Card | `#fffdf9` | Surface cards — clean, readable content areas |
-| Leaf Green | `#4a7c59` | AI/assistant elements — healing, nature, calm |
-| Warm Brown | `#2e261d` | Primary text — earthy, readable |
+| Crimson Red | `#c8102e` | Primary accent - urgency, action buttons, user bubbles |
+| Warm Beige | `#f5f0e8` | Base background - warmth, approachability |
+| Off-White Card | `#fffdf9` | Surface cards - clean, readable content areas |
+| Leaf Green | `#4a7c59` | AI/assistant elements - healing, nature, calm |
+| Warm Brown | `#2e261d` | Primary text - earthy, readable |
 
 This isn't just aesthetics. Color carries meaning in medical contexts. Red signals importance and urgency. Green is universally associated with health and healing. Beige avoids the cold, clinical feeling of pure white. Together they feel warm and trustworthy without being alarming.
 
-**The "Hole" Bug — Root Cause and Fix:**
+**The "Hole" Bug - Root Cause and Fix:**
 
 The chat area had a disturbing visual effect where, when scrolled, the background looked like a transparent hole revealing the page background behind it. The cause was:
 
 ```tsx
-// Before: transparent backgrounds — showed the body gradient behind
+// Before: transparent backgrounds - showed the body gradient behind
 <div className="flex h-screen bg-transparent relative">
 <main className="flex-1 flex flex-col h-screen overflow-hidden bg-transparent">
 <div className="flex-1 overflow-y-auto p-4"> {/* no background at all */}
 ```
 
-When you scroll in an element with `overflow-y-auto` and its background is `transparent`, the browser doesn't fill in the parent's background colour — it just shows whatever is behind the scrollable container, which can look like a dark or distorted hole, especially on some browsers and screen compositions.
+When you scroll in an element with `overflow-y-auto` and its background is `transparent`, the browser doesn't fill in the parent's background colour - it just shows whatever is behind the scrollable container, which can look like a dark or distorted hole, especially on some browsers and screen compositions.
 
 **Fix:** Give every layer an explicit, solid background colour:
 
@@ -768,20 +768,20 @@ When you scroll in an element with `overflow-y-auto` and its background is `tran
 <div style={{ backgroundColor: "#faf7f2" }} className="flex-1 overflow-y-auto">
 ```
 
-**Key Lesson:** Glassmorphism (transparency + backdrop-blur) looks beautiful in static screenshots but can cause real visual bugs in scrollable, dynamic layouts. Use it sparingly — only for overlays and modals where the background is genuinely intentional. For the main content area, always use a solid background.
+**Key Lesson:** Glassmorphism (transparency + backdrop-blur) looks beautiful in static screenshots but can cause real visual bugs in scrollable, dynamic layouts. Use it sparingly - only for overlays and modals where the background is genuinely intentional. For the main content area, always use a solid background.
 
 **Other design improvements made:**
 
-- **Login page:** Split-panel layout — a crimson/green gradient decorative panel on the left (desktop only) with feature bullets, and a warm beige form card on the right.
+- **Login page:** Split-panel layout - a crimson/green gradient decorative panel on the left (desktop only) with feature bullets, and a warm beige form card on the right.
 - **Sidebar:** Added branded logo header (`Heart` icon + app name), better conversation empty state, leaf-green user avatar initials, themed logout button.
 - **Chat empty state:** Added quick-start suggestion chips so users know what kinds of questions to ask.
 - **Loading indicator:** Replaced generic grey dots with leaf-green bouncing dots that match the AI avatar colour.
-- **Toasts:** Themed `react-hot-toast` notifications — green check for success, crimson for errors — matching the design system.
+- **Toasts:** Themed `react-hot-toast` notifications - green check for success, crimson for errors - matching the design system.
 - **Scrollbar:** Custom styled to match the warm palette instead of the OS default.
 
 ---
 
-### Day 67 (cont.) — Local Development Environment Bug
+### Day 67 (cont.) - Local Development Environment Bug
 
 **What we did:** Diagnosed why the backend was crashing on local startup with a `ConnectionRefusedError` after successfully running in production.
 
@@ -799,17 +799,17 @@ The `.env` file had `DATABASE_URL` pointing to a local MySQL server:
 DATABASE_URL=mysql+pymysql://username:password@localhost:3306/medical_qa
 ```
 
-But MySQL was not running locally. The production environment (Render) has its own database configured via its dashboard's environment variables — those never touch the local `.env` file. So the production deployment was fine, but local dev was broken.
+But MySQL was not running locally. The production environment (Render) has its own database configured via its dashboard's environment variables - those never touch the local `.env` file. So the production deployment was fine, but local dev was broken.
 
-**Fix — SQLite for local dev, MySQL for production:**
+**Fix - SQLite for local dev, MySQL for production:**
 
 ```bash
-# .env — local development only (gitignored — safe to edit freely)
+# .env - local development only (gitignored - safe to edit freely)
 # DATABASE_URL=mysql+pymysql://...   ← commented out
 DATABASE_URL=sqlite:///./medical_qa.db  ← SQLite, zero setup required
 ```
 
-The `database/config.py` already had this fallback built in — it just needed the `.env` to be updated:
+The `database/config.py` already had this fallback built in - it just needed the `.env` to be updated:
 
 ```python
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medical_qa.db")
@@ -824,14 +824,14 @@ else:
 
 | Where | Database | How configured |
 | --- | --- | --- |
-| Local development | SQLite (`medical_qa.db` file, auto-created) | `.env` file — no server needed |
+| Local development | SQLite (`medical_qa.db` file, auto-created) | `.env` file - no server needed |
 | Production (Render) | MySQL / Postgres (cloud-hosted) | Hosting platform's dashboard env vars |
 
 **Key Lessons:**
 
-- **Never commit secrets or environment-specific config.** The `.env` file is gitignored for a reason — it lets you have completely different configurations for local vs. production without touching any code.
+- **Never commit secrets or environment-specific config.** The `.env` file is gitignored for a reason - it lets you have completely different configurations for local vs. production without touching any code.
 - **SQLite is underrated for local dev.** It requires zero installation, creates its own file on the fly, supports all SQL operations, and SQLAlchemy switches between it and MySQL/Postgres with a single connection string change. There is no reason to run a full MySQL server locally just to test your app.
-- **Design for environment portability from day one.** The `os.getenv("DATABASE_URL", "sqlite:///./medical_qa.db")` pattern — use the env var if it exists, fall back to SQLite — means your app works anywhere without code changes.
+- **Design for environment portability from day one.** The `os.getenv("DATABASE_URL", "sqlite:///./medical_qa.db")` pattern - use the env var if it exists, fall back to SQLite - means your app works anywhere without code changes.
 
 ---
 
@@ -839,15 +839,15 @@ else:
 
 | Task | Status |
 | --- | --- |
-| Frontend design overhaul — crimson/beige/green palette | ✅ Done |
+| Frontend design overhaul - crimson/beige/green palette | ✅ Done |
 | Fixed chat background "hole" visual bug | ✅ Done |
 | Login + Register pages redesigned | ✅ Done |
 | Sidebar branding + conversation UI | ✅ Done |
 | Local dev environment fixed (SQLite fallback) | ✅ Done |
 | README updated with full-stack architecture (Next.js, PostgreSQL, Netlify, Render) | ✅ Done |
-| Production logging — replaced `print()` with `logging.getLogger("uvicorn.error")` | ✅ Done |
+| Production logging - replaced `print()` with `logging.getLogger("uvicorn.error")` | ✅ Done |
 | `docs/API_REFERENCE.md` created with all endpoints | ✅ Done |
-| Security audit — CORS scoped to Netlify URL, secrets in platform dashboards, HTTPS via Netlify | ✅ Done |
+| Security audit - CORS scoped to Netlify URL, secrets in platform dashboards, HTTPS via Netlify | ✅ Done |
 | Implementation Plan updated to reflect actual tech (PostgreSQL, Netlify, psycopg2-binary) | ✅ Done |
 | Demo video + LinkedIn post | ⏳ Up next |
 
@@ -855,13 +855,13 @@ else:
 
 ---
 
-## Final Architecture — What Was Actually Built
+## Final Architecture - What Was Actually Built
 
 ```
 User → Next.js Frontend (Netlify)
      → FastAPI Backend (Render)
           → PostgreSQL Database (Render, persists all users + conversations)
-          → Groq API (cloud LLM inference — Llama 3.1)
+          → Groq API (cloud LLM inference - Llama 3.1)
           → ChromaDB / PubMedBERT / Cross-Encoder (lightweight mode bypasses these on free tier)
 ```
 
